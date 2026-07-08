@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LiveryStripe } from "@/components/livery/LiveryStripe";
 
 export const metadata: Metadata = {
   title: "Career — Surya Pugazhenthi",
@@ -13,28 +14,32 @@ export default function CareerPage() {
       <header className="flex items-baseline justify-between">
         <Link
           href="/"
-          className="font-display text-sm font-bold tracking-[0.25em] uppercase outline-none hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
+          className="font-display text-sm font-bold tracking-widest italic uppercase outline-none hover:text-track focus-visible:ring-2 focus-visible:ring-track"
         >
           ← World Map
         </Link>
       </header>
 
       <main className="flex flex-1 flex-col">
-        <p className="mt-8 font-display text-xs font-semibold tracking-widest text-ink-soft uppercase md:mt-10">
+        <p className="mt-8 font-display text-sm font-semibold tracking-widest text-silver italic uppercase md:mt-10">
           Story mode
         </p>
-        <h1 className="font-display text-4xl font-black tracking-tight uppercase md:text-6xl">
+        <h1 className="font-display text-5xl font-black tracking-tight italic uppercase md:text-7xl">
           Career
         </h1>
 
-        <div className="mt-10 max-w-xl border-4 border-ink bg-paper p-6">
-          <p className="font-display text-sm font-bold tracking-widest text-accent uppercase">
-            Season data loading
-          </p>
-          <p className="mt-2 text-ink-soft">
-            The season-by-season history of Surya&apos;s education and work is
-            being compiled. Head back to the world map while the grid forms.
-          </p>
+        <div className="panel clip-cut mt-10 max-w-xl">
+          <LiveryStripe livery="marlboro" />
+          <div className="p-6">
+            <p className="font-display text-base font-bold tracking-widest text-track italic uppercase">
+              Season data loading
+            </p>
+            <p className="mt-2 text-silver">
+              The season-by-season history of Surya&apos;s education and work
+              is being compiled. Head back to the world map while the grid
+              forms.
+            </p>
+          </div>
         </div>
       </main>
     </div>

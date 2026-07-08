@@ -59,8 +59,10 @@ Each pavilion is a route under `app/` with a shared shell (section title, conten
 
 ### Design constraints (from the UX doc — enforced, not optional)
 
-- Palette: R4 warm yellow (#FAB217) primary, warm greys/off-whites, dark charcoal text, **one** accent: racing red (~#D62E2E). No neon/cyberpunk gradients, no glitch effects.
-- Typography: Satoshi (body) + Archivo (display), both self-hosted — no external font CDNs (CSP).
+- Base look: **dark graphite "night garage"** — near-black asphalt background, metallic `.panel` surfaces (vertical sheen gradient, lit top edge), angular `.clip-cut` corner cuts, faint CRT scanlines. Never flat bright color fields as page backgrounds (an earlier flat-yellow version was explicitly rejected as "flash game" slop).
+- Accents: camel yellow #FAB217 and racing red #D2222A at livery/decal scale only.
+- Liveries: components are wrapped in **livery-inspired decal treatments** (`content/liveries.ts` + `LiveryStripe`) — Marlboro, Gulf, West, Jägermeister, Leyton House, Warsteiner, Red Bull color systems. One livery per pavilion, applied to card/chip chrome, never as section-wide paint. **No real brand logos or wordmarks** — colors and patterns only (trademark safety on a public repo/site).
+- Typography: Satoshi (body, self-hosted) + Saira variable (display: condensed via `font-stretch: 75%`, italic — era "speed type"). No external font CDNs (CSP).
 - Copy tone: racing metaphor as chrome, facts in plain English — real orgs/titles/dates in content, game labels only as small captions; meta/OG tags fully professional.
 - Typography: 3–4 sizes per page max; body ≥16px; nothing below 12px.
 - Motion: hard cuts, straight-line slides, subtle fades; 150–250ms with mechanical easing (`cubic-bezier(0.16, 1, 0.3, 1)`); no bouncy/elastic easing. Intro drift animation runs once on first load only. Respect `prefers-reduced-motion` everywhere.

@@ -1,4 +1,4 @@
-import { Archivo } from "next/font/google";
+import { Saira } from "next/font/google";
 import localFont from "next/font/local";
 
 export const satoshi = localFont({
@@ -18,9 +18,14 @@ export const satoshi = localFont({
   display: "swap",
 });
 
-export const archivo = Archivo({
+/**
+ * Era "speed type": Saira variable with the width axis; display roles
+ * condense it via font-stretch and lean on true italics.
+ */
+export const saira = Saira({
   subsets: ["latin"],
-  weight: "variable",
-  variable: "--font-archivo",
+  style: ["normal", "italic"],
+  axes: ["wdth"],
+  variable: "--font-saira",
   display: "swap",
 });

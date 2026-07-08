@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { archivo, satoshi } from "./fonts";
+import { saira, satoshi } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${satoshi.variable} ${archivo.variable} h-full antialiased`}
+      className={`${satoshi.variable} ${saira.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>

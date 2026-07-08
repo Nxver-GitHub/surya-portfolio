@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { openCount, pavilions, type Pavilion } from "../../../content/pavilions";
+import { liveries } from "../../../content/liveries";
+import {
+  openCount,
+  pavilions,
+  type Pavilion,
+} from "../../../content/pavilions";
+import { LiveryStripe } from "../livery/LiveryStripe";
 import { useLockedNotice } from "./useLockedNotice";
 
 const LABEL_SIDE_CLASSES: Record<Pavilion["labelSide"], string> = {
-  top: "bottom-full mb-2.5 left-1/2 -translate-x-1/2",
-  bottom: "top-full mt-2.5 left-1/2 -translate-x-1/2",
-  left: "right-full mr-3 top-1/2 -translate-y-1/2",
-  right: "left-full ml-3 top-1/2 -translate-y-1/2",
+  top: "bottom-full mb-3 left-1/2 -translate-x-1/2",
+  bottom: "top-full mt-3 left-1/2 -translate-x-1/2",
+  left: "right-full mr-3.5 top-1/2 -translate-y-1/2",
+  right: "left-full ml-3.5 top-1/2 -translate-y-1/2",
 };
 
 const CIRCUIT_PATH =
@@ -23,33 +29,49 @@ export function CircuitMap() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="relative mx-auto w-full max-w-5xl grow" style={{ aspectRatio: "1000 / 560" }}>
-        {/* Circuit ribbon — decorative */}
+      <div
+        className="relative mx-auto w-full max-w-5xl grow"
+        style={{ aspectRatio: "1000 / 560" }}
+      >
+        {/* Night circuit ribbon — decorative */}
         <svg
           viewBox="0 0 1000 560"
           className="absolute inset-0 h-full w-full"
           aria-hidden="true"
           focusable="false"
         >
+          {/* kerb edge */}
           <path
             d={CIRCUIT_PATH}
             fill="none"
-            stroke="var(--color-ink)"
-            strokeWidth="14"
+            stroke="#43484f"
+            strokeWidth="18"
             strokeLinejoin="round"
           />
+          {/* tarmac */}
+          <path
+            d={CIRCUIT_PATH}
+            fill="none"
+            stroke="#212429"
+            strokeWidth="13"
+            strokeLinejoin="round"
+          />
+          {/* centerline */}
           <path
             d={CIRCUIT_PATH}
             fill="none"
             stroke="var(--color-track)"
-            strokeWidth="3"
-            strokeDasharray="14 12"
+            strokeWidth="2"
+            strokeDasharray="12 14"
             strokeLinejoin="round"
+            opacity="0.7"
           />
-          {/* Start/finish line at Career */}
+          {/* start/finish checkers at Career */}
           <g transform="translate(150 130)">
-            <rect x="-5" y="-24" width="10" height="14" fill="var(--color-paper)" />
-            <rect x="-5" y="10" width="10" height="14" fill="var(--color-paper)" />
+            <rect x="-3" y="-9" width="6" height="6" fill="#e8e6e1" />
+            <rect x="-3" y="3" width="6" height="6" fill="#e8e6e1" />
+            <rect x="-9" y="-3" width="6" height="6" fill="#e8e6e1" />
+            <rect x="3" y="-3" width="6" height="6" fill="#e8e6e1" />
           </g>
         </svg>
 
@@ -69,11 +91,17 @@ export function CircuitMap() {
                 onBlur={() => setActive(null)}
                 className="group relative flex items-center justify-center outline-none"
               >
-                <span className="block size-5 rounded-full border-4 border-accent bg-paper transition-transform duration-(--duration-snap) ease-(--ease-mech) group-hover:scale-125 group-focus-visible:scale-125 group-focus-visible:ring-2 group-focus-visible:ring-ink" />
                 <span
-                  className={`absolute whitespace-nowrap bg-ink px-2.5 py-1 font-display text-sm font-semibold tracking-widest text-track uppercase transition-colors duration-(--duration-snap) group-hover:bg-accent group-hover:text-paper group-focus-visible:bg-accent group-focus-visible:text-paper ${LABEL_SIDE_CLASSES[p.labelSide]}`}
+                  className="block size-4 rounded-full border-2 bg-chrome transition-transform duration-(--duration-snap) ease-(--ease-mech) group-hover:scale-125 group-focus-visible:scale-125 group-focus-visible:ring-2 group-focus-visible:ring-track"
+                  style={{ borderColor: liveries[p.livery].key }}
+                />
+                <span
+                  className={`panel clip-cut absolute flex flex-col whitespace-nowrap transition-colors duration-(--duration-snap) group-hover:border-track ${LABEL_SIDE_CLASSES[p.labelSide]}`}
                 >
-                  {p.name}
+                  <LiveryStripe livery={p.livery} />
+                  <span className="px-3 py-1 font-display text-base font-bold tracking-wide text-chrome italic uppercase group-hover:text-track group-focus-visible:text-track">
+                    {p.name}
+                  </span>
                 </span>
               </Link>
             ) : (
@@ -90,15 +118,18 @@ export function CircuitMap() {
                   noticedId === p.id ? "locked-shake" : ""
                 }`}
               >
-                <span className="block size-4 rounded-full border-4 border-ink/30 bg-track-deep group-focus-visible:ring-2 group-focus-visible:ring-ink" />
+                <span className="block size-3 rounded-full border-2 border-steel bg-panel group-focus-visible:ring-2 group-focus-visible:ring-track" />
                 <span
-                  className={`absolute whitespace-nowrap border border-ink/25 bg-track px-2.5 py-1 font-display text-sm font-semibold tracking-widest text-ink/50 uppercase ${LABEL_SIDE_CLASSES[p.labelSide]}`}
+                  className={`panel clip-cut absolute flex flex-col whitespace-nowrap opacity-70 ${LABEL_SIDE_CLASSES[p.labelSide]}`}
                 >
-                  {p.name}
+                  <LiveryStripe livery={p.livery} muted />
+                  <span className="px-3 py-1 font-display text-base font-semibold tracking-wide text-silver italic uppercase">
+                    {p.name}
+                  </span>
                 </span>
                 <span
                   role="status"
-                  className={`pointer-events-none absolute bottom-full mb-8 whitespace-nowrap bg-accent px-2 py-0.5 font-display text-xs font-bold tracking-widest text-paper uppercase transition-opacity duration-(--duration-snap) ${
+                  className={`pointer-events-none absolute bottom-full mb-10 whitespace-nowrap bg-accent px-2 py-0.5 font-display text-sm font-bold tracking-wider text-chrome italic uppercase transition-opacity duration-(--duration-snap) ${
                     noticedId === p.id ? "opacity-100" : "opacity-0"
                   }`}
                 >
@@ -111,14 +142,21 @@ export function CircuitMap() {
       </div>
 
       {/* Console status bar */}
-      <div className="mx-auto mt-6 flex w-full max-w-5xl items-center justify-between border-t-4 border-ink pt-3">
-        <p className="font-display text-sm font-semibold tracking-widest uppercase">
-          {active
-            ? `${active.name} — ${active.caption}`
-            : "Select a pavilion"}
+      <div className="panel clip-cut mx-auto mt-6 flex w-full max-w-5xl items-center justify-between px-4 py-2.5">
+        <p className="font-display text-base font-bold tracking-wide italic uppercase">
+          {active ? (
+            <>
+              <span style={{ color: liveries[active.livery].key }}>
+                {active.name}
+              </span>
+              <span className="text-silver"> — {active.caption}</span>
+            </>
+          ) : (
+            <span className="text-silver">Select a pavilion</span>
+          )}
         </p>
-        <p className="font-display text-sm font-semibold tracking-widest text-ink-soft uppercase">
-          {openCount}/{pavilions.length} pavilions open
+        <p className="font-display text-sm font-semibold tracking-widest text-track italic uppercase">
+          {openCount}/{pavilions.length} open
         </p>
       </div>
     </div>

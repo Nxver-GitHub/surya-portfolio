@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  /* Palette — R4 warm racing system */
-  --color-track: #fab217; /* R4 "Positive Yellow" — hero fields */
-  --color-track-deep: #de9805; /* pressed / shaded yellow */
-  --color-ink: #1c1a17; /* charcoal — text, circuit ribbon */
-  --color-ink-soft: #4a4640; /* secondary text on light surfaces */
-  --color-paper: #f5f1e8; /* warm off-white surfaces */
-  --color-grid: #8a8378; /* warm grey — metadata, locked states */
-  --color-accent: #d62e2e; /* racing red — the single accent */
+  /* Base — night-garage graphite, metallic panels */
+  --color-asphalt: #0e0f11; /* page background */
+  --color-panel: #16181b; /* panel gradient bottom */
+  --color-panel-2: #1f2226; /* panel gradient top */
+  --color-steel: #383d44; /* panel borders */
+  --color-chrome: #e8e6e1; /* primary text */
+  --color-silver: #9ba0a8; /* secondary text / metadata */
+
+  /* Accents — livery scale only, never full backgrounds */
+  --color-track: #fab217; /* camel yellow — primary accent */
+  --color-accent: #d2222a; /* racing red — alerts, LOCKED */
 
   /* Type */
-  --font-display: var(--font-archivo), "Archivo", sans-serif;
+  --font-display: var(--font-saira), "Saira", sans-serif;
   --font-body: var(--font-satoshi), "Satoshi", sans-serif;
 
   /* Motion — mechanical, no bounce */
@@ -22,14 +25,55 @@
 }
 
 body {
-  background: var(--color-track);
-  color: var(--color-ink);
+  background:
+    radial-gradient(120% 90% at 50% 0%, #191c20 0%, var(--color-asphalt) 55%);
+  color: var(--color-chrome);
   font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+/* Faint CRT scanlines over the whole shell */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.018) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* Display type is always condensed — the era's speed-type width */
+.font-display {
+  font-stretch: 75%;
 }
 
 ::selection {
-  background: var(--color-ink);
-  color: var(--color-track);
+  background: var(--color-track);
+  color: var(--color-asphalt);
+}
+
+/* Metallic menu panel: vertical sheen + lit top edge */
+.panel {
+  background: linear-gradient(180deg, var(--color-panel-2), var(--color-panel));
+  border: 1px solid var(--color-steel);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* Angular corner cuts, opposing corners — era panel silhouette */
+.clip-cut {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% 100%,
+    12px 100%,
+    0 calc(100% - 12px)
+  );
 }
 
 /* Locked-pavilion refusal: short mechanical shake */

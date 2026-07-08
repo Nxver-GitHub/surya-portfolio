@@ -1,3 +1,5 @@
+import type { LiveryId } from "./liveries";
+
 export type PavilionStatus = "open" | "locked";
 
 export interface Pavilion {
@@ -12,6 +14,8 @@ export interface Pavilion {
   map: { x: number; y: number };
   /** Which side of the node the label sits on, to keep it clear of the ribbon */
   labelSide: "top" | "bottom" | "left" | "right";
+  /** Livery-inspired decal system for this pavilion's chrome */
+  livery: LiveryId;
 }
 
 export const pavilions: readonly Pavilion[] = [
@@ -23,6 +27,7 @@ export const pavilions: readonly Pavilion[] = [
     status: "open",
     map: { x: 15, y: 23.2 },
     labelSide: "bottom",
+    livery: "marlboro",
   },
   {
     id: "garage",
@@ -32,6 +37,7 @@ export const pavilions: readonly Pavilion[] = [
     status: "locked",
     map: { x: 56, y: 23.2 },
     labelSide: "top",
+    livery: "gulf",
   },
   {
     id: "license",
@@ -41,6 +47,7 @@ export const pavilions: readonly Pavilion[] = [
     status: "locked",
     map: { x: 70.5, y: 42.3 },
     labelSide: "right",
+    livery: "west",
   },
   {
     id: "missions",
@@ -50,6 +57,7 @@ export const pavilions: readonly Pavilion[] = [
     status: "locked",
     map: { x: 75, y: 60.7 },
     labelSide: "right",
+    livery: "jager",
   },
   {
     id: "scapes",
@@ -59,6 +67,7 @@ export const pavilions: readonly Pavilion[] = [
     status: "locked",
     map: { x: 61.2, y: 85.7 },
     labelSide: "bottom",
+    livery: "leyton",
   },
   {
     id: "cafe",
@@ -68,6 +77,7 @@ export const pavilions: readonly Pavilion[] = [
     status: "locked",
     map: { x: 33, y: 89 },
     labelSide: "bottom",
+    livery: "warsteiner",
   },
   {
     id: "lobby",
@@ -77,6 +87,7 @@ export const pavilions: readonly Pavilion[] = [
     status: "locked",
     map: { x: 19.8, y: 67 },
     labelSide: "left",
+    livery: "redbull",
   },
 ] as const;
 
