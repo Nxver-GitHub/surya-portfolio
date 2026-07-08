@@ -4,6 +4,7 @@ import { useState } from "react";
 import { seasons, type Season } from "../../../content/career";
 import { LockedChip } from "./LockedChip";
 import { EventCard } from "./EventCard";
+import { OrgLogo } from "./OrgLogo";
 
 function seasonRefs(season: Season) {
   const cars = new Set<string>();
@@ -44,12 +45,17 @@ export function CareerBoard() {
               >
                 {s.number}
               </span>
-              <span
-                className={`ts-hard block font-display text-lg leading-tight font-bold tracking-wide uppercase ${
-                  isActive ? "text-white" : "text-chrome"
-                }`}
-              >
-                {s.name}
+              <span className="flex items-center gap-2">
+                {s.logo ? (
+                  <OrgLogo logo={s.logo} org={s.name} size={22} />
+                ) : null}
+                <span
+                  className={`ts-hard block font-display text-lg leading-tight font-bold tracking-wide uppercase ${
+                    isActive ? "text-white" : "text-chrome"
+                  }`}
+                >
+                  {s.name}
+                </span>
               </span>
               <span
                 className={`block text-xs ${isActive ? "text-white/70" : "text-silver"}`}

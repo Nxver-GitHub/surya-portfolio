@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { allEventSlugs, findEvent } from "../../../../content/career";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
 import { LockedChip } from "@/components/career/LockedChip";
+import { OrgLogo } from "@/components/career/OrgLogo";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 
 interface EventPageProps {
@@ -68,7 +69,14 @@ export default async function EventPage({ params }: EventPageProps) {
           </GtTitle>
         </div>
 
-        <dl className="mt-8 grid max-w-3xl grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 flex max-w-3xl items-center gap-3">
+          <OrgLogo logo={event.logo} org={event.org} size={40} />
+          <p className="ts-hard font-display text-lg font-bold tracking-wide text-chrome uppercase">
+            {event.org}
+          </p>
+        </div>
+
+        <dl className="mt-4 grid max-w-3xl grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <MetaField label="Track" value={event.org} />
           <MetaField label="Team" value={event.role} />
           <MetaField label="Stint" value={event.dates} />

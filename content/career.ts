@@ -8,6 +8,8 @@
 export interface CareerEvent {
   slug: string;
   title: string;
+  /** Org logo path under /public (omit to render an initials badge) */
+  logo?: string;
   /** Track — organization or program */
   org: string;
   /** Team — role/title */
@@ -31,6 +33,8 @@ export interface CareerEvent {
 
 export interface Season {
   id: string;
+  /** School/org logo for the season plate */
+  logo?: string;
   /** e.g. "Season 1" */
   number: string;
   name: string;
@@ -43,6 +47,7 @@ export interface Season {
 export const seasons: readonly Season[] = [
   {
     id: "s1",
+    logo: "/logos/dvc.png",
     number: "Season 1",
     name: "Diablo Valley",
     period: "2022 – 2024",
@@ -109,6 +114,7 @@ export const seasons: readonly Season[] = [
       },
       {
         slug: "puma-stem-scholars",
+        logo: "/logos/dvc.png",
         title: "NSF Puma STEM Scholars",
         org: "DVC Puma STEM Scholars (NSF-funded)",
         role: "Student Representative",
@@ -129,6 +135,7 @@ export const seasons: readonly Season[] = [
   },
   {
     id: "s2",
+    logo: "/logos/ucsc.png",
     number: "Season 2",
     name: "UC Santa Cruz",
     period: "2024 – 2026",
@@ -159,6 +166,7 @@ export const seasons: readonly Season[] = [
       },
       {
         slug: "benefitfinder-cruzhacks",
+        logo: "/logos/cruzhacks.png",
         title: "BenefitFinder wins at CruzHacks",
         org: "CruzHacks 2025",
         role: "Full-stack builder",
@@ -207,6 +215,7 @@ export const seasons: readonly Season[] = [
     events: [
       {
         slug: "16vc",
+        logo: "/logos/16vc.png",
         title: "16VC",
         org: "16VC",
         role: "Venture Associate",
@@ -224,6 +233,7 @@ export const seasons: readonly Season[] = [
       },
       {
         slug: "credence-ef-hackathon",
+        logo: "/logos/ef.png",
         title: "Credence at EF Marketing Agents Hackathon",
         org: "Entrepreneur First",
         role: "Full-stack builder",
@@ -244,6 +254,7 @@ export const seasons: readonly Season[] = [
       },
       {
         slug: "lvlup-ventures",
+        logo: "/logos/lvlup.png",
         title: "LvlUp Ventures",
         org: "LvlUp Ventures (Shopline-backed seed fund)",
         role: "Venture Scout",
@@ -262,6 +273,7 @@ export const seasons: readonly Season[] = [
       },
       {
         slug: "venture-starters",
+        logo: "/logos/venture-starters.png",
         title: "Venture Starters",
         org: "Venture Starters",
         role: "Venture Analyst Intern",
@@ -279,6 +291,7 @@ export const seasons: readonly Season[] = [
       },
       {
         slug: "tripweaver-locus",
+        logo: "/logos/locus.png",
         title: "TripWeaver at Locus Agentic Payments Hackathon",
         org: "Locus (Y Combinator FW25)",
         role: "Agent systems builder",

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CareerEvent } from "../../../content/career";
+import { OrgLogo } from "./OrgLogo";
 
 /** Orange small-caps label over a white value — the GT2 HUD field. */
 function Field({ label, value }: { label: string; value: string }) {
@@ -22,9 +23,12 @@ export function EventCard({ event }: { event: CareerEvent }) {
       className="group block border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)] outline-none transition-colors duration-(--duration-snap) hover:border-gt focus-visible:ring-2 focus-visible:ring-gt-bright"
     >
       <div className="p-4">
-        <h3 className="ts-hard font-display text-xl font-bold tracking-wide text-chrome uppercase group-hover:text-gt-bright">
-          {event.title}
-        </h3>
+        <div className="flex items-center gap-3">
+          <OrgLogo logo={event.logo} org={event.org} size={32} />
+          <h3 className="ts-hard font-display text-xl font-bold tracking-wide text-chrome uppercase group-hover:text-gt-bright">
+            {event.title}
+          </h3>
+        </div>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
           <Field label="Track" value={event.org} />
           <Field label="Team" value={event.role} />
