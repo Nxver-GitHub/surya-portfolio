@@ -56,6 +56,7 @@ export const seasons: readonly Season[] = [
     events: [
       {
         slug: "product-dev-club",
+        logo: "/logos/product-dev-club.png",
         title: "Founding Product Development Club",
         org: "Diablo Valley College",
         role: "Founder & President",
@@ -75,6 +76,7 @@ export const seasons: readonly Season[] = [
       },
       {
         slug: "project-bracket",
+        logo: "/logos/project-bracket.png",
         title: "Three stints at Project Bracket",
         org: "Project Bracket, DVC",
         role: "Team Member → ML Project Manager → Web Dev Project Manager",
@@ -95,6 +97,7 @@ export const seasons: readonly Season[] = [
       },
       {
         slug: "code-for-your-future",
+        logo: "/logos/code-for-your-future.png",
         title: "Code for Your Future",
         org: "Code for Your Future, DVC",
         role: "VP of Growth & Strategy",
@@ -144,6 +147,7 @@ export const seasons: readonly Season[] = [
     events: [
       {
         slug: "slugai-calendarize",
+        logo: "/logos/slugai.png",
         title: "Calendarize at SlugAI",
         org: "SlugAI — UCSC's AI innovation club",
         role: "Product Developer",
