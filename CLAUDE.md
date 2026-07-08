@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+@AGENTS.md
+
 ## Project
 
 "Surya Racing Portfolio" — a Gran Turismo / Ridge Racer Type 4–inspired personal portfolio site. The home page is a GT-style world map with pavilions, each mapping to a portfolio facet:
@@ -29,8 +31,6 @@ The `Docs/` folder is **local-only and gitignored** — this repo is public, so 
 
 ## Commands
 
-Once scaffolded (`pnpm create next-app`), the standard commands are:
-
 ```bash
 pnpm dev          # local dev server
 pnpm build        # production build (must pass before any PR)
@@ -40,7 +40,7 @@ pnpm test -- path/to/file.test.ts   # single test file
 pnpm exec playwright test           # e2e tests
 ```
 
-Update this section with the real scripts as soon as `package.json` exists.
+Vitest and Playwright are not yet installed — add them with the first feature that needs tests.
 
 ## Architecture
 
