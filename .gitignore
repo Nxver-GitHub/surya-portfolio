@@ -24,9 +24,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# Env files
-.env*
+# Env files — API keys (LLM providers, analytics, etc.) live in Vercel env
+# vars or local .env files only; never commit any variant
+.env
+.env.*
 !.env.example
+
+# Secrets / credentials, belt-and-suspenders
+*.pem
+*.key
+*.p12
+credentials*.json
+service-account*.json
 
 # Vercel
 .vercel
@@ -35,5 +44,24 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Playwright MCP artifacts
-.playwright-mcp/
+# Tests & coverage
+coverage/
+playwright-report/
+test-results/
+
+# Logs & caches
+*.log
+.turbo/
+.eslintcache
+
+# Editor/OS cruft
+.idea/
+.vscode/
+*.swp
+
+# Local Claude Code settings (keep shared settings tracked if added later)
+.claude/settings.local.json
+
+# Blender autosaves (source .blend files live in assets-src/)
+*.blend1
+*.blend2
