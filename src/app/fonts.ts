@@ -1,4 +1,4 @@
-import { Saira } from "next/font/google";
+import { Saira, Source_Serif_4 } from "next/font/google";
 import localFont from "next/font/local";
 
 export const satoshi = localFont({
@@ -27,5 +27,13 @@ export const saira = Saira({
   style: ["normal", "italic"],
   axes: ["wdth"],
   variable: "--font-saira",
+  display: "swap",
+});
+
+/** GT2 page titles are a heavy drop-shadowed serif ("License Test"). */
+export const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-serif-title",
   display: "swap",
 });

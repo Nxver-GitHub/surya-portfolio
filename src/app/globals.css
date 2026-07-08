@@ -1,20 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  /* Base — night-garage graphite, metallic panels */
-  --color-asphalt: #0e0f11; /* page background */
-  --color-panel: #16181b; /* panel gradient bottom */
-  --color-panel-2: #1f2226; /* panel gradient top */
-  --color-steel: #383d44; /* panel borders */
-  --color-chrome: #e8e6e1; /* primary text */
-  --color-silver: #9ba0a8; /* secondary text / metadata */
-
-  /* Accents — livery scale only, never full backgrounds */
-  --color-track: #fab217; /* camel yellow — primary accent */
-  --color-accent: #d2222a; /* racing red — alerts, LOCKED */
+  /* GT2 system palette */
+  --color-asphalt: #0a0a0b; /* page black */
+  --color-panel: #141416; /* raised surfaces */
+  --color-steel: #34363a; /* hairline borders */
+  --color-chrome: #f2f0ec; /* primary text (white w/ shadow) */
+  --color-silver: #a4a7ad; /* secondary text */
+  --color-gt: #ef8100; /* GT2 system orange — bars, plates, chips */
+  --color-gt-bright: #ffb000; /* orange highlight / cursor */
+  --color-accent: #c81f1f; /* red — title rules, LOCKED */
 
   /* Type */
-  --font-display: var(--font-saira), "Saira", sans-serif;
+  --font-title: var(--font-serif-title), Georgia, serif; /* GT2 headers */
+  --font-display: var(--font-saira), "Saira", sans-serif; /* condensed UI */
   --font-body: var(--font-satoshi), "Satoshi", sans-serif;
 
   /* Motion — mechanical, no bounce */
@@ -25,55 +24,117 @@
 }
 
 body {
-  background:
-    radial-gradient(120% 90% at 50% 0%, #191c20 0%, var(--color-asphalt) 55%);
+  /* GT2 black with fine grid-paper texture */
+  background-color: var(--color-asphalt);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 12px 12px;
   color: var(--color-chrome);
   font-family: var(--font-body);
   min-height: 100vh;
 }
 
-/* Faint CRT scanlines over the whole shell */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(255, 255, 255, 0.018) 0 1px,
-    transparent 1px 3px
-  );
-}
-
-/* Display type is always condensed — the era's speed-type width */
-.font-display {
-  font-stretch: 75%;
-}
-
 ::selection {
-  background: var(--color-track);
+  background: var(--color-gt);
   color: var(--color-asphalt);
 }
 
-/* Metallic menu panel: vertical sheen + lit top edge */
-.panel {
-  background: linear-gradient(180deg, var(--color-panel-2), var(--color-panel));
-  border: 1px solid var(--color-steel);
-  border-top-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+/* Display type is always condensed — the era's narrow UI width */
+.font-display {
+  font-stretch: 87.5%;
 }
 
-/* Angular corner cuts, opposing corners — era panel silhouette */
-.clip-cut {
-  clip-path: polygon(
-    0 0,
-    calc(100% - 12px) 0,
-    100% 12px,
-    100% 100%,
-    12px 100%,
-    0 calc(100% - 12px)
+@layer components {
+/* GT2 text treatment: hard black drop shadow on UI text */
+.ts-hard {
+  text-shadow:
+    1px 1px 0 rgba(0, 0, 0, 0.95),
+    2px 2px 3px rgba(0, 0, 0, 0.55);
+}
+
+/* Page title: heavy serif + red rule that kicks up diagonally at the end */
+.gt-title {
+  font-family: var(--font-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.95),
+    3px 3px 4px rgba(0, 0, 0, 0.5);
+}
+
+.gt-rule {
+  position: relative;
+  height: 3px;
+  background: var(--color-accent);
+}
+
+.gt-rule::after {
+  content: "";
+  position: absolute;
+  right: -14px;
+  bottom: 0;
+  width: 18px;
+  height: 3px;
+  background: var(--color-accent);
+  transform: rotate(-38deg);
+  transform-origin: left bottom;
+}
+
+/* Breadcrumb bar: orange strip bleeding off the right screen edge */
+.gt-crumb {
+  background: linear-gradient(180deg, #ff9d1f, var(--color-gt) 55%, #d06e00);
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Stamped plate button: black fill, doubled orange border */
+.plate {
+  background: #0d0d0e;
+  border: 1px solid var(--color-gt);
+  box-shadow:
+    inset 0 0 0 2px #0d0d0e,
+    inset 0 0 0 3px var(--color-gt),
+    1px 2px 0 rgba(0, 0, 0, 0.8);
+}
+
+.plate-hot {
+  background: linear-gradient(180deg, #ff9d1f, var(--color-gt) 55%, #d06e00);
+  border: 1px solid #5b3200;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    1px 2px 0 rgba(0, 0, 0, 0.8);
+}
+
+/* Status lozenge: the rounded orange back-button / chip shape */
+.lozenge {
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff9d1f, var(--color-gt) 55%, #d06e00);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    1px 2px 0 rgba(0, 0, 0, 0.8);
+}
+
+/* Enamel license badge: colored rim, metallic silver face */
+.badge-rim {
+  border-radius: 9px;
+  padding: 3px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    1px 2px 2px rgba(0, 0, 0, 0.7);
+}
+
+.badge-face {
+  border-radius: 6px;
+  background: linear-gradient(
+    180deg,
+    #f4f4f5 0%,
+    #c6c9ce 42%,
+    #9fa3aa 55%,
+    #d4d6da 100%
   );
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.55);
+}
 }
 
 /* Locked-pavilion refusal: short mechanical shake */

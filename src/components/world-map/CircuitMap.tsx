@@ -2,20 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { liveries } from "../../../content/liveries";
 import {
   openCount,
   pavilions,
   type Pavilion,
 } from "../../../content/pavilions";
-import { LiveryStripe } from "../livery/LiveryStripe";
+import { LicenseBadge } from "../gt/LicenseBadge";
 import { useLockedNotice } from "./useLockedNotice";
 
 const LABEL_SIDE_CLASSES: Record<Pavilion["labelSide"], string> = {
-  top: "bottom-full mb-3 left-1/2 -translate-x-1/2",
-  bottom: "top-full mt-3 left-1/2 -translate-x-1/2",
-  left: "right-full mr-3.5 top-1/2 -translate-y-1/2",
-  right: "left-full ml-3.5 top-1/2 -translate-y-1/2",
+  top: "bottom-full mb-2 left-1/2 -translate-x-1/2 items-center",
+  bottom: "top-full mt-2 left-1/2 -translate-x-1/2 items-center",
+  left: "right-full mr-3 top-1/2 -translate-y-1/2 items-end",
+  right: "left-full ml-3 top-1/2 -translate-y-1/2 items-start",
 };
 
 const CIRCUIT_PATH =
@@ -40,122 +39,126 @@ export function CircuitMap() {
           aria-hidden="true"
           focusable="false"
         >
-          {/* kerb edge */}
           <path
             d={CIRCUIT_PATH}
             fill="none"
-            stroke="#43484f"
+            stroke="#3c3f44"
             strokeWidth="18"
             strokeLinejoin="round"
           />
-          {/* tarmac */}
           <path
             d={CIRCUIT_PATH}
             fill="none"
-            stroke="#212429"
+            stroke="#1b1d20"
             strokeWidth="13"
             strokeLinejoin="round"
           />
-          {/* centerline */}
           <path
             d={CIRCUIT_PATH}
             fill="none"
-            stroke="var(--color-track)"
+            stroke="var(--color-gt)"
             strokeWidth="2"
             strokeDasharray="12 14"
             strokeLinejoin="round"
-            opacity="0.7"
+            opacity="0.75"
           />
           {/* start/finish checkers at Career */}
           <g transform="translate(150 130)">
-            <rect x="-3" y="-9" width="6" height="6" fill="#e8e6e1" />
-            <rect x="-3" y="3" width="6" height="6" fill="#e8e6e1" />
-            <rect x="-9" y="-3" width="6" height="6" fill="#e8e6e1" />
-            <rect x="3" y="-3" width="6" height="6" fill="#e8e6e1" />
+            <rect x="-3" y="-9" width="6" height="6" fill="#f2f0ec" />
+            <rect x="-3" y="3" width="6" height="6" fill="#f2f0ec" />
+            <rect x="-9" y="-3" width="6" height="6" fill="#f2f0ec" />
+            <rect x="3" y="-3" width="6" height="6" fill="#f2f0ec" />
           </g>
         </svg>
 
-        {/* Pavilion nodes — real controls overlaid on the ribbon */}
-        {pavilions.map((p) => (
-          <div
-            key={p.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${p.map.x}%`, top: `${p.map.y}%` }}
-          >
-            {p.status === "open" ? (
-              <Link
-                href={`/${p.slug}`}
-                onMouseEnter={() => setActive(p)}
-                onMouseLeave={() => setActive(null)}
-                onFocus={() => setActive(p)}
-                onBlur={() => setActive(null)}
-                className="group relative flex items-center justify-center outline-none"
-              >
-                <span
-                  className="block size-4 rounded-full border-2 bg-chrome transition-transform duration-(--duration-snap) ease-(--ease-mech) group-hover:scale-125 group-focus-visible:scale-125 group-focus-visible:ring-2 group-focus-visible:ring-track"
-                  style={{ borderColor: liveries[p.livery].key }}
-                />
-                <span
-                  className={`panel clip-cut absolute flex flex-col whitespace-nowrap transition-colors duration-(--duration-snap) group-hover:border-track ${LABEL_SIDE_CLASSES[p.labelSide]}`}
-                >
-                  <LiveryStripe livery={p.livery} />
-                  <span className="px-3 py-1 font-display text-base font-bold tracking-wide text-chrome italic uppercase group-hover:text-track group-focus-visible:text-track">
-                    {p.name}
-                  </span>
-                </span>
-              </Link>
-            ) : (
-              <button
-                type="button"
-                aria-disabled="true"
-                aria-label={`${p.name} — locked, unlocks soon`}
-                onMouseEnter={() => setActive(p)}
-                onMouseLeave={() => setActive(null)}
-                onFocus={() => setActive(p)}
-                onBlur={() => setActive(null)}
-                onClick={() => notify(p.id)}
-                className={`group relative flex cursor-not-allowed items-center justify-center outline-none ${
-                  noticedId === p.id ? "locked-shake" : ""
+        {/* Pavilion nodes: GT2 enamel badges with name plates */}
+        {pavilions.map((p) => {
+          const open = p.status === "open";
+          const inner = (
+            <>
+              <LicenseBadge
+                glyph={p.glyph}
+                livery={p.livery}
+                size={52}
+                muted={!open}
+                className={
+                  open
+                    ? "transition-transform duration-(--duration-snap) ease-(--ease-mech) group-hover:scale-110 group-focus-visible:scale-110"
+                    : ""
+                }
+              />
+              <span
+                className={`ts-hard mt-1 font-display text-sm font-bold tracking-wider whitespace-nowrap uppercase ${
+                  open
+                    ? "text-chrome group-hover:text-gt-bright group-focus-visible:text-gt-bright"
+                    : "text-silver/80"
                 }`}
               >
-                <span className="block size-3 rounded-full border-2 border-steel bg-panel group-focus-visible:ring-2 group-focus-visible:ring-track" />
-                <span
-                  className={`panel clip-cut absolute flex flex-col whitespace-nowrap opacity-70 ${LABEL_SIDE_CLASSES[p.labelSide]}`}
+                {p.name}
+              </span>
+            </>
+          );
+
+          return (
+            <div
+              key={p.id}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${p.map.x}%`, top: `${p.map.y}%` }}
+            >
+              {open ? (
+                <Link
+                  href={`/${p.slug}`}
+                  onMouseEnter={() => setActive(p)}
+                  onMouseLeave={() => setActive(null)}
+                  onFocus={() => setActive(p)}
+                  onBlur={() => setActive(null)}
+                  className={`group absolute flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-gt-bright ${LABEL_SIDE_CLASSES[p.labelSide]}`}
                 >
-                  <LiveryStripe livery={p.livery} muted />
-                  <span className="px-3 py-1 font-display text-base font-semibold tracking-wide text-silver italic uppercase">
-                    {p.name}
-                  </span>
-                </span>
-                <span
-                  role="status"
-                  className={`pointer-events-none absolute bottom-full mb-10 whitespace-nowrap bg-accent px-2 py-0.5 font-display text-sm font-bold tracking-wider text-chrome italic uppercase transition-opacity duration-(--duration-snap) ${
-                    noticedId === p.id ? "opacity-100" : "opacity-0"
+                  {inner}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  aria-disabled="true"
+                  aria-label={`${p.name} — locked, unlocks soon`}
+                  onMouseEnter={() => setActive(p)}
+                  onMouseLeave={() => setActive(null)}
+                  onFocus={() => setActive(p)}
+                  onBlur={() => setActive(null)}
+                  onClick={() => notify(p.id)}
+                  className={`group absolute flex cursor-not-allowed flex-col outline-none focus-visible:ring-2 focus-visible:ring-gt-bright ${LABEL_SIDE_CLASSES[p.labelSide]} ${
+                    noticedId === p.id ? "locked-shake" : ""
                   }`}
                 >
-                  {noticedId === p.id ? "Unlocks soon" : ""}
-                </span>
-              </button>
-            )}
-          </div>
-        ))}
+                  {inner}
+                  <span
+                    role="status"
+                    className={`ts-hard pointer-events-none absolute -top-7 bg-accent px-2 py-0.5 font-display text-xs font-bold tracking-wider whitespace-nowrap text-white uppercase transition-opacity duration-(--duration-snap) ${
+                      noticedId === p.id ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    {noticedId === p.id ? "Unlocks soon" : ""}
+                  </span>
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Console status bar */}
-      <div className="panel clip-cut mx-auto mt-6 flex w-full max-w-5xl items-center justify-between px-4 py-2.5">
-        <p className="font-display text-base font-bold tracking-wide italic uppercase">
+      {/* GT2 bottom status bar */}
+      <div className="mx-auto mt-6 flex w-full max-w-5xl items-center justify-between border-t border-steel pt-3">
+        <p className="ts-hard font-display text-base font-bold tracking-wider uppercase">
           {active ? (
             <>
-              <span style={{ color: liveries[active.livery].key }}>
-                {active.name}
-              </span>
-              <span className="text-silver"> — {active.caption}</span>
+              <span className="text-gt-bright">{active.name}</span>
+              <span className="text-silver"> · {active.caption}</span>
             </>
           ) : (
             <span className="text-silver">Select a pavilion</span>
           )}
         </p>
-        <p className="font-display text-sm font-semibold tracking-widest text-track italic uppercase">
+        <p className="lozenge ts-hard px-4 py-1 font-display text-sm font-bold tracking-widest text-white uppercase">
           {openCount}/{pavilions.length} open
         </p>
       </div>
