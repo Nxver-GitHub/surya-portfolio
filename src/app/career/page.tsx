@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
-import { LiveryStripe } from "@/components/livery/LiveryStripe";
+import { CareerBoard } from "@/components/career/CareerBoard";
 
 export const metadata: Metadata = {
   title: "Career — Surya Pugazhenthi",
   description:
-    "Surya Pugazhenthi's education and work history: schools, roles, and outcomes, told season by season.",
+    "Surya Pugazhenthi's education and work history: Diablo Valley College, UC Santa Cruz, product roles, hackathon wins, and venture scouting — season by season.",
 };
 
 export default function CareerPage() {
@@ -19,24 +19,17 @@ export default function CareerPage() {
         </LozengeLink>
       </header>
 
-      <main className="flex flex-1 flex-col">
+      <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
           <GtTitle kicker="Story mode">Career</GtTitle>
+          <p className="mt-3 max-w-2xl text-base text-silver">
+            Three seasons so far: community college, university, and the
+            venture-and-agents era. Pick a season, open an event, read the
+            race report.
+          </p>
         </div>
 
-        <div className="mt-10 max-w-xl border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
-          <LiveryStripe livery="marlboro" />
-          <div className="p-6">
-            <p className="ts-hard font-display text-base font-bold tracking-widest text-gt-bright uppercase">
-              Season data loading
-            </p>
-            <p className="mt-2 text-silver">
-              The season-by-season history of Surya&apos;s education and work
-              is being compiled. Head back to the world map while the grid
-              forms.
-            </p>
-          </div>
-        </div>
+        <CareerBoard />
       </main>
     </div>
   );
