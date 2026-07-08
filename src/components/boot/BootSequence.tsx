@@ -29,14 +29,15 @@ export function BootSequence() {
   }, []);
 
   useEffect(() => {
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reducedMotion || sessionStorage.getItem(SESSION_KEY)) {
-      setPhase("done");
-      return;
-    }
-    setPhase("cut-orange");
+    // decide after paint: avoids SSR/hydration mismatch on sessionStorage
+    const id = requestAnimationFrame(() => {
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const seen = sessionStorage.getItem(SESSION_KEY);
+      setPhase(reducedMotion || seen ? "done" : "cut-orange");
+    });
+    return () => cancelAnimationFrame(id);
   }, []);
 
   useEffect(() => {
