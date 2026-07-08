@@ -37,7 +37,7 @@ export const pavilions: readonly Pavilion[] = [
     slug: "garage",
     name: "Garage",
     caption: "Projects, presented as cars",
-    status: "locked",
+    status: "open",
     map: { x: 56, y: 23.2 },
     labelSide: "top",
     livery: "gulf",

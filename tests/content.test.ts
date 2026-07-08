@@ -104,3 +104,52 @@ describe("liveries", () => {
     }
   });
 });
+
+describe("cars", () => {
+  it("has unique car ids", async () => {
+    const { cars } = await import("../content/cars");
+    const ids = cars.map((c) => c.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("gives every non-locked car a class, tagline, and lap record", async () => {
+    const { cars } = await import("../content/cars");
+    for (const c of cars.filter((c) => c.status !== "locked")) {
+      expect(c.carClass, c.id).toBeTruthy();
+      expect(c.tagline, c.id).toBeTruthy();
+      expect(c.lapRecord, c.id).toBeTruthy();
+    }
+  });
+
+  it("resolves every career carId to a real car", async () => {
+    const { carById } = await import("../content/cars");
+    for (const season of seasons) {
+      for (const e of season.events) {
+        for (const carId of e.carIds ?? []) {
+          expect(carById.has(carId), `career ${e.slug} → ${carId}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("links car careerEventSlugs back to real career events", async () => {
+    const { cars } = await import("../content/cars");
+    for (const c of cars) {
+      if (c.careerEventSlug) {
+        expect(findEvent(c.careerEventSlug), `${c.id}`).not.toBeNull();
+      }
+    }
+  });
+
+  it("references only defined liveries and existing media files", async () => {
+    const { cars } = await import("../content/cars");
+    for (const c of cars) {
+      expect(liveries[c.livery], c.id).toBeDefined();
+      for (const src of [c.media?.video?.src, c.media?.deck?.src]) {
+        if (src) {
+          expect(existsSync(join(PUBLIC_DIR, src)), `${c.id}: ${src}`).toBe(true);
+        }
+      }
+    }
+  });
+});
