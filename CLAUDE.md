@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+@AGENTS.md
+
 ## Project
 
 "Surya Racing Portfolio" — a Gran Turismo / Ridge Racer Type 4–inspired personal portfolio site. The home page is a GT-style world map with pavilions, each mapping to a portfolio facet:
@@ -29,8 +31,6 @@ The `Docs/` folder is **local-only and gitignored** — this repo is public, so 
 
 ## Commands
 
-Once scaffolded (`pnpm create next-app`), the standard commands are:
-
 ```bash
 pnpm dev          # local dev server
 pnpm build        # production build (must pass before any PR)
@@ -40,7 +40,7 @@ pnpm test -- path/to/file.test.ts   # single test file
 pnpm exec playwright test           # e2e tests
 ```
 
-Update this section with the real scripts as soon as `package.json` exists.
+Vitest and Playwright are not yet installed — add them with the first feature that needs tests.
 
 ## Architecture
 
@@ -59,7 +59,10 @@ Each pavilion is a route under `app/` with a shared shell (section title, conten
 
 ### Design constraints (from the UX doc — enforced, not optional)
 
-- Palette: R4 warm yellow (#FAB217) primary, warm greys/off-whites, dark charcoal text, **one** accent max. No neon/cyberpunk gradients, no glitch effects.
+- Base look: **exact GT2 menu system** (reference: GT2 License Test screen) — black `#0a0a0b` with fine grid-paper texture, GT orange `#EF8100` as the system color. The component vocabulary lives in `globals.css` under `@layer components`: `.gt-crumb` (orange breadcrumb strip bleeding off the right edge), `.gt-title` + `.gt-rule` (heavy drop-shadowed serif title over a red rule with a diagonal kick), `.plate` / `.plate-hot` (stamped black buttons with doubled orange border), `.lozenge` (orange rounded back-button/chip), `.badge-rim` + `.badge-face` (enamel license badge: colored rim, metallic silver face — see `LicenseBadge`), `.ts-hard` (hard black text drop shadow on all UI text). Never flat bright color fields as page backgrounds (an earlier flat-yellow version was explicitly rejected as "flash game" slop).
+- Liveries: components also carry **livery-inspired decal treatments** (`content/liveries.ts`, `LiveryStripe`, badge rim colors) — Marlboro, Gulf, West, Jägermeister, Leyton House, Warsteiner, Red Bull color systems. One livery per pavilion, on card/chip chrome only. **No real brand logos or wordmarks** — colors and patterns only (trademark safety on a public repo/site).
+- Typography: Source Serif 4 bold for page titles (GT2 headers were drop-shadowed serifs), Saira variable condensed (`font-stretch: 87.5%`, mostly upright) for UI/display, Satoshi (self-hosted) for body. No external font CDNs (CSP).
+- Copy tone: racing metaphor as chrome, facts in plain English — real orgs/titles/dates in content, game labels only as small captions; meta/OG tags fully professional.
 - Typography: 3–4 sizes per page max; body ≥16px; nothing below 12px.
 - Motion: hard cuts, straight-line slides, subtle fades; 150–250ms with mechanical easing (`cubic-bezier(0.16, 1, 0.3, 1)`); no bouncy/elastic easing. Intro drift animation runs once on first load only. Respect `prefers-reduced-motion` everywhere.
 - Accessibility: WCAG AA contrast (careful with text on yellow), semantic landmarks/headings, full keyboard navigation across all pavilions.
