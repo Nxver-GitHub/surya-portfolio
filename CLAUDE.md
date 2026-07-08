@@ -59,7 +59,9 @@ Each pavilion is a route under `app/` with a shared shell (section title, conten
 
 ### Design constraints (from the UX doc — enforced, not optional)
 
-- Palette: R4 warm yellow (#FAB217) primary, warm greys/off-whites, dark charcoal text, **one** accent max. No neon/cyberpunk gradients, no glitch effects.
+- Palette: R4 warm yellow (#FAB217) primary, warm greys/off-whites, dark charcoal text, **one** accent: racing red (~#D62E2E). No neon/cyberpunk gradients, no glitch effects.
+- Typography: Satoshi (body) + Archivo (display), both self-hosted — no external font CDNs (CSP).
+- Copy tone: racing metaphor as chrome, facts in plain English — real orgs/titles/dates in content, game labels only as small captions; meta/OG tags fully professional.
 - Typography: 3–4 sizes per page max; body ≥16px; nothing below 12px.
 - Motion: hard cuts, straight-line slides, subtle fades; 150–250ms with mechanical easing (`cubic-bezier(0.16, 1, 0.3, 1)`); no bouncy/elastic easing. Intro drift animation runs once on first load only. Respect `prefers-reduced-motion` everywhere.
 - Accessibility: WCAG AA contrast (careful with text on yellow), semantic landmarks/headings, full keyboard navigation across all pavilions.

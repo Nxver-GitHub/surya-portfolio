@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  /* Palette — R4 warm racing system */
+  --color-track: #fab217; /* R4 "Positive Yellow" — hero fields */
+  --color-track-deep: #de9805; /* pressed / shaded yellow */
+  --color-ink: #1c1a17; /* charcoal — text, circuit ribbon */
+  --color-ink-soft: #4a4640; /* secondary text on light surfaces */
+  --color-paper: #f5f1e8; /* warm off-white surfaces */
+  --color-grid: #8a8378; /* warm grey — metadata, locked states */
+  --color-accent: #d62e2e; /* racing red — the single accent */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Type */
+  --font-display: var(--font-archivo), "Archivo", sans-serif;
+  --font-body: var(--font-satoshi), "Satoshi", sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Motion — mechanical, no bounce */
+  --ease-mech: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-snap: 150ms;
+  --duration-slide: 200ms;
+  --duration-panel: 250ms;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-track);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-track);
+}
+
+/* Locked-pavilion refusal: short mechanical shake */
+@keyframes locked-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+.locked-shake {
+  animation: locked-shake var(--duration-slide) var(--ease-mech);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .locked-shake {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
