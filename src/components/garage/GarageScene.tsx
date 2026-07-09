@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { liveries } from "../../../content/liveries";
 import type { Car } from "../../../content/cars";
+import { useReducedMotion } from "./useReducedMotion";
 
 /** Placeholder kart shown until a car's Blender model lands. */
 function PlaceholderCar({ color, accent }: { color: string; accent: string }) {
@@ -63,6 +64,7 @@ function CarModel({ path }: { path: string }) {
 export function GarageScene({ car }: { car: Car }) {
   const livery = liveries[car.livery];
   const accent = livery.bars[1] ?? "#f4f2ef";
+  const reducedMotion = useReducedMotion();
 
   return (
     <Canvas
@@ -91,7 +93,7 @@ export function GarageScene({ car }: { car: Car }) {
       )}
 
       <OrbitControls
-        autoRotate
+        autoRotate={!reducedMotion}
         autoRotateSpeed={0.9}
         enablePan={false}
         enableZoom={false}

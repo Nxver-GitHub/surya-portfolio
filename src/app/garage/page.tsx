@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
 import { CarBrowser } from "@/components/garage/CarBrowser";
 
@@ -8,13 +9,7 @@ export const metadata: Metadata = {
     "Surya Pugazhenthi's projects: Nodegent, TripWeaver, Credence, BenefitFinder, Calendarize, ClientSight, and more — each with tech stack, impact, and results.",
 };
 
-interface GaragePageProps {
-  searchParams: Promise<{ car?: string }>;
-}
-
-export default async function GaragePage({ searchParams }: GaragePageProps) {
-  const { car } = await searchParams;
-
+export default function GaragePage() {
   return (
     <div className="relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8">
       <GtCrumb label="Garage" />
@@ -34,7 +29,9 @@ export default async function GaragePage({ searchParams }: GaragePageProps) {
           </p>
         </div>
 
-        <CarBrowser initialCarId={car} />
+        <Suspense fallback={null}>
+          <CarBrowser />
+        </Suspense>
       </main>
     </div>
   );

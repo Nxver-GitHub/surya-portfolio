@@ -1,8 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cars, type Car } from "../../../content/cars";
 import { liveries } from "../../../content/liveries";
 import { LiveryStripe } from "../livery/LiveryStripe";
@@ -61,7 +60,7 @@ function CarListButton({
           {car.name}
         </span>
         <span
-          className={`truncate text-xs ${isActive ? "text-white/70" : "text-silver/80"}`}
+          className={`truncate text-xs ${isActive ? "text-white/80" : "text-silver"}`}
         >
           {locked ? "Locked" : car.carClass}
         </span>
@@ -79,15 +78,18 @@ function CarListButton({
   );
 }
 
-export function CarBrowser({ initialCarId }: { initialCarId?: string }) {
+export function CarBrowser() {
   const router = useRouter();
-  const [selected, setSelected] = useState<Car>(
-    () => cars.find((c) => c.id === initialCarId) ?? cars[0],
-  );
+  const searchParams = useSearchParams();
+
+  // URL is the single source of truth — back/forward stays in sync
+  const carId = searchParams.get("car");
+  const selected = cars.find((c) => c.id === carId) ?? cars[0];
 
   const select = (car: Car) => {
-    setSelected(car);
-    router.replace(`/garage?car=${car.id}`, { scroll: false });
+    if (car.id !== selected.id) {
+      router.replace(`/garage?car=${car.id}`, { scroll: false });
+    }
   };
 
   return (
@@ -111,9 +113,12 @@ export function CarBrowser({ initialCarId }: { initialCarId?: string }) {
       >
         {selected.status === "hero" ? (
           <>
-            <GarageScene key={selected.id} car={selected} />
+            {/* stable Canvas: scene reacts to car prop, no WebGL teardown */}
+            <div aria-hidden="true" className="h-full">
+              <GarageScene car={selected} />
+            </div>
             {!selected.modelPath ? (
-              <p className="ts-hard pointer-events-none absolute right-3 bottom-2 font-display text-xs font-semibold tracking-widest text-silver/70 uppercase">
+              <p className="ts-hard pointer-events-none absolute right-3 bottom-2 font-display text-xs font-semibold tracking-widest text-silver uppercase">
                 Placeholder chassis — real model in the paint shop
               </p>
             ) : null}

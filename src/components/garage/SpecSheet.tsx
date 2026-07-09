@@ -18,7 +18,7 @@ export function SpecSheet({ car }: { car: Car }) {
         <p className="ts-hard font-display text-lg font-bold tracking-widest text-silver uppercase">
           Classified entry
         </p>
-        <p className="mt-2 text-sm text-silver/80">
+        <p className="mt-2 text-sm text-silver">
           A new machine is being built in a closed workshop. Specs release
           when it rolls out.
         </p>
@@ -37,7 +37,7 @@ export function SpecSheet({ car }: { car: Car }) {
           {car.chassis ? (
             <p className="text-sm text-silver">{car.chassis}</p>
           ) : (
-            <p className="text-sm text-silver/70">3D model in production</p>
+            <p className="text-sm text-silver">3D model in production</p>
           )}
         </div>
 
@@ -140,9 +140,13 @@ export function SpecSheet({ car }: { car: Car }) {
               preload="metadata"
               className="mt-1.5 w-full border border-steel"
               src={car.media.video.src}
+              poster={car.media.video.poster}
+              aria-describedby={
+                car.media.video.note ? `${car.id}-video-note` : undefined
+              }
             />
             {car.media.video.note ? (
-              <p className="mt-1 text-xs text-silver/70">
+              <p id={`${car.id}-video-note`} className="mt-1 text-xs text-silver">
                 {car.media.video.note}
               </p>
             ) : null}

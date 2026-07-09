@@ -40,7 +40,7 @@ export interface Car {
   missionId?: string;
   team?: readonly { name: string; role: string }[];
   media?: {
-    video?: { src: string; note?: string };
+    video?: { src: string; poster?: string; note?: string };
     deck?: { src: string; label: string };
     photos?: readonly { src: string; caption: string }[];
   };
@@ -88,6 +88,7 @@ export const cars: readonly Car[] = [
     media: {
       video: {
         src: "/projects/nodegent/demo-2.5x.mp4",
+        poster: "/projects/nodegent/demo-poster.jpg",
         note: "Demo shown at 2.5× speed",
       },
       deck: {
