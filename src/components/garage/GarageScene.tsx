@@ -82,15 +82,15 @@ export function GarageScene({ car }: { car: Car }) {
       <color attach="background" args={["#0d0d0f"]} />
       <fog attach="fog" args={["#0d0d0f", 9, 16]} />
 
-      <ambientLight intensity={0.55} />
-      <directionalLight position={[4, 6, 3]} intensity={1.1} />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[4, 6, 3]} intensity={1.5} />
       <directionalLight position={[-5, 3, -2]} intensity={0.35} color="#ffb000" />
 
       {/* procedural studio env map — metallic paint needs something to reflect;
           built from Lightformers locally (no HDRI fetch, CSP-safe) */}
       <Environment resolution={256} frames={1}>
-        <Lightformer form="rect" intensity={3} scale={[9, 2, 1]} position={[0, 5, 0]} target={[0, 0, 0]} />
-        <Lightformer form="rect" intensity={1.2} color="#cfd6e0" scale={[6, 1.6, 1]} position={[5, 1.6, 2]} target={[0, 0.4, 0]} />
+        <Lightformer form="rect" intensity={4} scale={[9, 2, 1]} position={[0, 5, 0]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={1.7} color="#cfd6e0" scale={[6, 1.6, 1]} position={[5, 1.6, 2]} target={[0, 0.4, 0]} />
         <Lightformer form="rect" intensity={0.35} color="#ffb000" scale={[6, 1.4, 1]} position={[-5, 1.4, -2]} target={[0, 0.4, 0]} />
         <Lightformer form="rect" intensity={0.4} color="#3a3d44" scale={[10, 10, 1]} position={[0, -2, 0]} target={[0, 0, 0]} />
       </Environment>

@@ -46,13 +46,24 @@ export interface Car {
   };
   /** glTF model path once the Blender model lands */
   modelPath?: string;
+  /** Attribution for third-party 3D models (CC-BY etc.) — rendered under the 3D scene */
+  modelCredit?: {
+    title: string;
+    author: string;
+    /** e.g. "Sketchfab" */
+    source: string;
+    url: string;
+    /** e.g. "CC BY 4.0" */
+    license: string;
+    licenseUrl?: string;
+  };
 }
 
 export const cars: readonly Car[] = [
   {
     id: "nodegent",
     name: "Nodegent",
-    chassis: "RUF CTR2–inspired",
+    chassis: "Porsche 911 Carrera 4S (993)",
     carClass: "Production Class",
     status: "hero",
     livery: "rothmans",
@@ -97,6 +108,14 @@ export const cars: readonly Car[] = [
       },
     },
     modelPath: "/models/nodegent.glb",
+    modelCredit: {
+      title: "1996 Porsche 993 Carrera 4S",
+      author: "s0h1o9b",
+      source: "Sketchfab",
+      url: "https://sketchfab.com/3d-models/1996-porsche-993-carrera-4s-5d90416b06854a369e566d3fa286c692",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
   },
   {
     id: "tripweaver",

@@ -122,6 +122,33 @@ export function CarBrowser() {
                 Placeholder chassis — real model in the paint shop
               </p>
             ) : null}
+            {selected.modelCredit ? (
+              <p className="absolute bottom-2 left-3 text-xs text-silver/80">
+                Model:{" "}
+                <a
+                  href={selected.modelCredit.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-silver/40 underline-offset-2 hover:text-chrome"
+                >
+                  {selected.modelCredit.title}
+                </a>{" "}
+                by {selected.modelCredit.author} (
+                {selected.modelCredit.licenseUrl ? (
+                  <a
+                    href={selected.modelCredit.licenseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-silver/40 underline-offset-2 hover:text-chrome"
+                  >
+                    {selected.modelCredit.license}
+                  </a>
+                ) : (
+                  selected.modelCredit.license
+                )}
+                ) via {selected.modelCredit.source}
+              </p>
+            ) : null}
           </>
         ) : (
           <div className="flex h-full min-h-72 flex-col items-center justify-center gap-3 px-6">

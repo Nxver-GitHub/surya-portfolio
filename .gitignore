@@ -66,3 +66,5 @@ test-results/
 *.blend1
 *.blend2
 .playwright-mcp/
+assets-src/cars/incoming/*
+!assets-src/cars/incoming/README.md
