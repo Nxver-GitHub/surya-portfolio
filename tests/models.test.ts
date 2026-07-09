@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { cars } from "../content/cars";
 
@@ -44,13 +44,14 @@ describe("model attribution (CC-BY compliance)", () => {
     }
   });
 
-  it("credited cars keep their source records in assets-src/cars", () => {
+  it("every credited car has an editable .blend source in assets-src/cars", () => {
+    const blendDir = join(__dirname, "..", "assets-src", "cars");
+    const blends = readdirSync(blendDir).filter((f) => f.endsWith(".blend"));
     for (const car of modeledCars) {
       if (!car.modelCredit) continue;
-      const blend = join(__dirname, "..", "assets-src", "cars");
       expect(
-        existsSync(blend),
-        "assets-src/cars must exist to hold editable model sources",
+        blends.some((f) => f.startsWith(`${car.id}-`) || f === `${car.id}.blend`),
+        `${car.id}: no ${car.id}-*.blend source in assets-src/cars`,
       ).toBe(true);
     }
   });
