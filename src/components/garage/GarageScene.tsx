@@ -1,7 +1,13 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import {
+  ContactShadows,
+  Environment,
+  Lightformer,
+  OrbitControls,
+  useGLTF,
+} from "@react-three/drei";
 import { liveries } from "../../../content/liveries";
 import type { Car } from "../../../content/cars";
 import { useReducedMotion } from "./useReducedMotion";
@@ -58,8 +64,8 @@ function PlaceholderCar({ color, accent }: { color: string; accent: string }) {
 
 function CarModel({ path }: { path: string }) {
   const { scene } = useGLTF(path);
-  // Blender exports at real-world size (~4.2m); normalize to scene scale
-  return <primitive object={scene} scale={0.58} />;
+  // Blender exports at real-world size (~4.25m); normalize to scene scale
+  return <primitive object={scene} scale={0.5} />;
 }
 
 export function GarageScene({ car }: { car: Car }) {
@@ -69,7 +75,7 @@ export function GarageScene({ car }: { car: Car }) {
 
   return (
     <Canvas
-      camera={{ position: [4.6, 2.1, 4.6], fov: 38 }}
+      camera={{ position: [4.1, 1.9, 4.1], fov: 38 }}
       dpr={[1, 1.75]}
       className="touch-none"
     >
@@ -80,12 +86,22 @@ export function GarageScene({ car }: { car: Car }) {
       <directionalLight position={[4, 6, 3]} intensity={1.1} />
       <directionalLight position={[-5, 3, -2]} intensity={0.35} color="#ffb000" />
 
+      {/* procedural studio env map — metallic paint needs something to reflect;
+          built from Lightformers locally (no HDRI fetch, CSP-safe) */}
+      <Environment resolution={256} frames={1}>
+        <Lightformer form="rect" intensity={3} scale={[9, 2, 1]} position={[0, 5, 0]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={1.2} color="#cfd6e0" scale={[6, 1.6, 1]} position={[5, 1.6, 2]} target={[0, 0.4, 0]} />
+        <Lightformer form="rect" intensity={0.35} color="#ffb000" scale={[6, 1.4, 1]} position={[-5, 1.4, -2]} target={[0, 0.4, 0]} />
+        <Lightformer form="rect" intensity={0.4} color="#3a3d44" scale={[10, 10, 1]} position={[0, -2, 0]} target={[0, 0, 0]} />
+      </Environment>
+
       {/* concrete floor + subtle grid */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
         <circleGeometry args={[7, 48]} />
         <meshLambertMaterial color="#17181b" />
       </mesh>
       <gridHelper args={[14, 28, "#2c2e33", "#222429"]} position={[0, 0, 0]} />
+      <ContactShadows position={[0, 0.01, 0]} opacity={0.7} scale={7} blur={2.4} far={1.6} resolution={512} />
 
       {car.modelPath ? (
         <CarModel path={car.modelPath} />
@@ -94,7 +110,7 @@ export function GarageScene({ car }: { car: Car }) {
       )}
 
       <OrbitControls
-        target={[0, 0.45, 0]}
+        target={[0, 0.35, 0]}
         autoRotate={!reducedMotion}
         autoRotateSpeed={0.9}
         enablePan={false}

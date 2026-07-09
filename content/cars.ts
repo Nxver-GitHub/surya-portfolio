@@ -52,7 +52,7 @@ export const cars: readonly Car[] = [
   {
     id: "nodegent",
     name: "Nodegent",
-    chassis: "Porsche 959–inspired",
+    chassis: "RUF CTR2–inspired",
     carClass: "Production Class",
     status: "hero",
     livery: "rothmans",

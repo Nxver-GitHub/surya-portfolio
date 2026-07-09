@@ -65,3 +65,4 @@ test-results/
 # Blender autosaves (source .blend files live in assets-src/)
 *.blend1
 *.blend2
+.playwright-mcp/
