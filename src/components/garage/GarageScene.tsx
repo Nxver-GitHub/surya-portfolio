@@ -91,7 +91,7 @@ export function GarageScene({ car }: { car: Car }) {
       <Environment resolution={256} frames={1}>
         <Lightformer form="rect" intensity={4} scale={[9, 2, 1]} position={[0, 5, 0]} target={[0, 0, 0]} />
         <Lightformer form="rect" intensity={1.7} color="#cfd6e0" scale={[6, 1.6, 1]} position={[5, 1.6, 2]} target={[0, 0.4, 0]} />
-        <Lightformer form="rect" intensity={0.35} color="#ffb000" scale={[6, 1.4, 1]} position={[-5, 1.4, -2]} target={[0, 0.4, 0]} />
+        <Lightformer form="rect" intensity={0.18} color="#ffb000" scale={[6, 1.4, 1]} position={[-5, 1.4, -2]} target={[0, 0.4, 0]} />
         <Lightformer form="rect" intensity={0.4} color="#3a3d44" scale={[10, 10, 1]} position={[0, -2, 0]} target={[0, 0, 0]} />
       </Environment>
 

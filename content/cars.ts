@@ -120,7 +120,7 @@ export const cars: readonly Car[] = [
   {
     id: "tripweaver",
     name: "TripWeaver",
-    chassis: "McLaren F1 GTR Longtail–inspired",
+    chassis: "McLaren F1 LM",
     carClass: "GT1 Hackathon Special",
     status: "hero",
     livery: "marlboro",
@@ -143,6 +143,15 @@ export const cars: readonly Car[] = [
     raced: "Nov 2025",
     careerEventSlug: "tripweaver-locus",
     missionId: "locus-agentic-payments",
+    modelPath: "/models/tripweaver.glb",
+    modelCredit: {
+      title: "McLaren F1LM – Low Poly",
+      author: "Ajay Gawde",
+      source: "Sketchfab",
+      url: "https://sketchfab.com/3d-models/mclaren-f1lm-low-poly-ed54b4bab2cc4d31a13a2fce89d8e9e2",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
   },
   {
     id: "credence",
