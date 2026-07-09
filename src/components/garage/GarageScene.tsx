@@ -58,7 +58,8 @@ function PlaceholderCar({ color, accent }: { color: string; accent: string }) {
 
 function CarModel({ path }: { path: string }) {
   const { scene } = useGLTF(path);
-  return <primitive object={scene} />;
+  // Blender exports at real-world size (~4.2m); normalize to scene scale
+  return <primitive object={scene} scale={0.58} />;
 }
 
 export function GarageScene({ car }: { car: Car }) {
@@ -93,6 +94,7 @@ export function GarageScene({ car }: { car: Car }) {
       )}
 
       <OrbitControls
+        target={[0, 0.45, 0]}
         autoRotate={!reducedMotion}
         autoRotateSpeed={0.9}
         enablePan={false}

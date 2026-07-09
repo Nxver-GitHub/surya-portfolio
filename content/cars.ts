@@ -96,6 +96,7 @@ export const cars: readonly Car[] = [
         label: "Final presentation deck",
       },
     },
+    modelPath: "/models/nodegent.glb",
   },
   {
     id: "tripweaver",
