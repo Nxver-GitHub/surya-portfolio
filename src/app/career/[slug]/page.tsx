@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { allEventSlugs, findEvent } from "../../../../content/career";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
-import { LockedChip } from "@/components/career/LockedChip";
+import { CarChip } from "@/components/career/CarChip";
+import { MissionChip } from "@/components/career/MissionChip";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 
@@ -127,10 +128,10 @@ export default async function EventPage({ params }: EventPageProps) {
               </Link>
             ))}
             {event.carIds?.map((c) => (
-              <LockedChip key={c} label={c} unlocksWith="Garage" />
+              <CarChip key={c} carId={c} />
             ))}
             {event.missionIds?.map((m) => (
-              <LockedChip key={m} label={m} unlocksWith="Missions" />
+              <MissionChip key={m} missionId={m} />
             ))}
           </div>
         ) : null}

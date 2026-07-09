@@ -11,7 +11,9 @@ export type LiveryId =
   | "leyton"
   | "warsteiner"
   | "redbull"
-  | "camel";
+  | "camel"
+  | "rothmans"
+  | "calsonic";
 
 export interface Livery {
   /** Decal bar colors, rendered in order */
@@ -37,4 +39,8 @@ export const liveries: Record<LiveryId, Livery> = {
   redbull: { bars: ["#26346b", "#ffcf00", "#d2222a"], key: "#ffcf00" },
   /* desert yellow — period rally/F1 */
   camel: { bars: ["#fab217", "#1c1a17"], key: "#fab217" },
+  /* navy/white/gold — the 959's Paris-Dakar-winning colors */
+  rothmans: { bars: ["#20356f", "#f4f2ef", "#c9a54a"], key: "#5b7fd4" },
+  /* process blue + white — JGTC Group A Skyline icon */
+  calsonic: { bars: ["#0064b4", "#f4f6f8", "#003c78"], key: "#1e82d2" },
 };
