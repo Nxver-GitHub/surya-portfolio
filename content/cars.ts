@@ -156,7 +156,7 @@ export const cars: readonly Car[] = [
   {
     id: "credence",
     name: "Credence",
-    chassis: "Mercedes CLK GTR–inspired",
+    chassis: "Mercedes-Benz CLK GTR",
     carClass: "GT1 Hackathon Special",
     status: "hero",
     livery: "west",
@@ -172,6 +172,15 @@ export const cars: readonly Car[] = [
     raced: "Apr 2026",
     careerEventSlug: "credence-ef-hackathon",
     missionId: "ef-marketing-agents",
+    modelPath: "/models/credence.glb",
+    modelCredit: {
+      title: "TOON: Mercedez Benz CLK GTR",
+      author: "LePoint_BAT",
+      source: "Sketchfab",
+      url: "https://sketchfab.com/3d-models/toon-mercedez-benz-clk-gtr-004f277bc51e432d81770a3d348c8d98",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
   },
   {
     id: "benefitfinder",
