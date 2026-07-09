@@ -1,6 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
+import { useEffect } from "react";
 import {
   ContactShadows,
   Environment,
@@ -9,7 +10,7 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import { liveries } from "../../../content/liveries";
-import type { Car } from "../../../content/cars";
+import { cars, type Car } from "../../../content/cars";
 import { useReducedMotion } from "./useReducedMotion";
 
 /** Placeholder kart shown until a car's Blender model lands. */
@@ -72,6 +73,18 @@ export function GarageScene({ car }: { car: Car }) {
   const livery = liveries[car.livery];
   const accent = livery.bars[1] ?? "#f4f2ef";
   const reducedMotion = useReducedMotion();
+
+  // warm the other hero models after the first one is on screen,
+  // so switching cars doesn't show the loading state
+  useEffect(() => {
+    const t = setTimeout(() => {
+      for (const c of cars) {
+        if (c.modelPath && c.id !== car.id) useGLTF.preload(c.modelPath);
+      }
+    }, 2000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- warm once on mount
+  }, []);
 
   return (
     <Canvas

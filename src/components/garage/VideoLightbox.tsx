@@ -45,6 +45,7 @@ export function VideoLightbox({ src, poster, note, title }: VideoLightboxProps) 
             alt=""
             width={1280}
             height={480}
+            priority
             className="w-full opacity-80 transition-opacity duration-(--duration-snap) group-hover:opacity-100"
           />
         ) : (
