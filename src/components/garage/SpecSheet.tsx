@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Car } from "../../../content/cars";
 import { MissionChip } from "../career/MissionChip";
 import { LiveryStripe } from "../livery/LiveryStripe";
+import { VideoLightbox } from "./VideoLightbox";
 
 function SpecLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -134,22 +135,14 @@ export function SpecSheet({ car }: { car: Car }) {
         {car.media?.video ? (
           <div>
             <SpecLabel>Onboard footage</SpecLabel>
-            <video
-              controls
-              playsInline
-              preload="metadata"
-              className="mt-1.5 w-full border border-steel"
-              src={car.media.video.src}
-              poster={car.media.video.poster}
-              aria-describedby={
-                car.media.video.note ? `${car.id}-video-note` : undefined
-              }
-            />
-            {car.media.video.note ? (
-              <p id={`${car.id}-video-note`} className="mt-1 text-xs text-silver">
-                {car.media.video.note}
-              </p>
-            ) : null}
+            <div className="mt-1.5">
+              <VideoLightbox
+                src={car.media.video.src}
+                poster={car.media.video.poster}
+                note={car.media.video.note}
+                title={car.name}
+              />
+            </div>
           </div>
         ) : null}
 
