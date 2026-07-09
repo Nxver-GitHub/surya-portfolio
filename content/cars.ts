@@ -176,10 +176,10 @@ export const cars: readonly Car[] = [
   {
     id: "benefitfinder",
     name: "BenefitFinder",
-    chassis: "Ferrari F40 LM–inspired",
+    chassis: "Nissan Skyline GT-R (R32)",
     carClass: "GT1 Hackathon Special",
     status: "hero",
-    livery: "jager",
+    livery: "calsonic",
     tagline:
       "Matches students to aid programs they'd never find on their own.",
     performance: [
@@ -192,6 +192,15 @@ export const cars: readonly Car[] = [
     raced: "Apr 2025",
     careerEventSlug: "benefitfinder-cruzhacks",
     missionId: "cruzhacks-2025",
+    modelPath: "/models/benefitfinder.glb",
+    modelCredit: {
+      title: "Nissan Skyline R32 GTR",
+      author: "Blue3D",
+      source: "Sketchfab",
+      url: "https://sketchfab.com/3d-models/nissan-skyline-r32-gtr-e2a16f567a7e4d0ab99c0bd6460ba396",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
   },
   {
     id: "calendarize",
