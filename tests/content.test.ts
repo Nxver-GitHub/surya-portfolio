@@ -153,3 +153,39 @@ describe("cars", () => {
     }
   });
 });
+
+describe("missions", () => {
+  it("has unique mission ids with complete cards", async () => {
+    const { missionPacks } = await import("../content/missions");
+    const all = missionPacks.flatMap((p) => p.missions);
+    expect(new Set(all.map((m) => m.id)).size).toBe(all.length);
+    for (const m of all) {
+      expect(m.objective, m.id).toBeTruthy();
+      expect(m.constraints.length, m.id).toBeGreaterThan(0);
+      expect(m.outcome, m.id).toBeTruthy();
+    }
+  });
+
+  it("cross-links resolve in both directions", async () => {
+    const { missionPacks, missionById } = await import("../content/missions");
+    const { cars, carById } = await import("../content/cars");
+    for (const m of missionPacks.flatMap((p) => p.missions)) {
+      if (m.carId) expect(carById.has(m.carId), `${m.id} → ${m.carId}`).toBe(true);
+      if (m.careerEventSlug)
+        expect(findEvent(m.careerEventSlug), m.id).not.toBeNull();
+      if (m.logo)
+        expect(existsSync(join(PUBLIC_DIR, m.logo)), m.logo).toBe(true);
+    }
+    for (const c of cars) {
+      if (c.missionId)
+        expect(missionById.has(c.missionId), `${c.id} → ${c.missionId}`).toBe(true);
+    }
+    for (const season of seasons) {
+      for (const e of season.events) {
+        for (const mid of e.missionIds ?? []) {
+          expect(missionById.has(mid), `career ${e.slug} → ${mid}`).toBe(true);
+        }
+      }
+    }
+  });
+});

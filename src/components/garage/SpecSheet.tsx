@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Car } from "../../../content/cars";
-import { LockedChip } from "../career/LockedChip";
+import { MissionChip } from "../career/MissionChip";
 import { LiveryStripe } from "../livery/LiveryStripe";
 
 function SpecLabel({ children }: { children: React.ReactNode }) {
@@ -127,7 +127,7 @@ export function SpecSheet({ car }: { car: Car }) {
             </Link>
           ))}
           {car.missionId ? (
-            <LockedChip label={car.missionId} unlocksWith="Missions" />
+            <MissionChip missionId={car.missionId} />
           ) : null}
         </div>
 

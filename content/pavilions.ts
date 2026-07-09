@@ -59,7 +59,7 @@ export const pavilions: readonly Pavilion[] = [
     slug: "missions",
     name: "Missions",
     caption: "Hackathons & challenges",
-    status: "locked",
+    status: "open",
     map: { x: 75, y: 60.7 },
     labelSide: "right",
     livery: "jager",

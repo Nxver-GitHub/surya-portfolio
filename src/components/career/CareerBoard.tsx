@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { seasons, type Season } from "../../../content/career";
 import { CarChip } from "./CarChip";
-import { LockedChip } from "./LockedChip";
+import { MissionChip } from "./MissionChip";
 import { EventCard } from "./EventCard";
 import { OrgLogo } from "./OrgLogo";
 
@@ -103,7 +103,7 @@ export function CareerBoard() {
               </h3>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {refs.missions.map((m) => (
-                  <LockedChip key={m} label={m} unlocksWith="Missions" />
+                  <MissionChip key={m} missionId={m} />
                 ))}
               </div>
             </div>
