@@ -109,7 +109,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "license", tierId: "IA" },
       },
     ],
-    anchor: { x: -2.4, y: 0.95, z: -1.2 },
+    anchor: { x: -3.3, y: 0.98, z: 1.44 },
   },
 
   /* ── Tournament: two hackathon builds, head to head ─────────────────── */
@@ -150,7 +150,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "missions", missionId: "cruzhacks-2025" },
       },
     ],
-    anchor: { x: 0, y: 0.95, z: -2.1 },
+    anchor: { x: -3.3, y: 0.98, z: -1.36 },
   },
 
   /* ── Collection: the venture / founder-side thread ──────────────────── */
@@ -184,7 +184,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "license", tierId: "S" },
       },
     ],
-    anchor: { x: 2.4, y: 0.95, z: -1.2 },
+    anchor: { x: -1.3, y: 0.98, z: 0.4 },
   },
 
   /* ── Misc: the GT7 "Scapes book" — send visitors to photography ─────── */
@@ -218,7 +218,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "scapes", category: "life" },
       },
     ],
-    anchor: { x: -1.4, y: 0.95, z: 0.6 },
+    anchor: { x: -3.12, y: 0.98, z: 1.78 },
   },
 
   /* ── Misc: the fast start — one lap for a busy hiring manager ───────── */
@@ -252,7 +252,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "career", eventSlug: "product-dev-club" },
       },
     ],
-    anchor: { x: 1.4, y: 0.95, z: 0.6 },
+    anchor: { x: -3.12, y: 0.98, z: -1.04 },
   },
 ] as const;
 

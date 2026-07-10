@@ -118,9 +118,11 @@ export function CafeScene({ selectedId, onSelect }: CafeSceneProps) {
   return (
     <Canvas
       aria-hidden="true"
-      camera={{ position: [0, 2.2, 5.2], fov: 42 }}
+      // Entrance hero view from the Blender bake report; the scene ships
+      // KHR_materials_unlit so `flat` (NoToneMapping) keeps baked colors true.
+      camera={{ position: [-2.6, 1.65, 3.2], fov: 60 }}
+      flat
       dpr={[1, 1.75]}
-      shadows
       className="touch-none"
     >
       {/* warm ambient wash — café interior, not a studio */}
@@ -153,15 +155,17 @@ export function CafeScene({ selectedId, onSelect }: CafeSceneProps) {
         />
       ))}
 
+      {/* Distance/polar limits keep the orbit inside the 10x8m room — the
+          window backdrop plane only reads correctly from indoors. */}
       <OrbitControls
-        target={[0, 0.9, 0]}
+        target={[0, 0.95, 0]}
         autoRotate={idle}
         autoRotateSpeed={0.5}
         enablePan={false}
         enableZoom
-        minDistance={3.5}
-        maxDistance={7}
-        minPolarAngle={Math.PI / 4}
+        minDistance={2.6}
+        maxDistance={4.2}
+        minPolarAngle={1.05}
         maxPolarAngle={Math.PI / 2.05}
       />
     </Canvas>
