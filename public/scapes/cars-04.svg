@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-label="Scapes placeholder — CARS">
+  <defs>
+    <radialGradient id="wash" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#3a2a12" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#1a130a" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0a0a0b"/>
+    </radialGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#34363a" stroke-width="1" opacity="0.28"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="#0a0a0b"/>
+  <rect width="100%" height="100%" fill="url(#wash)"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+  <rect x="8" y="8" width="1184" height="1184" fill="none" stroke="#34363a" stroke-width="2" opacity="0.7"/>
+  <path d="M16 88 V16 H88" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M1112 16 H1184 V88" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M16 1112 V1184 H88" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M1112 1184 H1184 V1112" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <circle cx="600" cy="528" r="132" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <line x1="540" y1="528" x2="660" y2="528" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <line x1="600" y1="468" x2="600" y2="588" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <text x="600" y="756" text-anchor="middle" font-family="'Saira Semi Condensed','Arial Narrow',sans-serif" font-size="108" font-weight="800" letter-spacing="4" fill="#a4a7ad" opacity="0.9">SCAPES</text>
+  <text x="600" y="852" text-anchor="middle" font-family="'Saira Semi Condensed','Arial Narrow',sans-serif" font-size="66" font-weight="700" letter-spacing="3" fill="#a4a7ad" opacity="0.6">CARS · AWAITING SCAN</text>
+</svg>
