@@ -1,31 +1,88 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Environment,
+  Html,
   Lightformer,
   OrbitControls,
   useGLTF,
 } from "@react-three/drei";
-import type { Group, Mesh } from "three";
+import { Vector3 } from "three";
+import type { Group, Object3D } from "three";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
-import { liveries } from "../../../content/liveries";
 import { useReducedMotion } from "../garage/useReducedMotion";
+import {
+  CRT_NODE_NAME,
+  OVERVIEW_POSE,
+  CRT_POSE,
+  tableFrontPose,
+  type CameraPose,
+} from "./cameraPoses";
 
 /** Contract: the café model lives here. Blender agent exports meshopt-
  * compressed glb to this public path; drei's loader decodes meshopt itself. */
 const CAFE_MODEL_PATH = "/models/cafe.glb";
 
-/** Warsteiner gold — the pavilion accent, reused for the book markers' glow. */
-const MARKER_KEY = liveries.warsteiner.key;
+/** Camera-flight duration (ms). Longer than the 150–250ms UI motion is fine
+ * for a scripted flight; same mechanical easing family, no bounce/overshoot. */
+const FLIGHT_MS = 800;
 
-function CafeModel() {
+/** The site's mechanical easing (cubic-bezier(0.16, 1, 0.3, 1)) as a scalar
+ * ease for a 0→1 flight progress. A decelerating ease-out, no overshoot. */
+function easeMechanical(t: number): number {
+  const clamped = t < 0 ? 0 : t > 1 ? 1 : t;
+  return 1 - Math.pow(1 - clamped, 3);
+}
+
+/** What the camera is currently framing. Books carry their anchor so the rig
+ * derives the pose with one shared rule; crt/room use fixed poses. */
+export type CafeFocus =
+  | { kind: "room" }
+  | { kind: "book"; bookId: string }
+  | { kind: "crt" };
+
+interface CafeModelProps {
+  onCrtFound: (present: boolean) => void;
+  onSelectCrt: () => void;
+}
+
+function CafeModel({ onCrtFound, onSelectCrt }: CafeModelProps) {
   // Throws to the SceneErrorBoundary if the glb is absent/malformed (the
   // proven path in this worktree until the real model lands at integration).
   const { scene } = useGLTF(CAFE_MODEL_PATH);
+
+  // Resolve the CRT node once per loaded scene; degrade gracefully if absent.
+  const crt = useMemo<Object3D | null>(
+    () => scene.getObjectByName(CRT_NODE_NAME) ?? null,
+    [scene],
+  );
+
+  useEffect(() => {
+    onCrtFound(crt !== null);
+  }, [crt, onCrtFound]);
+
   // Lighting is baked in Blender (per CLAUDE.md), so render the scene as-is.
-  return <primitive object={scene} />;
+  // A transparent invisible collider over the CRT node carries the click, so
+  // the raycast target is stable regardless of the node's own geometry.
+  return (
+    <>
+      <primitive object={scene} />
+      {crt ? (
+        <mesh
+          position={crt.position}
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelectCrt();
+          }}
+        >
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        </mesh>
+      ) : null}
+    </>
+  );
 }
 
 interface BookMarkerProps {
@@ -36,12 +93,13 @@ interface BookMarkerProps {
 }
 
 /** A floating, glowing stylized book that marks a Menu Book on a café table.
- * Clicking it selects that book. Bobs gently unless reduced motion is set. */
+ * Uses the book's own enamel cover color. Clicking it selects that book. Bobs
+ * gently unless reduced motion is set; hover/active shows an HTML label. */
 function BookMarker({ book, isActive, onSelect, idle }: BookMarkerProps) {
   const ref = useRef<Group>(null);
-  const coverRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const { x, y, z } = book.anchor;
+  const { color, label } = book.cover;
 
   useFrame((state) => {
     if (!ref.current) return;
@@ -51,7 +109,8 @@ function BookMarker({ book, isActive, onSelect, idle }: BookMarkerProps) {
     if (idle) ref.current.rotation.y = t * 0.5;
   });
 
-  const emissive = isActive || hovered ? 0.9 : 0.35;
+  const lit = isActive || hovered;
+  const emissive = lit ? 0.9 : 0.35;
 
   return (
     <group
@@ -67,12 +126,12 @@ function BookMarker({ book, isActive, onSelect, idle }: BookMarkerProps) {
       }}
       onPointerOut={() => setHovered(false)}
     >
-      {/* book body */}
-      <mesh ref={coverRef} castShadow>
+      {/* book body — the audience's enamel cover color */}
+      <mesh castShadow>
         <boxGeometry args={[0.26, 0.34, 0.05]} />
         <meshStandardMaterial
-          color={MARKER_KEY}
-          emissive={MARKER_KEY}
+          color={color}
+          emissive={color}
           emissiveIntensity={emissive}
           roughness={0.5}
           metalness={0.1}
@@ -85,30 +144,164 @@ function BookMarker({ book, isActive, onSelect, idle }: BookMarkerProps) {
       </mesh>
       {/* soft halo so the marker reads as "interactive" from across the room */}
       <pointLight
-        color={MARKER_KEY}
-        intensity={isActive || hovered ? 0.9 : 0.3}
+        color={color}
+        intensity={lit ? 0.9 : 0.3}
         distance={1.6}
         position={[0, 0, 0.3]}
       />
+      {/* Hover/active label — enhancement-only; the same info is mirrored in the
+          2D UI for keyboard users, so this is never the sole source. */}
+      {lit ? (
+        <Html center distanceFactor={6} position={[0, 0.34, 0]} zIndexRange={[20, 0]}>
+          <div
+            style={{
+              transform: "translateY(-100%)",
+              whiteSpace: "nowrap",
+              background: "#0a0a0b",
+              border: `2px solid ${color}`,
+              boxShadow: "2px 3px 0 rgba(0,0,0,0.7)",
+              padding: "4px 8px",
+              pointerEvents: "none",
+              fontFamily: "var(--font-display, sans-serif)",
+              textTransform: "uppercase",
+            }}
+          >
+            <div
+              style={{
+                color,
+                fontSize: 9,
+                fontWeight: 800,
+                letterSpacing: "0.18em",
+              }}
+            >
+              {label}
+            </div>
+            <div style={{ color: "#e6e6e6", fontSize: 12, fontWeight: 700 }}>
+              {book.title}
+            </div>
+          </div>
+        </Html>
+      ) : null}
     </group>
+  );
+}
+
+interface CameraRigProps {
+  focus: CafeFocus;
+  idle: boolean;
+  reducedMotion: boolean;
+}
+
+/**
+ * Drives the scripted camera flights. Keeps the base OrbitControls (so the user
+ * can still orbit gently around whatever is focused) and, whenever the focus
+ * changes, tweens both the camera position and the controls target from their
+ * current values to the focus pose over FLIGHT_MS with mechanical easing.
+ * Reduced motion → instant cut. Auto-rotate is on only in room view.
+ */
+function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
+  const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const camera = useThree((state) => state.camera);
+
+  // Flight state, kept in refs so useFrame reads without re-subscribing.
+  const fromPos = useRef(new Vector3());
+  const fromTarget = useRef(new Vector3());
+  const toPos = useRef(new Vector3());
+  const toTarget = useRef(new Vector3());
+  const start = useRef<number | null>(null);
+  const playing = useRef(false);
+
+  const pose = useMemo<CameraPose>(() => {
+    if (focus.kind === "crt") return CRT_POSE;
+    if (focus.kind === "book") {
+      const book = menuBooks.find((b) => b.id === focus.bookId);
+      return book ? tableFrontPose(book.anchor) : OVERVIEW_POSE;
+    }
+    return OVERVIEW_POSE;
+  }, [focus]);
+
+  // Begin (or, under reduced motion, immediately complete) a flight whenever
+  // the destination pose changes.
+  useEffect(() => {
+    const ctrl = controls.current;
+    if (!ctrl) return;
+
+    toPos.current.set(pose.position[0], pose.position[1], pose.position[2]);
+    toTarget.current.set(pose.target[0], pose.target[1], pose.target[2]);
+
+    if (reducedMotion) {
+      camera.position.copy(toPos.current);
+      ctrl.target.copy(toTarget.current);
+      ctrl.update();
+      playing.current = false;
+      return;
+    }
+
+    fromPos.current.copy(camera.position);
+    fromTarget.current.copy(ctrl.target);
+    start.current = null;
+    playing.current = true;
+  }, [pose, reducedMotion, camera]);
+
+  useFrame((state) => {
+    const ctrl = controls.current;
+    if (!ctrl || !playing.current) return;
+
+    const now = state.clock.elapsedTime * 1000;
+    if (start.current === null) start.current = now;
+    const raw = (now - start.current) / FLIGHT_MS;
+    const eased = easeMechanical(raw);
+
+    camera.position.lerpVectors(fromPos.current, toPos.current, eased);
+    ctrl.target.lerpVectors(fromTarget.current, toTarget.current, eased);
+    ctrl.update();
+
+    if (raw >= 1) playing.current = false;
+  });
+
+  // Auto-rotate only when idling in room view and no flight is running.
+  const autoRotate = idle && focus.kind === "room";
+
+  return (
+    <OrbitControls
+      ref={controls}
+      target={[OVERVIEW_POSE.target[0], OVERVIEW_POSE.target[1], OVERVIEW_POSE.target[2]]}
+      autoRotate={autoRotate}
+      autoRotateSpeed={0.5}
+      enablePan={false}
+      enableZoom
+      minDistance={1.4}
+      maxDistance={4.6}
+      minPolarAngle={1.05}
+      maxPolarAngle={Math.PI / 2.05}
+    />
   );
 }
 
 interface CafeSceneProps {
   selectedId: string;
+  focus: CafeFocus;
   onSelect: (book: MenuBook) => void;
+  onSelectCrt: () => void;
+  onCrtFound: (present: boolean) => void;
 }
 
 /**
- * The lazy, client-only 3D café. Loads the baked-lighting café glb, adds a
- * warm procedural environment for any un-baked surfaces, and floats a clickable
- * book marker at each Menu Book's anchor. Selection is shared with the semantic
- * BookList, so clicking a marker and clicking a tab drive the same state.
+ * The lazy, client-only 3D café. Loads the baked-lighting café glb, adds a warm
+ * procedural environment for any un-baked surfaces, floats a clickable marker at
+ * each Menu Book's anchor, and runs GT7-style scripted camera flights via the
+ * CameraRig (table-front per book, desk-front for the CRT, back to room view).
  *
- * The canvas is enhancement-only (aria-hidden): every action here is mirrored
- * by the keyboard-navigable BookList, so nothing is 3D-exclusive.
+ * The canvas is enhancement-only (aria-hidden): every action here is mirrored by
+ * the keyboard-navigable BookList and the 2D controls, so nothing is 3D-only.
  */
-export function CafeScene({ selectedId, onSelect }: CafeSceneProps) {
+export function CafeScene({
+  selectedId,
+  focus,
+  onSelect,
+  onSelectCrt,
+  onCrtFound,
+}: CafeSceneProps) {
   const reducedMotion = useReducedMotion();
   const idle = !reducedMotion;
 
@@ -118,9 +311,16 @@ export function CafeScene({ selectedId, onSelect }: CafeSceneProps) {
   return (
     <Canvas
       aria-hidden="true"
-      // Entrance hero view from the Blender bake report; the scene ships
+      // Entrance hero view = the overview pose; the scene ships
       // KHR_materials_unlit so `flat` (NoToneMapping) keeps baked colors true.
-      camera={{ position: [-2.6, 1.65, 3.2], fov: 60 }}
+      camera={{
+        position: [
+          OVERVIEW_POSE.position[0],
+          OVERVIEW_POSE.position[1],
+          OVERVIEW_POSE.position[2],
+        ],
+        fov: 60,
+      }}
       flat
       dpr={[1, 1.75]}
       className="touch-none"
@@ -143,7 +343,7 @@ export function CafeScene({ selectedId, onSelect }: CafeSceneProps) {
         <Lightformer form="rect" intensity={0.4} color="#3a2f1e" scale={[10, 10, 1]} position={[0, -2, 0]} target={[0, 0, 0]} />
       </Environment>
 
-      <CafeModel />
+      <CafeModel onCrtFound={onCrtFound} onSelectCrt={onSelectCrt} />
 
       {books.map((book) => (
         <BookMarker
@@ -155,19 +355,7 @@ export function CafeScene({ selectedId, onSelect }: CafeSceneProps) {
         />
       ))}
 
-      {/* Distance/polar limits keep the orbit inside the 10x8m room — the
-          window backdrop plane only reads correctly from indoors. */}
-      <OrbitControls
-        target={[0, 0.95, 0]}
-        autoRotate={idle}
-        autoRotateSpeed={0.5}
-        enablePan={false}
-        enableZoom
-        minDistance={2.6}
-        maxDistance={4.2}
-        minPolarAngle={1.05}
-        maxPolarAngle={Math.PI / 2.05}
-      />
+      <CameraRig focus={focus} idle={idle} reducedMotion={reducedMotion} />
     </Canvas>
   );
 }
