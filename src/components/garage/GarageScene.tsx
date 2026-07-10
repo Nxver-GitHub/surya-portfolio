@@ -65,8 +65,29 @@ function PlaceholderCar({ color, accent }: { color: string; accent: string }) {
 
 function CarModel({ path }: { path: string }) {
   const { scene } = useGLTF(path);
-  // Blender exports at real-world size (~4.25m); normalize to scene scale
-  return <primitive object={scene} scale={0.5} />;
+  return (
+    <>
+      {/* Blender exports at real-world size (~4.25m); normalize to scene scale */}
+      <primitive object={scene} scale={0.5} />
+      {/* lives inside the suspense-gated subtree so the one-frame bake
+          happens after the model exists; remounts (rebakes) per car */}
+      <CarShadow />
+    </>
+  );
+}
+
+function CarShadow() {
+  return (
+    <ContactShadows
+      position={[0, 0.01, 0]}
+      opacity={0.7}
+      scale={7}
+      blur={2.4}
+      far={1.6}
+      resolution={512}
+      frames={1}
+    />
+  );
 }
 
 export function GarageScene({ car }: { car: Car }) {
@@ -74,8 +95,10 @@ export function GarageScene({ car }: { car: Car }) {
   const accent = livery.bars[1] ?? "#f4f2ef";
   const reducedMotion = useReducedMotion();
 
-  // warm the other hero models after the first one is on screen,
-  // so switching cars doesn't show the loading state
+  // warm the other hero models after the first one is on screen, so
+  // switching cars doesn't show the loading state. Note: clearing the
+  // timeout only guards the un-started case — a preload already fired
+  // is not abortable (drei caches by URL), which is acceptable waste.
   useEffect(() => {
     const t = setTimeout(() => {
       for (const c of cars) {
@@ -114,12 +137,14 @@ export function GarageScene({ car }: { car: Car }) {
         <meshLambertMaterial color="#17181b" />
       </mesh>
       <gridHelper args={[14, 28, "#2c2e33", "#222429"]} position={[0, 0, 0]} />
-      <ContactShadows position={[0, 0.01, 0]} opacity={0.7} scale={7} blur={2.4} far={1.6} resolution={512} />
 
       {car.modelPath ? (
         <CarModel path={car.modelPath} />
       ) : (
-        <PlaceholderCar color={livery.key} accent={accent} />
+        <>
+          <PlaceholderCar color={livery.key} accent={accent} />
+          <CarShadow />
+        </>
       )}
 
       <OrbitControls
