@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1067" viewBox="0 0 1600 1067" role="img" aria-label="Scapes placeholder — LIFE / TRAVEL">
+  <defs>
+    <radialGradient id="wash" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#20304a" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#101724" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0a0a0b"/>
+    </radialGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#34363a" stroke-width="1" opacity="0.28"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="#0a0a0b"/>
+  <rect width="100%" height="100%" fill="url(#wash)"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+  <rect x="8" y="8" width="1584" height="1051" fill="none" stroke="#34363a" stroke-width="2" opacity="0.7"/>
+  <path d="M16 80.02 V16 H80.02" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M1519.98 16 H1584 V80.02" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M16 986.98 V1051 H80.02" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M1519.98 1051 H1584 V986.98" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <circle cx="800" cy="469.48" r="117.37" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <line x1="746.65" y1="469.48" x2="853.35" y2="469.48" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <line x1="800" y1="416.13" x2="800" y2="522.83" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <text x="800" y="672.21" text-anchor="middle" font-family="'Saira Semi Condensed','Arial Narrow',sans-serif" font-size="96.03" font-weight="800" letter-spacing="4" fill="#a4a7ad" opacity="0.9">SCAPES</text>
+  <text x="800" y="757.5699999999999" text-anchor="middle" font-family="'Saira Semi Condensed','Arial Narrow',sans-serif" font-size="58.685" font-weight="700" letter-spacing="3" fill="#a4a7ad" opacity="0.6">LIFE / TRAVEL · AWAITING SCAN</text>
+</svg>

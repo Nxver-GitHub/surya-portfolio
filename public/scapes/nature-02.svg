@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1067" height="1600" viewBox="0 0 1067 1600" role="img" aria-label="Scapes placeholder — NATURE">
+  <defs>
+    <radialGradient id="wash" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#1c3a2e" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#0e1a15" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#0a0a0b"/>
+    </radialGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#34363a" stroke-width="1" opacity="0.28"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="#0a0a0b"/>
+  <rect width="100%" height="100%" fill="url(#wash)"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+  <rect x="8" y="8" width="1051" height="1584" fill="none" stroke="#34363a" stroke-width="2" opacity="0.7"/>
+  <path d="M16 80.02 V16 H80.02" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M986.98 16 H1051 V80.02" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M16 1519.98 V1584 H80.02" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <path d="M986.98 1584 H1051 V1519.98" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.55"/>
+  <circle cx="533.5" cy="704" r="117.37" fill="none" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <line x1="480.15" y1="704" x2="586.85" y2="704" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <line x1="533.5" y1="650.65" x2="533.5" y2="757.35" stroke="#a4a7ad" stroke-width="2" opacity="0.4"/>
+  <text x="533.5" y="1008" text-anchor="middle" font-family="'Saira Semi Condensed','Arial Narrow',sans-serif" font-size="96.03" font-weight="800" letter-spacing="4" fill="#a4a7ad" opacity="0.9">SCAPES</text>
+  <text x="533.5" y="1136" text-anchor="middle" font-family="'Saira Semi Condensed','Arial Narrow',sans-serif" font-size="58.685" font-weight="700" letter-spacing="3" fill="#a4a7ad" opacity="0.6">NATURE · AWAITING SCAN</text>
+</svg>
