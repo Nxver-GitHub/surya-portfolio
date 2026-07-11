@@ -1,0 +1,34 @@
+MP4/4 Steering wheel (1988)
+===========================
+
+Title:    MP4/4 Steering wheel (1988)
+Author:   kenkento.zapater (@kenkento.zapater)
+Profile:  https://sketchfab.com/kenkento.zapater
+Source:   https://sketchfab.com/models/bec20f3649c74cfcaa5a6fdddd7dea80
+License:  Creative Commons Attribution 4.0 International (CC BY 4.0)
+License URL: https://creativecommons.org/licenses/by/4.0/
+
+Modifications (by this project)
+-------------------------------
+- Rescaled to a real-world diameter of 0.26 m, oriented standing upright with
+  the grip/driver face toward -X, bottom-most point grounded at Z=0, origin at
+  footprint center.
+- Trademark scrub (public repo): removed the "HONDA" engine wordmark and its
+  "H" emblem from the center pad (base-colour texture). No other sponsor marks
+  (McLaren / Marlboro / Momo) were present in the textures or geometry after
+  inspection of all three maps; the coloured switch caps carry no wordmarks and
+  were left as period-correct switchgear. The removed logo area was filled with
+  cloned suede-grain from the surrounding pad. No text or logos remain anywhere.
+- The period-correct three-spoke suede/leather wheel character is retained
+  (suede rim, satin metal button rims, recessed centre boss).
+- A small subtle display stand was added — two minimal dark metal support posts
+  under the lower rim — because a thin wheel disc cannot plausibly stand on its
+  own on a shelf.
+- Material handling: the source uses packed ORM (metallic-roughness) + normal
+  maps routed through a Separate Color node (G→roughness, B→metallic); this
+  routing was verified correct and retained, so the suede reads matte and the
+  metal hardware reads satin. No emission leaks.
+- Compressed for the web: meshopt geometry compression + WebP textures via
+  @gltf-transform/cli (Draco not used).
+
+Destination: GT Café display exhibit (public/models/cafe-wheel.glb)
