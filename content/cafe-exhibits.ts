@@ -166,7 +166,76 @@ export interface Exhibit {
  *   },
  * },
  */
-export const exhibits: readonly Exhibit[] = [];
+export const exhibits: readonly Exhibit[] = [
+  {
+    id: "stratos",
+    name: "Lancia Stratos HF",
+    flavor:
+      "The wedge-shaped Group 4 rally weapon that won the World Rally Championship three years running (1974–76).",
+    modelPath: "/models/cafe-stratos.glb",
+    mount: {
+      // Rug show-car stage, parked ~15° off-axis, nose toward the window —
+      // the overhang past the F1 clear zone lands on rug, clear of the tables.
+      position: MOUNTS.rugStage.position,
+      rotationY: 0.26,
+    },
+    frameDistance: 3.4,
+    credit: {
+      title: "Lancia Stratos HF - Rally - Alitalia Livery",
+      author: "James Slater",
+      authorUrl: "https://sketchfab.com/JamesSlater",
+      source: "Sketchfab",
+      url: "https://sketchfab.com/models/76dfbe905346419d817fa03d1e46e547",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
+  },
+  {
+    id: "helmet",
+    name: "Senna-Inspired F1 Helmet",
+    flavor:
+      "A modern Grand Prix helmet repainted in the yellow, green and blue colour language of Ayrton Senna.",
+    modelPath: "/models/cafe-helmet.glb",
+    mount: {
+      // Motorsport-corner shelf. The glb is authored visor-facing −X (into the
+      // room from the east wall), so no additional yaw is needed.
+      position: MOUNTS.helmetShelf.position,
+      rotationY: 0,
+    },
+    frameDistance: 1.1,
+    credit: {
+      title: "F1 Helmet ZhouGuanyu 24",
+      author: "miopass",
+      authorUrl: "https://sketchfab.com/miopass",
+      source: "Sketchfab",
+      url: "https://sketchfab.com/models/1124fa1f754645d7b9d54de84009d463",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
+  },
+  {
+    id: "mp44-wheel",
+    name: "MP4/4 Steering Wheel (1988)",
+    flavor:
+      "The three-spoke suede wheel of the 1988 McLaren MP4/4 — the car that won 15 of 16 grands prix that season.",
+    modelPath: "/models/cafe-wheel.glb",
+    mount: {
+      // Same east-wall shelf run, beside the helmet's spot; authored face −X.
+      position: [6.32, 1.42, 0.95],
+      rotationY: 0,
+    },
+    frameDistance: 1.1,
+    credit: {
+      title: "MP4/4 Steering wheel (1988)",
+      author: "kenkento.zapater",
+      authorUrl: "https://sketchfab.com/kenkento.zapater",
+      source: "Sketchfab",
+      url: "https://sketchfab.com/models/bec20f3649c74cfcaa5a6fdddd7dea80",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
+  },
+];
 
 /** Exhibit lookup by id, for the scene and UI to resolve a focus target. */
 export const exhibitById: ReadonlyMap<string, Exhibit> = new Map(
