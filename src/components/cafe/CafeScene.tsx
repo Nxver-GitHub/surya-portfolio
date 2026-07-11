@@ -59,6 +59,15 @@ function CafeModel({ onCrtFound, onSelectCrt }: CafeModelProps) {
     [scene],
   );
 
+  // World-space collider position: today's glb keeps a flat node list, but a
+  // future re-export could nest CRT_Terminal under a parent transform — local
+  // position would then silently drift from the visible mesh.
+  const crtWorldPos = useMemo<Vector3 | null>(() => {
+    if (!crt) return null;
+    scene.updateMatrixWorld(true);
+    return crt.getWorldPosition(new Vector3());
+  }, [crt, scene]);
+
   useEffect(() => {
     onCrtFound(crt !== null);
   }, [crt, onCrtFound]);
@@ -69,9 +78,9 @@ function CafeModel({ onCrtFound, onSelectCrt }: CafeModelProps) {
   return (
     <>
       <primitive object={scene} />
-      {crt ? (
+      {crtWorldPos ? (
         <mesh
-          position={crt.position}
+          position={crtWorldPos}
           onClick={(event) => {
             event.stopPropagation();
             onSelectCrt();
@@ -211,6 +220,9 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
   const elapsed = useRef(0);
   const playing = useRef(false);
   const mounted = useRef(false);
+  // State mirror of `playing` — gates OrbitControls so a mid-flight drag or
+  // scroll can't write to the camera in the same frame as the tween.
+  const [flying, setFlying] = useState(false);
 
   const pose = useMemo<CameraPose>(() => {
     if (focus.kind === "crt") return CRT_POSE;
@@ -241,6 +253,7 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
       ctrl.target.copy(toTarget.current);
       ctrl.update();
       playing.current = false;
+      setFlying(false);
       return;
     }
 
@@ -248,6 +261,7 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
     fromTarget.current.copy(ctrl.target);
     elapsed.current = 0;
     playing.current = true;
+    setFlying(true);
   }, [pose, reducedMotion, camera]);
 
   useFrame((_, delta) => {
@@ -264,7 +278,10 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
     ctrl.target.lerpVectors(fromTarget.current, toTarget.current, eased);
     ctrl.update();
 
-    if (raw >= 1) playing.current = false;
+    if (raw >= 1) {
+      playing.current = false;
+      setFlying(false);
+    }
   });
 
   // Auto-rotate only when idling in room view and no flight is running.
@@ -276,6 +293,7 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
   return (
     <OrbitControls
       ref={controls}
+      enabled={!flying}
       enableDamping={false}
       autoRotate={autoRotate}
       autoRotateSpeed={0.5}
