@@ -1,0 +1,41 @@
+F1 Helmet — repainted "Senna-inspired" homage
+==============================================
+
+Title:    F1 Helmet ZhouGuanyu 24
+Author:   miopass (@miopass)
+Profile:  https://sketchfab.com/miopass
+Source:   https://sketchfab.com/models/1124fa1f754645d7b9d54de84009d463
+License:  Creative Commons Attribution 4.0 International (CC BY 4.0)
+License URL: https://creativecommons.org/licenses/by/4.0/
+
+Modifications (by this project)
+-------------------------------
+- Rescaled to real-world modern F1 helmet dimensions (0.30 m front-to-back
+  including rear spoiler), base of the shell grounded at Z=0, origin at
+  footprint center, visor oriented along -X (facing into the room when
+  shelf-mounted).
+- Full livery repaint — "Senna-inspired homage": the entire original Zhou
+  Guanyu 2024 design was stripped and replaced. Removed EVERY real-world mark:
+  the "周冠宇" (ZHOU) name characters, the white city-skyline sponsor blocks,
+  the green chevron/arrow bands, the purple crest/ornament, the "Speedhui /
+  2024 / 上帝保佑" visor tear-off script and cloud motifs, and all remaining
+  green text scripts. No text or logos remain anywhere on the model.
+- Repainted in an unmistakable Senna colour language WITHOUT reproducing the
+  exact registered stripe geometry (band widths and the crown sweep are
+  varied so it reads as homage, not replica): bright yellow shell base, a
+  green band sweeping the crown/brow and dipping forward toward the visor,
+  blue accents around the visor surround / lower shell.
+- Visor rebuilt as dark smoke (near-opaque, glossy clearcoat; the branded
+  tear-off strip was discarded). Interior liner reset to a neutral matte
+  dark fabric.
+- Material corrections: the source used packed ORM / metallic-roughness
+  textures split via Separate Color nodes; these were replaced entirely.
+  Shell/trim now read as glossy automotive paint (metallic 0, roughness ~0.14,
+  light clearcoat) baked from a procedural Senna colour field into WebP
+  base-colour textures. Visor: metallic 0, roughness 0.06, IOR 1.45. No
+  emission leaks.
+- Decimated for the web (visor mesh was ~56k tris of a smooth lens; shell
+  kept dense to preserve curvature normals) and compressed: meshopt geometry
+  compression + WebP textures via @gltf-transform/cli (Draco not used).
+
+Destination: GT Café display exhibit (public/models/cafe-helmet.glb)
