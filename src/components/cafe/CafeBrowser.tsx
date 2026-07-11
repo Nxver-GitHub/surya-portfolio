@@ -200,6 +200,15 @@ export function CafeBrowser() {
               >
                 <span aria-hidden="true">⤢</span> Room view
               </LozengeButton>
+              {/* Keyboard path to the house terminal — the 3D CRT is a
+                  pointer-only target, so mirror it here like the exhibits'
+                  "On display" buttons. Hidden while the terminal is open
+                  (the status chip below takes its place). */}
+              {crtPresent && focus.kind !== "crt" ? (
+                <LozengeButton onClick={selectCrt}>
+                  <span aria-hidden="true">▸</span> Terminal
+                </LozengeButton>
+              ) : null}
               {/* Book chip only while a book is the focus — during an exhibit
                   or CRT visit the dedicated plate below carries the context. */}
               {focus.kind === "book" || focus.kind === "room" ? (

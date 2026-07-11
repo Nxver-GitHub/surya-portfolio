@@ -12,8 +12,10 @@
  *   - Route each submission: local command → handled here; anything else →
  *     model via `sendMessage`. The request body is flattened to the route's
  *     `{ messages: [{role, content}] }` contract via `prepareSendMessagesRequest`.
- *   - Merge the local log with the streamed assistant text into one ordered
- *     view for rendering.
+ *   - Keep ONE ordered scrollback: user echoes are appended at submit time,
+ *     finished replies are folded in via `onFinish`, and the in-flight reply
+ *     renders as a transient tail — so errors and later commands always appear
+ *     in true session order (and `clear` wipes the whole screen).
  *   - Enforce a per-session user-message cap, then nudge to the contact links.
  *   - Map 429/503 errors to themed lines instead of raw errors.
  *
@@ -100,6 +102,14 @@ export function useTerminalChat({
     onError: (error) => {
       appendLocal([makeLine("error", themedErrorLine(error))]);
     },
+    // Fold the finished reply into the ordered scrollback; the transient
+    // streaming tail below stops rendering once `status` leaves streaming.
+    onFinish: ({ message }) => {
+      const text = messageText(message);
+      if (message.role === "assistant" && text.length > 0) {
+        appendLocal([makeLine("reply", text)]);
+      }
+    },
   });
 
   const busy = status === "submitted" || status === "streaming";
@@ -136,6 +146,10 @@ export function useTerminalChat({
             return;
           }
           setUserTurns((n) => n + 1);
+          // Echo the user line into the scrollback NOW, so anything that
+          // follows (streamed reply, themed error, a later command) renders
+          // after it in true session order.
+          appendLocal([makeLine("prompt", `> ${resolved.text}`)]);
           sendMessage({ text: resolved.text });
           return;
         }
@@ -144,24 +158,21 @@ export function useTerminalChat({
     [appendLocal, atSessionLimit, busy, onExit, sendMessage],
   );
 
-  // Merge local lines with the live chat turns. Local lines (boot, commands,
-  // errors) render first as the session's fixed preamble; the streamed
-  // user/assistant turns follow in order. Empty assistant placeholders (before
-  // the first token) are dropped so no blank row flashes.
+  // The scrollback IS localLines, in append order (boot, echoes, command
+  // output, errors, finished replies). While a reply is in flight, the
+  // partial assistant text renders as a transient tail row; `onFinish` folds
+  // the final text into the log the moment the tail stops rendering.
   const lines = useMemo<readonly TerminalLine[]>(() => {
-    const chatLines: TerminalLine[] = [];
-    for (const message of messages) {
-      if (message.role !== "user" && message.role !== "assistant") continue;
-      const text = messageText(message);
-      if (message.role === "assistant" && text.length === 0) continue;
-      chatLines.push({
-        id: message.id,
-        tone: message.role === "user" ? "prompt" : "reply",
-        text: message.role === "user" ? `> ${text}` : text,
-      });
-    }
-    return [...localLines, ...chatLines];
-  }, [localLines, messages]);
+    if (!busy) return localLines;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== "assistant") return localLines;
+    const tail = messageText(last);
+    if (tail.length === 0) return localLines;
+    return [
+      ...localLines,
+      { id: "streaming-tail", tone: "reply", text: tail },
+    ];
+  }, [busy, localLines, messages]);
 
   return { lines, busy, submit, atSessionLimit };
 }
