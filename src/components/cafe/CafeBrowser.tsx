@@ -11,6 +11,8 @@ import { CafeBackdrop } from "./CafeBackdrop";
 import { ExhibitList } from "./ExhibitList";
 import { ExhibitPlate } from "./ExhibitPlate";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
+import { Terminal } from "./terminal/Terminal";
+import type { TerminalLine } from "./terminal/terminalLines";
 import type { CafeFocus } from "./CafeScene";
 
 // Code-split the WebGL café off the initial bundle. Client-only: ssr:false is
@@ -93,6 +95,15 @@ export function CafeBrowser() {
   const [liveExhibitIds, setLiveExhibitIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  // Live terminal scrollback, mirrored up from the Terminal panel so the 3D CRT
+  // screen can paint it. Empty unless the terminal is open.
+  const [terminalLines, setTerminalLines] = useState<readonly TerminalLine[]>(
+    () => [],
+  );
+
+  // The terminal is "open" whenever the CRT is the focus. It works with the 3D
+  // scene present (real CRT) or, via the fallback lozenge below, without it.
+  const terminalOpen = focus.kind === "crt";
 
   const select = useCallback(
     (book: MenuBook) => {
@@ -106,6 +117,12 @@ export function CafeBrowser() {
 
   const selectCrt = useCallback(() => setFocus({ kind: "crt" }), []);
   const roomView = useCallback(() => setFocus({ kind: "room" }), []);
+  // Close the terminal: back to room view and drop the mirrored scrollback so
+  // the 3D CRT feed clears (the panel itself unmounts and stops reporting).
+  const closeTerminal = useCallback(() => {
+    setTerminalLines([]);
+    setFocus({ kind: "room" });
+  }, []);
 
   const selectExhibit = useCallback((exhibit: Exhibit) => {
     setFocus({ kind: "exhibit", exhibitId: exhibit.id });
@@ -165,6 +182,8 @@ export function CafeBrowser() {
                 onCrtFound={onCrtFound}
                 onSelectExhibit={selectExhibit}
                 onExhibitAvailability={onExhibitAvailability}
+                terminalActive={terminalOpen && crtPresent}
+                terminalLines={terminalLines}
               />
             </Suspense>
           </SceneErrorBoundary>
@@ -192,7 +211,7 @@ export function CafeBrowser() {
                     Terminal
                   </span>
                   <span className="font-display text-xs font-bold tracking-wide text-white uppercase">
-                    Coming online soon
+                    Online — CAFE-OS v2.2
                   </span>
                 </span>
               ) : null}
@@ -208,6 +227,27 @@ export function CafeBrowser() {
 
             {/* The focused exhibit's plate: name, flavour, and full CC credit. */}
             {focusedExhibit ? <ExhibitPlate exhibit={focusedExhibit} /> : null}
+          </div>
+        ) : null}
+
+        {/* No-WebGL fallback: a plain lozenge to open the terminal, so the
+            (pure-DOM) house terminal still works without the 3D scene. */}
+        {!sceneReady && !terminalOpen ? (
+          <div>
+            <LozengeButton onClick={selectCrt}>
+              <span aria-hidden="true">▸</span> Open terminal
+            </LozengeButton>
+          </div>
+        ) : null}
+
+        {/* The house terminal. Rendered whenever the CRT is the focus — beside
+            the visible scene on desktop, full-width below on mobile, and as the
+            sole surface in the no-WebGL fallback. Escape / `exit` closes it back
+            to room view. It reports its scrollback up so the 3D CRT can mirror
+            it (see CrtScreenFeed). */}
+        {terminalOpen ? (
+          <div className="h-[420px] sm:h-[460px]">
+            <Terminal onClose={closeTerminal} onLinesChange={setTerminalLines} />
           </div>
         ) : null}
 

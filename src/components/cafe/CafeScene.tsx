@@ -22,6 +22,8 @@ import { menuBooks, type MenuBook } from "../../../content/menu-books";
 import { exhibits, exhibitById, type Exhibit } from "../../../content/cafe-exhibits";
 import { useReducedMotion } from "../garage/useReducedMotion";
 import { ExhibitPiece } from "./ExhibitPiece";
+import { CrtScreenFeed } from "./terminal/CrtScreenFeed";
+import type { TerminalLine } from "./terminal/terminalLines";
 import {
   CAMERA_BOUNDS,
   CRT_NODE_NAME,
@@ -354,6 +356,10 @@ interface CafeSceneProps {
   onSelectExhibit: (exhibit: Exhibit) => void;
   /** Reports an exhibit's glb load result, so the UI lists only live pieces. */
   onExhibitAvailability: (exhibit: Exhibit, available: boolean) => void;
+  /** True while the 2D terminal overlay is open — wakes the CRT screen feed. */
+  terminalActive?: boolean;
+  /** The terminal scrollback to mirror onto the CRT screen (set dressing). */
+  terminalLines?: readonly TerminalLine[];
 }
 
 /**
@@ -373,6 +379,8 @@ export function CafeScene({
   onCrtFound,
   onSelectExhibit,
   onExhibitAvailability,
+  terminalActive = false,
+  terminalLines = [],
 }: CafeSceneProps) {
   const reducedMotion = useReducedMotion();
   const idle = !reducedMotion;
@@ -428,6 +436,10 @@ export function CafeScene({
       </Environment>
 
       <CafeModel onCrtFound={onCrtFound} onSelectCrt={onSelectCrt} />
+
+      {/* Hybrid CRT screen feed: mirrors the 2D terminal onto the in-scene
+          monitor while the overlay is open; restores the screen on close. */}
+      <CrtScreenFeed active={terminalActive} lines={terminalLines} />
 
       {books.map((book) => (
         <BookMarker

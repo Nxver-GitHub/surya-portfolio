@@ -137,6 +137,25 @@ body {
 }
 }
 
+/* Café terminal caret blink — hard on/off, no easing (terminal feel). Stilled
+   under reduced motion by the global rule below, and only rendered when motion
+   is allowed (see Terminal.tsx). */
+@keyframes cafe-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.cafe-caret {
+  animation: cafe-caret-blink 1s step-end infinite;
+  font-family: ui-monospace, monospace;
+}
+
 /* Locked-pavilion refusal: short mechanical shake */
 @keyframes locked-shake {
   0%,
