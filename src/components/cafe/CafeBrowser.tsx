@@ -1,12 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
+import { exhibits, type Exhibit } from "../../../content/cafe-exhibits";
 import { BookList } from "./BookList";
 import { BookPanel } from "./BookPanel";
 import { CafeBackdrop } from "./CafeBackdrop";
+import { ExhibitList } from "./ExhibitList";
+import { ExhibitPlate } from "./ExhibitPlate";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import type { CafeFocus } from "./CafeScene";
 
@@ -86,6 +89,10 @@ export function CafeBrowser() {
   const [crtPresent, setCrtPresent] = useState(false);
   // Whether the 3D scene mounted at all (false → 2D fallback is showing).
   const [sceneReady, setSceneReady] = useState(false);
+  // Ids of exhibits whose glb loaded successfully — the UI lists only these.
+  const [liveExhibitIds, setLiveExhibitIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
   const select = useCallback(
     (book: MenuBook) => {
@@ -100,10 +107,39 @@ export function CafeBrowser() {
   const selectCrt = useCallback(() => setFocus({ kind: "crt" }), []);
   const roomView = useCallback(() => setFocus({ kind: "room" }), []);
 
+  const selectExhibit = useCallback((exhibit: Exhibit) => {
+    setFocus({ kind: "exhibit", exhibitId: exhibit.id });
+  }, []);
+
   const onCrtFound = useCallback((present: boolean) => {
     setSceneReady(true);
     setCrtPresent(present);
   }, []);
+
+  // Fold each exhibit's load result into the live set (immutable update).
+  const onExhibitAvailability = useCallback(
+    (exhibit: Exhibit, available: boolean) => {
+      setLiveExhibitIds((prev) => {
+        const has = prev.has(exhibit.id);
+        if (available === has) return prev;
+        const next = new Set(prev);
+        if (available) next.add(exhibit.id);
+        else next.delete(exhibit.id);
+        return next;
+      });
+    },
+    [],
+  );
+
+  // The live exhibits, in roster order, and the focused one (for the plate).
+  const liveExhibits = useMemo(
+    () => exhibits.filter((e) => liveExhibitIds.has(e.id)),
+    [liveExhibitIds],
+  );
+  const focusedExhibit =
+    focus.kind === "exhibit"
+      ? liveExhibits.find((e) => e.id === focus.exhibitId) ?? null
+      : null;
 
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
@@ -113,8 +149,12 @@ export function CafeBrowser() {
       </nav>
 
       <div className="flex flex-col gap-6 lg:order-2">
-        {/* 3D café — enhancement only; falls back to a 2D backdrop */}
-        <div className="min-h-72 overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] lg:min-h-96">
+        {/* 3D café — enhancement only; falls back to a 2D backdrop. Sized to
+            read like a ROOM, not a letterbox: portrait-ish on mobile so the
+            floor-to-ceiling of the room is visible, ~3:2 with real height on
+            desktop. Height is viewport-relative and capped so it never
+            dominates the page. */}
+        <div className="aspect-[4/5] max-h-[620px] min-h-[420px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] sm:aspect-[16/10] sm:max-h-none sm:min-h-[480px] lg:aspect-[3/2] lg:min-h-[520px]">
           <SceneErrorBoundary fallback={<CafeBackdrop reason="error" />}>
             <Suspense fallback={<CafeBackdrop reason="loading" />}>
               <CafeScene
@@ -123,6 +163,8 @@ export function CafeBrowser() {
                 onSelect={select}
                 onSelectCrt={selectCrt}
                 onCrtFound={onCrtFound}
+                onSelectExhibit={selectExhibit}
+                onExhibitAvailability={onExhibitAvailability}
               />
             </Suspense>
           </SceneErrorBoundary>
@@ -131,24 +173,41 @@ export function CafeBrowser() {
         {/* Scene controls — gated on the 3D scene actually being present, so
             nothing dangles when the glb failed to load (2D fallback path). */}
         {sceneReady ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <LozengeButton
-              onClick={roomView}
-              disabled={focus.kind === "room"}
-            >
-              <span aria-hidden="true">⤢</span> Room view
-            </LozengeButton>
-            <FocusLabel book={selected} />
-            {focus.kind === "crt" && crtPresent ? (
-              <span className="plate-hot ts-hard inline-flex flex-col gap-0.5 px-3 py-1.5">
-                <span className="font-display text-[10px] font-black tracking-[0.18em] text-white/80 uppercase">
-                  Terminal
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <LozengeButton
+                onClick={roomView}
+                disabled={focus.kind === "room"}
+              >
+                <span aria-hidden="true">⤢</span> Room view
+              </LozengeButton>
+              {/* Book chip only while a book is the focus — during an exhibit
+                  or CRT visit the dedicated plate below carries the context. */}
+              {focus.kind === "book" || focus.kind === "room" ? (
+                <FocusLabel book={selected} />
+              ) : null}
+              {focus.kind === "crt" && crtPresent ? (
+                <span className="plate-hot ts-hard inline-flex flex-col gap-0.5 px-3 py-1.5">
+                  <span className="font-display text-[10px] font-black tracking-[0.18em] text-white/80 uppercase">
+                    Terminal
+                  </span>
+                  <span className="font-display text-xs font-bold tracking-wide text-white uppercase">
+                    Coming online soon
+                  </span>
                 </span>
-                <span className="font-display text-xs font-bold tracking-wide text-white uppercase">
-                  Coming online soon
-                </span>
-              </span>
-            ) : null}
+              ) : null}
+            </div>
+
+            {/* "On display" — one button per live exhibit; renders nothing when
+                the roster is empty. Same focus state as an in-scene click. */}
+            <ExhibitList
+              available={liveExhibits}
+              activeId={focus.kind === "exhibit" ? focus.exhibitId : null}
+              onSelect={selectExhibit}
+            />
+
+            {/* The focused exhibit's plate: name, flavour, and full CC credit. */}
+            {focusedExhibit ? <ExhibitPlate exhibit={focusedExhibit} /> : null}
           </div>
         ) : null}
 

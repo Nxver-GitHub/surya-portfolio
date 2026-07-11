@@ -14,6 +14,7 @@
  */
 
 import type { BookAnchor } from "../../../content/menu-books";
+import type { Exhibit } from "../../../content/cafe-exhibits";
 
 /** A camera position + the world point it aims at (café-local space). */
 export interface CameraPose {
@@ -21,6 +22,48 @@ export interface CameraPose {
   readonly position: readonly [number, number, number];
   /** Point the camera looks at [x, y, z]. */
   readonly target: readonly [number, number, number];
+}
+
+/**
+ * Interior containment box for the camera EYE (café-local metres). The room is
+ * ~13×3.8×9m with walls at ±6.5 (x), floor/ceiling 0–3.8 (y), ±4.5 (z); this
+ * box holds a 0.3m margin off every surface. Clamping the eye here every frame
+ * keeps the camera inside the building — OrbitControls recomputes its spherical
+ * from the clamped position next frame, so it slides along a wall instead of
+ * passing through it. maxDistance stays generous; this box is the real boundary.
+ */
+export const CAMERA_BOUNDS = {
+  minX: -6.2,
+  maxX: 6.2,
+  minY: 0.5,
+  maxY: 3.4,
+  minZ: -4.2,
+  maxZ: 4.2,
+} as const;
+
+function clampScalar(value: number, min: number, max: number): number {
+  return value < min ? min : value > max ? max : value;
+}
+
+/**
+ * Clamp a camera eye position into {@link CAMERA_BOUNDS}, returning a new tuple
+ * (never mutates the input). Used both to keep flight destinations honest and,
+ * in-scene, to contain the live camera every frame. Pure.
+ */
+export function clampToRoom(
+  position: readonly [number, number, number],
+): [number, number, number] {
+  return [
+    clampScalar(position[0], CAMERA_BOUNDS.minX, CAMERA_BOUNDS.maxX),
+    clampScalar(position[1], CAMERA_BOUNDS.minY, CAMERA_BOUNDS.maxY),
+    clampScalar(position[2], CAMERA_BOUNDS.minZ, CAMERA_BOUNDS.maxZ),
+  ];
+}
+
+/** A pose with its eye clamped into the interior box (target left as-authored,
+ * since the look-at point may legitimately sit on a wall the eye faces). */
+function clampPose(pose: CameraPose): CameraPose {
+  return { position: clampToRoom(pose.position), target: pose.target };
 }
 
 /**
@@ -76,15 +119,56 @@ export function tableFrontPose(anchor: BookAnchor): CameraPose {
   const unitX = toCenterX / length;
   const unitZ = toCenterZ / length;
 
-  return {
+  return clampPose({
     position: [
       anchor.x + unitX * TABLE_BACK_OFFSET,
       anchor.y + TABLE_UP_OFFSET,
       anchor.z + unitZ * TABLE_BACK_OFFSET,
     ],
     target: [anchor.x, anchor.y, anchor.z],
-  };
+  });
 }
 
 /** The name of the glb node the CRT click raycasts for (getObjectByName). */
 export const CRT_NODE_NAME = "CRT_Terminal";
+
+/**
+ * Default stand-back distance for an exhibit's derived framing (metres), used
+ * when the exhibit sets no `frameDistance`. Mid-range: closer than a car needs,
+ * further than a helmet — real pieces should tune `frameDistance` to their size.
+ */
+export const EXHIBIT_FRAME_DISTANCE = 2.6;
+/** How far above the piece's mount the framing camera floats (metres). */
+export const EXHIBIT_UP_OFFSET = 0.7;
+
+/**
+ * Derive the framing pose for an exhibit. If the exhibit carries a
+ * `cameraOverride`, that pose wins verbatim. Otherwise this applies the same
+ * back-toward-room-center rule as {@link tableFrontPose}: stand the camera off
+ * the piece toward {@link ROOM_CENTER} by `frameDistance` (default
+ * {@link EXHIBIT_FRAME_DISTANCE}), lift it {@link EXHIBIT_UP_OFFSET}, and look
+ * at the piece. Pure and deterministic — moving a mount moves its framing with
+ * it, so no per-exhibit camera tuning is needed for the common case.
+ */
+export function exhibitFramePose(exhibit: Exhibit): CameraPose {
+  if (exhibit.cameraOverride) {
+    return clampPose({
+      position: exhibit.cameraOverride.position,
+      target: exhibit.cameraOverride.target,
+    });
+  }
+
+  const [px, py, pz] = exhibit.mount.position;
+  const distance = exhibit.frameDistance ?? EXHIBIT_FRAME_DISTANCE;
+
+  const toCenterX = ROOM_CENTER[0] - px;
+  const toCenterZ = ROOM_CENTER[2] - pz;
+  const length = Math.hypot(toCenterX, toCenterZ) || 1;
+  const unitX = toCenterX / length;
+  const unitZ = toCenterZ / length;
+
+  return clampPose({
+    position: [px + unitX * distance, py + EXHIBIT_UP_OFFSET, pz + unitZ * distance],
+    target: [px, py, pz],
+  });
+}

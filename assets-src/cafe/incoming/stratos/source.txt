@@ -1,0 +1,31 @@
+Lancia Stratos HF - Rally - Alitalia Livery
+===========================================
+
+Title:    Lancia Stratos HF - Rally - Alitalia Livery
+Author:   James Slater (@JamesSlater)
+Profile:  https://sketchfab.com/JamesSlater
+Source:   https://sketchfab.com/models/76dfbe905346419d817fa03d1e46e547
+License:  Creative Commons Attribution 4.0 International (CC BY 4.0)
+License URL: https://creativecommons.org/licenses/by/4.0/
+
+Modifications (by this project)
+-------------------------------
+- Rescaled to real-world Lancia Stratos HF dimensions (length 3.71 m), wheels
+  grounded at Z=0, origin at footprint center, nose oriented along +X.
+- Trademark scrub (public repo): removed all real-world marks — every "ALITALIA"
+  wordmark, "LANCIA" text, "RALLYE MONTE CARLO" event plate and "1" badge, the
+  driver-name scripts ("S. Munari / S. Maiga"), the "HF" shield badges, the
+  "CAMPIONE DEL MONDO" caption, the "ROME" rally-plate labels, and the sponsor
+  decals (Pirelli / Facom / Magneti / Champion / Campagnolo, etc.). The abstract
+  green/white/red arrow livery geometry is retained as national racing colors,
+  which carry no wordmarks. The main racing numbers were removed for a clean
+  exhibit read.
+- Material corrections: driven Principled sliders directly where the UE4-authored
+  packed ORM/metallic-roughness channels misread — car paint reads as glossy
+  paint (metallic 0, roughness ~0.05), tyres/mechanical retain their ORM maps,
+  and the glass was rebuilt as proper glass (roughness 0.05, transmission 0.85,
+  IOR 1.45). No emission leaks.
+- Compressed for the web: meshopt geometry compression + WebP textures via
+  @gltf-transform/cli (Draco not used).
+
+Destination: GT Café display exhibit (public/models/cafe-stratos.glb)

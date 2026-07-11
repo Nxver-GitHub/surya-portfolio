@@ -68,3 +68,6 @@ test-results/
 .playwright-mcp/
 assets-src/cars/incoming/*
 !assets-src/cars/incoming/README.md
+assets-src/cafe/incoming/**
+!assets-src/cafe/incoming/*/
+!assets-src/cafe/incoming/*/source.txt
