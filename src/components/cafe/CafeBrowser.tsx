@@ -181,7 +181,11 @@ export function CafeBrowser() {
               >
                 <span aria-hidden="true">⤢</span> Room view
               </LozengeButton>
-              <FocusLabel book={selected} />
+              {/* Book chip only while a book is the focus — during an exhibit
+                  or CRT visit the dedicated plate below carries the context. */}
+              {focus.kind === "book" || focus.kind === "room" ? (
+                <FocusLabel book={selected} />
+              ) : null}
               {focus.kind === "crt" && crtPresent ? (
                 <span className="plate-hot ts-hard inline-flex flex-col gap-0.5 px-3 py-1.5">
                   <span className="font-display text-[10px] font-black tracking-[0.18em] text-white/80 uppercase">
