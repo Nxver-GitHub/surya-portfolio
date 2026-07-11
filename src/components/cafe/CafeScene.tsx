@@ -208,8 +208,9 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
   const fromTarget = useRef(new Vector3());
   const toPos = useRef(new Vector3());
   const toTarget = useRef(new Vector3());
-  const start = useRef<number | null>(null);
+  const elapsed = useRef(0);
   const playing = useRef(false);
+  const mounted = useRef(false);
 
   const pose = useMemo<CameraPose>(() => {
     if (focus.kind === "crt") return CRT_POSE;
@@ -220,8 +221,10 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
     return OVERVIEW_POSE;
   }, [focus]);
 
-  // Begin (or, under reduced motion, immediately complete) a flight whenever
-  // the destination pose changes.
+  // Begin (or, under reduced motion / on first mount, immediately complete) a
+  // flight whenever the destination pose changes. A rapid focus change mid-
+  // flight redirects from the current camera state and restarts the full
+  // FLIGHT_MS — intentional: every flight reads as one complete move.
   useEffect(() => {
     const ctrl = controls.current;
     if (!ctrl) return;
@@ -229,7 +232,11 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
     toPos.current.set(pose.position[0], pose.position[1], pose.position[2]);
     toTarget.current.set(pose.target[0], pose.target[1], pose.target[2]);
 
-    if (reducedMotion) {
+    if (reducedMotion || !mounted.current) {
+      // Instant cut: reduced motion always; first mount seeds the controls
+      // target imperatively (no declarative `target` prop — it would re-apply
+      // on re-renders and stomp the tweened value mid-flight).
+      mounted.current = true;
       camera.position.copy(toPos.current);
       ctrl.target.copy(toTarget.current);
       ctrl.update();
@@ -239,17 +246,18 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
 
     fromPos.current.copy(camera.position);
     fromTarget.current.copy(ctrl.target);
-    start.current = null;
+    elapsed.current = 0;
     playing.current = true;
   }, [pose, reducedMotion, camera]);
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     const ctrl = controls.current;
     if (!ctrl || !playing.current) return;
 
-    const now = state.clock.elapsedTime * 1000;
-    if (start.current === null) start.current = now;
-    const raw = (now - start.current) / FLIGHT_MS;
+    // Accumulate clamped frame deltas so a tab-throttled or very long first
+    // frame can't collapse the whole flight into a single snap.
+    elapsed.current += Math.min(delta, 0.1) * 1000;
+    const raw = elapsed.current / FLIGHT_MS;
     const eased = easeMechanical(raw);
 
     camera.position.lerpVectors(fromPos.current, toPos.current, eased);
@@ -262,10 +270,13 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
   // Auto-rotate only when idling in room view and no flight is running.
   const autoRotate = idle && focus.kind === "room";
 
+  // No declarative `target` prop: the rig owns the target imperatively (the
+  // mount effect seeds it, flights tween it). Damping off — it would layer
+  // OrbitControls' own smoothing on top of the hand-tweened flight.
   return (
     <OrbitControls
       ref={controls}
-      target={[OVERVIEW_POSE.target[0], OVERVIEW_POSE.target[1], OVERVIEW_POSE.target[2]]}
+      enableDamping={false}
       autoRotate={autoRotate}
       autoRotateSpeed={0.5}
       enablePan={false}
