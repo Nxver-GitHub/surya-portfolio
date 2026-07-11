@@ -43,6 +43,21 @@ export interface BookAnchor {
   z: number;
 }
 
+/**
+ * Enamel spine treatment for a book, so each audience reads as a distinct
+ * object across the room and in the hover UI. Colors harmonize with the site's
+ * livery palettes (see content/liveries.ts) but are hardcoded here — a book's
+ * cover is content, not a livery entry.
+ */
+export interface BookCover {
+  /** Enamel body color as a `#rrggbb` hex — distinct per book. */
+  color: string;
+  /** 1–2 char spine mark, mirroring the world-map badge glyphs. */
+  glyph: string;
+  /** Short audience tag for the hover/label UI, e.g. "FOR FOUNDERS". */
+  label: string;
+}
+
 /** One stop on a reading path. */
 export interface MenuBookTask {
   id: string;
@@ -68,6 +83,8 @@ export interface MenuBook {
   tasks: readonly MenuBookTask[];
   /** 3D table position the book's marker sits at (placeholder coords) */
   anchor: BookAnchor;
+  /** Enamel spine treatment — color, glyph, and audience tag for the UI. */
+  cover: BookCover;
 }
 
 export const menuBooks: readonly MenuBook[] = [
@@ -109,7 +126,8 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "license", tierId: "IA" },
       },
     ],
-    anchor: { x: -3.3, y: 0.98, z: 1.44 },
+    anchor: { x: -4.2, y: 0.98, z: 0 },
+    cover: { color: "#8bc0e2", glyph: "AG", label: "FOR FOUNDERS" },
   },
 
   /* ── Tournament: two hackathon builds, head to head ─────────────────── */
@@ -150,7 +168,8 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "missions", missionId: "cruzhacks-2025" },
       },
     ],
-    anchor: { x: -3.3, y: 0.98, z: -1.36 },
+    anchor: { x: -2.97, y: 0.98, z: 2.33 },
+    cover: { color: "#e56a19", glyph: "GP", label: "FOR ENGINEERS" },
   },
 
   /* ── Collection: the venture / founder-side thread ──────────────────── */
@@ -184,7 +203,8 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "license", tierId: "S" },
       },
     ],
-    anchor: { x: -1.3, y: 0.98, z: 0.4 },
+    anchor: { x: 0, y: 0.82, z: 3.3 },
+    cover: { color: "#20356f", glyph: "VT", label: "FOR VCS & OPERATORS" },
   },
 
   /* ── Misc: the GT7 "Scapes book" — send visitors to photography ─────── */
@@ -218,7 +238,8 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "scapes", category: "life" },
       },
     ],
-    anchor: { x: -3.12, y: 0.98, z: 1.78 },
+    anchor: { x: 2.97, y: 0.98, z: 2.33 },
+    cover: { color: "#6fcabb", glyph: "OC", label: "OFF THE CLOCK" },
   },
 
   /* ── Misc: the fast start — one lap for a busy hiring manager ───────── */
@@ -252,7 +273,8 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "career", eventSlug: "product-dev-club" },
       },
     ],
-    anchor: { x: -3.12, y: 0.98, z: -1.04 },
+    anchor: { x: 4.2, y: 0.98, z: 0 },
+    cover: { color: "#d2222a", glyph: "QL", label: "THE QUICK LAP" },
   },
 ] as const;
 

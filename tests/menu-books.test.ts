@@ -98,6 +98,47 @@ describe("menu books — structure", () => {
   });
 });
 
+describe("menu books — enamel covers", () => {
+  const HEX = /^#[0-9a-fA-F]{6}$/;
+  const EXPECTED_LABELS: readonly string[] = [
+    "FOR FOUNDERS",
+    "FOR ENGINEERS",
+    "FOR VCS & OPERATORS",
+    "OFF THE CLOCK",
+    "THE QUICK LAP",
+  ];
+
+  it("gives every book a cover with a valid #rrggbb color", () => {
+    for (const b of menuBooks) {
+      expect(b.cover, b.id).toBeTruthy();
+      expect(HEX.test(b.cover.color), `${b.id}: ${b.cover.color}`).toBe(true);
+    }
+  });
+
+  it("gives every book a non-empty glyph of one or two chars", () => {
+    for (const b of menuBooks) {
+      expect(b.cover.glyph.length, b.id).toBeGreaterThanOrEqual(1);
+      expect(b.cover.glyph.length, b.id).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it("gives every book a non-empty audience label", () => {
+    for (const b of menuBooks) {
+      expect(b.cover.label.trim().length, b.id).toBeGreaterThan(0);
+    }
+  });
+
+  it("uses a distinct cover color per book", () => {
+    const colors = menuBooks.map((b) => b.cover.color.toLowerCase());
+    expect(new Set(colors).size).toBe(colors.length);
+  });
+
+  it("labels match the five expected audience tags", () => {
+    const labels = menuBooks.map((b) => b.cover.label);
+    expect([...labels].sort()).toEqual([...EXPECTED_LABELS].sort());
+  });
+});
+
 describe("menu books — task targets resolve against real content", () => {
   it("resolves every task target to real content", () => {
     for (const b of menuBooks) {
