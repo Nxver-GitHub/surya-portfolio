@@ -247,7 +247,13 @@ export const exhibits: readonly Exhibit[] = [
       position: MOUNTS.wingWall.position,
       rotationY: 0,
     },
-    frameDistance: 2.0,
+    // Authored pose instead of the derived one: the default rule floats the
+    // eye 0.7m above a wall piece and looks down at it — a straight-on,
+    // near-level view reads far better for wall-hung aero.
+    cameraOverride: {
+      position: [4.77, 1.68, -0.89],
+      target: [6.44, 1.6, -1.2],
+    },
     credit: {
       title: "Endurance Rear Wing",
       author: "Surya Pugazhenthi",
