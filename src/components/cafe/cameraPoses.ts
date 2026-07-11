@@ -28,24 +28,25 @@ export interface CameraPose {
  * Canvas `camera` prop and the base OrbitControls target so returning to the
  * room lands exactly where the scene opened.
  *
- * PLACEHOLDER — orchestrator confirms against the rebuilt glb's hero framing.
+ * Baked-scene hero framing: from the west-southwest looking across the rug's
+ * F1 stage toward the bar and the motorsport corner. Target stays at room
+ * center so the idle orbit sweeps the whole gallery.
  */
 export const OVERVIEW_POSE: CameraPose = {
-  position: [-2.6, 1.65, 3.2],
+  position: [-4.9, 1.9, 3.8],
   target: [0, 0.95, 0],
 } as const;
 
 /**
  * Desk-front pose for the CRT terminal (the `CRT_Terminal` node in the glb).
  *
- * PLACEHOLDER — the CRT's real desk position is unknown until the rebuilt glb
- * lands. The orchestrator replaces both vectors with values framing the actual
- * `CRT_Terminal` node. Until then this points at a plausible desk near room
- * center so the move is exercisable against the v1 glb (or with no glb).
+ * Baked-scene desk-front framing from the Blender report: eye pulled back into
+ * the seating arc, looking down slightly onto the screen (which faces +X).
+ * E11's interactive terminal inherits this exact pose.
  */
 export const CRT_POSE: CameraPose = {
-  position: [1.6, 1.35, 1.9],
-  target: [1.9, 1.05, -0.2],
+  position: [-4.85, 1.45, -0.7],
+  target: [-6.15, 0.95, -1.35],
 } as const;
 
 /**

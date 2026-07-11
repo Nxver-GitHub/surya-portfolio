@@ -126,7 +126,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "license", tierId: "IA" },
       },
     ],
-    anchor: { x: -3.3, y: 0.98, z: 1.44 },
+    anchor: { x: -4.2, y: 0.98, z: 0 },
     cover: { color: "#8bc0e2", glyph: "AG", label: "FOR FOUNDERS" },
   },
 
@@ -168,7 +168,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "missions", missionId: "cruzhacks-2025" },
       },
     ],
-    anchor: { x: -3.3, y: 0.98, z: -1.36 },
+    anchor: { x: -2.97, y: 0.98, z: 2.33 },
     cover: { color: "#e56a19", glyph: "GP", label: "FOR ENGINEERS" },
   },
 
@@ -203,7 +203,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "license", tierId: "S" },
       },
     ],
-    anchor: { x: -1.3, y: 0.98, z: 0.4 },
+    anchor: { x: 0, y: 0.82, z: 3.3 },
     cover: { color: "#20356f", glyph: "VT", label: "FOR VCS & OPERATORS" },
   },
 
@@ -238,7 +238,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "scapes", category: "life" },
       },
     ],
-    anchor: { x: -3.12, y: 0.98, z: 1.78 },
+    anchor: { x: 2.97, y: 0.98, z: 2.33 },
     cover: { color: "#6fcabb", glyph: "OC", label: "OFF THE CLOCK" },
   },
 
@@ -273,7 +273,7 @@ export const menuBooks: readonly MenuBook[] = [
         target: { kind: "career", eventSlug: "product-dev-club" },
       },
     ],
-    anchor: { x: -3.12, y: 0.98, z: -1.04 },
+    anchor: { x: 4.2, y: 0.98, z: 0 },
     cover: { color: "#d2222a", glyph: "QL", label: "THE QUICK LAP" },
   },
 ] as const;

@@ -282,7 +282,7 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
       enablePan={false}
       enableZoom
       minDistance={1.4}
-      maxDistance={4.6}
+      maxDistance={6.6}
       minPolarAngle={1.05}
       maxPolarAngle={Math.PI / 2.05}
     />
