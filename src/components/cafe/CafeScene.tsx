@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ComponentRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentRef,
+} from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Environment,
@@ -12,11 +19,16 @@ import {
 import { Vector3 } from "three";
 import type { Group, Object3D } from "three";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
+import { exhibits, exhibitById, type Exhibit } from "../../../content/cafe-exhibits";
 import { useReducedMotion } from "../garage/useReducedMotion";
+import { ExhibitPiece } from "./ExhibitPiece";
 import {
+  CAMERA_BOUNDS,
   CRT_NODE_NAME,
   OVERVIEW_POSE,
   CRT_POSE,
+  clampToRoom,
+  exhibitFramePose,
   tableFrontPose,
   type CameraPose,
 } from "./cameraPoses";
@@ -41,7 +53,8 @@ function easeMechanical(t: number): number {
 export type CafeFocus =
   | { kind: "room" }
   | { kind: "book"; bookId: string }
-  | { kind: "crt" };
+  | { kind: "crt" }
+  | { kind: "exhibit"; exhibitId: string };
 
 interface CafeModelProps {
   onCrtFound: (present: boolean) => void;
@@ -225,12 +238,19 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
   const [flying, setFlying] = useState(false);
 
   const pose = useMemo<CameraPose>(() => {
-    if (focus.kind === "crt") return CRT_POSE;
-    if (focus.kind === "book") {
+    // Fixed poses (CRT/overview) are authored inside the box; derived table/
+    // exhibit poses are already clamped in cameraPoses. Clamp the eye here too
+    // so every flight destination is provably inside the room.
+    let raw: CameraPose;
+    if (focus.kind === "crt") raw = CRT_POSE;
+    else if (focus.kind === "book") {
       const book = menuBooks.find((b) => b.id === focus.bookId);
-      return book ? tableFrontPose(book.anchor) : OVERVIEW_POSE;
-    }
-    return OVERVIEW_POSE;
+      raw = book ? tableFrontPose(book.anchor) : OVERVIEW_POSE;
+    } else if (focus.kind === "exhibit") {
+      const exhibit = exhibitById.get(focus.exhibitId);
+      raw = exhibit ? exhibitFramePose(exhibit) : OVERVIEW_POSE;
+    } else raw = OVERVIEW_POSE;
+    return { position: clampToRoom(raw.position), target: raw.target };
   }, [focus]);
 
   // Begin (or, under reduced motion / on first mount, immediately complete) a
@@ -266,21 +286,38 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
 
   useFrame((_, delta) => {
     const ctrl = controls.current;
-    if (!ctrl || !playing.current) return;
+    if (!ctrl) return;
 
-    // Accumulate clamped frame deltas so a tab-throttled or very long first
-    // frame can't collapse the whole flight into a single snap.
-    elapsed.current += Math.min(delta, 0.1) * 1000;
-    const raw = elapsed.current / FLIGHT_MS;
-    const eased = easeMechanical(raw);
+    if (playing.current) {
+      // Accumulate clamped frame deltas so a tab-throttled or very long first
+      // frame can't collapse the whole flight into a single snap.
+      elapsed.current += Math.min(delta, 0.1) * 1000;
+      const raw = elapsed.current / FLIGHT_MS;
+      const eased = easeMechanical(raw);
 
-    camera.position.lerpVectors(fromPos.current, toPos.current, eased);
-    ctrl.target.lerpVectors(fromTarget.current, toTarget.current, eased);
-    ctrl.update();
+      camera.position.lerpVectors(fromPos.current, toPos.current, eased);
+      ctrl.target.lerpVectors(fromTarget.current, toTarget.current, eased);
+      ctrl.update();
 
-    if (raw >= 1) {
-      playing.current = false;
-      setFlying(false);
+      if (raw >= 1) {
+        playing.current = false;
+        setFlying(false);
+      }
+    }
+
+    // Contain the camera EYE inside the room every frame — both mid-flight and
+    // during free orbit / auto-rotate. Clamp AFTER OrbitControls (auto-rotate)
+    // and the flight lerp have written this frame's position, so nothing can
+    // push the eye through a wall. If clamping moved the eye, re-run the
+    // controls so its spherical is recomputed from the clamped point (it then
+    // slides along the wall next frame instead of passing through).
+    const { x, y, z } = camera.position;
+    const cx = x < CAMERA_BOUNDS.minX ? CAMERA_BOUNDS.minX : x > CAMERA_BOUNDS.maxX ? CAMERA_BOUNDS.maxX : x;
+    const cy = y < CAMERA_BOUNDS.minY ? CAMERA_BOUNDS.minY : y > CAMERA_BOUNDS.maxY ? CAMERA_BOUNDS.maxY : y;
+    const cz = z < CAMERA_BOUNDS.minZ ? CAMERA_BOUNDS.minZ : z > CAMERA_BOUNDS.maxZ ? CAMERA_BOUNDS.maxZ : z;
+    if (cx !== x || cy !== y || cz !== z) {
+      camera.position.set(cx, cy, cz);
+      if (!playing.current) ctrl.update();
     }
   });
 
@@ -313,6 +350,10 @@ interface CafeSceneProps {
   onSelect: (book: MenuBook) => void;
   onSelectCrt: () => void;
   onCrtFound: (present: boolean) => void;
+  /** Focus an exhibit (from an in-scene click). */
+  onSelectExhibit: (exhibit: Exhibit) => void;
+  /** Reports an exhibit's glb load result, so the UI lists only live pieces. */
+  onExhibitAvailability: (exhibit: Exhibit, available: boolean) => void;
 }
 
 /**
@@ -330,12 +371,26 @@ export function CafeScene({
   onSelect,
   onSelectCrt,
   onCrtFound,
+  onSelectExhibit,
+  onExhibitAvailability,
 }: CafeSceneProps) {
   const reducedMotion = useReducedMotion();
   const idle = !reducedMotion;
 
-  // stable list reference for the marker map
+  // stable list references for the marker/exhibit maps
   const books = useMemo(() => menuBooks, []);
+  const pieces = useMemo(() => exhibits, []);
+
+  // Which exhibit id is hovered in-scene (drives its HTML name label). Local to
+  // the scene — hover is a pure enhancement, not mirrored in the 2D UI.
+  const [hoveredExhibitId, setHoveredExhibitId] = useState<string | null>(null);
+  const onExhibitHover = useCallback((exhibit: Exhibit, hovered: boolean) => {
+    setHoveredExhibitId((prev) =>
+      hovered ? exhibit.id : prev === exhibit.id ? null : prev,
+    );
+  }, []);
+
+  const activeExhibitId = focus.kind === "exhibit" ? focus.exhibitId : null;
 
   return (
     <Canvas
@@ -381,6 +436,18 @@ export function CafeScene({
           isActive={book.id === selectedId}
           onSelect={onSelect}
           idle={idle}
+        />
+      ))}
+
+      {pieces.map((exhibit) => (
+        <ExhibitPiece
+          key={exhibit.id}
+          exhibit={exhibit}
+          isActive={exhibit.id === activeExhibitId}
+          hovered={exhibit.id === hoveredExhibitId}
+          onSelect={onSelectExhibit}
+          onHoverChange={onExhibitHover}
+          onAvailability={onExhibitAvailability}
         />
       ))}
 
