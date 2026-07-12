@@ -12,8 +12,12 @@ import { ExhibitList } from "./ExhibitList";
 import { ExhibitPlate } from "./ExhibitPlate";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { Terminal } from "./terminal/Terminal";
-import type { TerminalLine } from "./terminal/terminalLines";
+import { useTerminalChat } from "./terminal/useTerminalChat";
 import type { CafeFocus } from "./CafeScene";
+
+/** Stable empty scrollback reference for the closed-terminal CRT feed (a fresh
+ * `[]` each render would needlessly re-run the feed's repaint effect). */
+const EMPTY_LINES: readonly [] = [];
 
 // Code-split the WebGL café off the initial bundle. Client-only: ssr:false is
 // required (and only allowed) inside a Client Component — this one.
@@ -95,11 +99,6 @@ export function CafeBrowser() {
   const [liveExhibitIds, setLiveExhibitIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
-  // Live terminal scrollback, mirrored up from the Terminal panel so the 3D CRT
-  // screen can paint it. Empty unless the terminal is open.
-  const [terminalLines, setTerminalLines] = useState<readonly TerminalLine[]>(
-    () => [],
-  );
 
   // The terminal is "open" whenever the CRT is the focus. It works with the 3D
   // scene present (real CRT) or, via the fallback lozenge below, without it.
@@ -117,12 +116,20 @@ export function CafeBrowser() {
 
   const selectCrt = useCallback(() => setFocus({ kind: "crt" }), []);
   const roomView = useCallback(() => setFocus({ kind: "room" }), []);
-  // Close the terminal: back to room view and drop the mirrored scrollback so
-  // the 3D CRT feed clears (the panel itself unmounts and stops reporting).
+  // Close the terminal: back to room view. The session persists in the module
+  // store, so reopening restores the conversation for the rest of the visit.
   const closeTerminal = useCallback(() => {
-    setTerminalLines([]);
     setFocus({ kind: "room" });
   }, []);
+
+  // The terminal's session controller — called ONCE here and passed down to the
+  // panel. `open` gates the cold boot to the first open (not page load); the
+  // scrollback lives in the module store, so we read chat.lines directly to
+  // mirror it onto the 3D CRT screen (no onLinesChange callback anymore).
+  const chat = useTerminalChat({ open: terminalOpen, onExit: closeTerminal });
+  // Mirror the scrollback onto the 3D CRT screen only while the terminal is
+  // open; empty otherwise so the in-scene monitor clears on close.
+  const terminalLines = terminalOpen ? chat.lines : EMPTY_LINES;
 
   const selectExhibit = useCallback((exhibit: Exhibit) => {
     setFocus({ kind: "exhibit", exhibitId: exhibit.id });
@@ -252,11 +259,11 @@ export function CafeBrowser() {
         {/* The house terminal. Rendered whenever the CRT is the focus — beside
             the visible scene on desktop, full-width below on mobile, and as the
             sole surface in the no-WebGL fallback. Escape / `exit` closes it back
-            to room view. It reports its scrollback up so the 3D CRT can mirror
-            it (see CrtScreenFeed). */}
+            to room view. The scrollback lives in the shared session store, which
+            the 3D CRT feed reads via chat.lines (see CrtScreenFeed). */}
         {terminalOpen ? (
           <div className="h-[420px] sm:h-[460px]">
-            <Terminal onClose={closeTerminal} onLinesChange={setTerminalLines} />
+            <Terminal chat={chat} variant="overlay" onClose={closeTerminal} />
           </div>
         ) : null}
 

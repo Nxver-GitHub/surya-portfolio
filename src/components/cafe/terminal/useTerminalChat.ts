@@ -4,30 +4,50 @@
  * useTerminalChat — the café terminal's client controller (E11).
  *
  * Bridges the AI SDK v6 `useChat` hook (streaming replies from
- * /api/cafe-terminal) with a local scrollback log that also carries boot
- * chatter and the output of client-only commands (help/about/projects/contact/
- * clear/exit) which never hit the API. Responsibilities:
+ * /api/cafe-terminal) with the terminal's SESSION STORE (terminalSession.ts) —
+ * a module-level external store whose scrollback, login step, turn count and
+ * command history survive the Terminal component unmounting. That's the whole
+ * point of the store: close the overlay and reopen it later in the same page
+ * visit, and the conversation is still there. This hook is now owned by the
+ * PARENT (CafeBrowser) and called EXACTLY ONCE — its return value is passed
+ * down to every terminal surface (the overlay/screen panel and the mobile
+ * input bar), so they all read and drive one shared session.
  *
- *   - Boot sequence on open (instant under reduced motion).
- *   - Route each submission: local command → handled here; anything else →
- *     model via `sendMessage`. The request body is flattened to the route's
- *     `{ messages: [{role, content}] }` contract via `prepareSendMessagesRequest`.
- *   - Keep ONE ordered scrollback: user echoes are appended at submit time,
- *     finished replies are folded in via `onFinish`, and the in-flight reply
- *     renders as a transient tail — so errors and later commands always appear
- *     in true session order (and `clear` wipes the whole screen).
+ * Responsibilities:
+ *   - Boot: on the first open of the visit, play BOOT_LINES + the login prompt;
+ *     on reopen, print a single "session restored." line. Both are idempotent
+ *     against the store's `booted` flag.
+ *   - Route each submission:
+ *       login !== "authed" → the login fiction (handleLoginInput); never a
+ *         command, never the API.
+ *       authed → local command (help/about/…/clear/exit) handled here, or a
+ *         chat message routed to the model via `sendMessage`.
+ *   - Keep ONE ordered scrollback in the store: user echoes are appended at
+ *     submit time, finished replies folded in via `onFinish`, and the in-flight
+ *     reply renders as a transient tail (derived here, never committed) — so
+ *     errors and later commands always appear in true session order.
  *   - Enforce a per-session user-message cap, then nudge to the contact links.
  *   - Map 429/503 errors to themed lines instead of raw errors.
  *
- * The heavy lifting of command resolution and error mapping lives in pure,
- * separately-tested modules (localCommands.ts, errorMapping.ts).
+ * Command resolution, error mapping, the login fiction, the portrait card and
+ * history cycling all live in pure, separately-tested modules.
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { resolveLocalCommand } from "./localCommands";
 import { themedErrorLine } from "./errorMapping";
+import { handleLoginInput, LOGIN_PROMPT } from "./loginMachine";
+import { isWhoIsSurya, makePortraitLine } from "./portrait";
+import {
+  appendSessionLines,
+  clearSessionLines,
+  patchTerminalSession,
+  pushSessionHistory,
+  useTerminalSession,
+  type LoginState,
+} from "./terminalSession";
 import {
   BOOT_LINES,
   MAX_USER_MESSAGES,
@@ -39,6 +59,10 @@ import {
 
 const API_PATH = "/api/cafe-terminal";
 
+/** Dim one-liner shown when the terminal is reopened mid-visit (boot already
+ * played once, so we don't replay the whole cold-start sequence). */
+const SESSION_RESTORED_LINE = "session restored.";
+
 /** Extract the concatenated text of a UIMessage's text parts. The model is
  * told plain-text-only but still leaks markdown bold markers occasionally;
  * the terminal renders raw text, so strip `**` rather than display it. */
@@ -49,37 +73,72 @@ function messageText(message: UIMessage): string {
     .replaceAll("**", "");
 }
 
-export interface UseTerminalChat {
-  /** The full ordered scrollback (boot + commands + streamed turns). */
+/**
+ * The controller surface passed down to every terminal view. One instance per
+ * page visit (the parent calls the hook once); the overlay panel, the in-screen
+ * panel and the mobile input bar all render from and drive this same object.
+ */
+export interface TerminalChatApi {
+  /** The full ordered scrollback (boot + login + commands + streamed turns). */
   lines: readonly TerminalLine[];
   /** True while a model reply is in flight (drives the caret/"working" state). */
   busy: boolean;
-  /** Submit a line of input (command or chat). No-op on empty input. */
+  /** Submit a line of input (login step, command, or chat). No-op on empty
+   * input once authed; the login step handles its own empty-Enter semantics. */
   submit: (input: string) => void;
   /** Whether the session message cap has been reached. */
   atSessionLimit: boolean;
+  /** The current login-fiction step — drives password masking in the inputs. */
+  login: LoginState;
+  /** Submitted-input history (oldest → newest) for ↑/↓ cycling in the inputs. */
+  history: readonly string[];
 }
 
 interface UseTerminalChatOptions {
+  /** Whether the terminal surface is currently open (drives boot/restore).
+   * The hook is mounted for the whole page visit; boot must wait for the FIRST
+   * open, not page load, so the parent passes its open state through. */
+  open: boolean;
   /** Called when the user runs `exit` (or otherwise closes from within). */
   onExit: () => void;
 }
 
 export function useTerminalChat({
+  open,
   onExit,
-}: UseTerminalChatOptions): UseTerminalChat {
-  // Seed the boot chatter as the initial scrollback (instant; the view handles
-  // any reveal timing). The hook mounts fresh each time the terminal opens and
-  // unmounts on close, so this is the whole boot sequence — no reset effect.
-  const [localLines, setLocalLines] = useState<readonly TerminalLine[]>(() =>
-    makeLines("system", BOOT_LINES),
-  );
-  const [userTurns, setUserTurns] = useState(0);
+}: UseTerminalChatOptions): TerminalChatApi {
+  // The session (scrollback, login step, turn count, history, booted flag)
+  // lives in the module store so it survives the overlay unmounting. This hook
+  // is the single writer of chat/login lines; it never holds session state in
+  // component-local useState.
+  const session = useTerminalSession();
+  const { lines: sessionLines, login, userTurns, history, booted } = session;
 
-  const appendLocal = useCallback((toAdd: readonly TerminalLine[]) => {
-    if (toAdd.length === 0) return;
-    setLocalLines((prev) => [...prev, ...toAdd]);
-  }, []);
+  // Track the previous open state so each open EDGE (closed → open) runs the
+  // boot-or-restore step exactly once — the hook stays mounted across
+  // close/reopen, so we key off the transition, not mount.
+  const wasOpenRef = useRef(false);
+
+  // On each open edge: cold-boot the very first time this visit (BOOT_LINES +
+  // login prompt), or print a single dim "session restored." line on reopen.
+  // The `booted` flag lives in the store, so it holds across the whole visit.
+  useEffect(() => {
+    if (!open) {
+      wasOpenRef.current = false;
+      return;
+    }
+    if (wasOpenRef.current) return; // already handled this open edge
+    wasOpenRef.current = true;
+    if (booted) {
+      appendSessionLines([makeLine("system", SESSION_RESTORED_LINE)]);
+      return;
+    }
+    patchTerminalSession({ booted: true, login: "login" });
+    appendSessionLines([
+      ...makeLines("system", BOOT_LINES),
+      makeLine("system", LOGIN_PROMPT),
+    ]);
+  }, [open, booted]);
 
   // One transport for the hook's lifetime. Flattens AI-SDK UI messages to the
   // route's strict {role, content} shape — only user/assistant text turns cross
@@ -111,18 +170,18 @@ export function useTerminalChat({
   const { messages, sendMessage, status } = useChat({
     transport,
     // Groq streams hundreds of chunks/second; unthrottled, every chunk is a
-    // state update whose render cascades (via the parent scrollback mirror)
-    // past React's update-depth limit. Batch UI updates to ~16fps.
+    // state update whose render cascades past React's update-depth limit. Batch
+    // UI updates to ~16fps.
     experimental_throttle: 60,
     onError: (error) => {
-      appendLocal([makeLine("error", themedErrorLine(error))]);
+      appendSessionLines([makeLine("error", themedErrorLine(error))]);
     },
     // Fold the finished reply into the ordered scrollback; the transient
     // streaming tail below stops rendering once `status` leaves streaming.
     onFinish: ({ message }) => {
       const text = messageText(message);
       if (message.role === "assistant" && text.length > 0) {
-        appendLocal([makeLine("reply", text)]);
+        appendSessionLines([makeLine("reply", text)]);
       }
     },
   });
@@ -132,62 +191,81 @@ export function useTerminalChat({
 
   const submit = useCallback(
     (input: string) => {
+      // --- Login fiction: everything before the guest shell. Never a command,
+      // never the API. Record history for every non-empty input EXCEPT while
+      // masking a password (don't stash typed passwords in ↑/↓ history). ---
+      if (login !== "authed") {
+        const wasPassword = login === "password";
+        if (!wasPassword) pushSessionHistory(input);
+        const result = handleLoginInput(login, input);
+        appendSessionLines(result.lines);
+        if (result.next !== login) patchTerminalSession({ login: result.next });
+        return;
+      }
+
+      // --- Authed guest shell: local command or chat. ---
       const resolved = resolveLocalCommand(input);
 
       switch (resolved.kind) {
         case "print":
           // Echo the command, then its output (echo only for non-empty input).
           if (input.trim().length > 0) {
-            appendLocal([
+            pushSessionHistory(input);
+            appendSessionLines([
               makeLine("prompt", `> ${input.trim()}`),
               ...makeLines("system", resolved.lines),
             ]);
           }
           return;
         case "clear":
-          appendLocal([makeLine("prompt", "> clear")]);
-          setLocalLines([]);
+          pushSessionHistory(input);
+          appendSessionLines([makeLine("prompt", "> clear")]);
+          clearSessionLines();
           return;
         case "exit":
+          pushSessionHistory(input);
           onExit();
           return;
         case "chat": {
           if (busy) return; // ignore submits while a reply is streaming
+          pushSessionHistory(resolved.text);
           if (atSessionLimit) {
-            appendLocal([
+            appendSessionLines([
               makeLine("prompt", `> ${resolved.text}`),
               makeLine("system", SESSION_LIMIT_LINE),
             ]);
             return;
           }
-          setUserTurns((n) => n + 1);
+          patchTerminalSession({ userTurns: userTurns + 1 });
           // Echo the user line into the scrollback NOW, so anything that
           // follows (streamed reply, themed error, a later command) renders
-          // after it in true session order.
-          appendLocal([makeLine("prompt", `> ${resolved.text}`)]);
+          // after it in true session order. When the visitor asks who Surya is,
+          // drop the portrait card right after the echo (the question still
+          // goes to the model for a real answer).
+          const echo: TerminalLine[] = [makeLine("prompt", `> ${resolved.text}`)];
+          if (isWhoIsSurya(resolved.text)) echo.push(makePortraitLine());
+          appendSessionLines(echo);
           sendMessage({ text: resolved.text });
           return;
         }
       }
     },
-    [appendLocal, atSessionLimit, busy, onExit, sendMessage],
+    [atSessionLimit, busy, login, onExit, sendMessage, userTurns],
   );
 
-  // The scrollback IS localLines, in append order (boot, echoes, command
-  // output, errors, finished replies). While a reply is in flight, the
-  // partial assistant text renders as a transient tail row; `onFinish` folds
-  // the final text into the log the moment the tail stops rendering.
+  // The scrollback IS the store's committed lines, in append order (boot,
+  // login, echoes, command output, errors, finished replies). While a reply is
+  // in flight, the partial assistant text renders as a transient tail row that
+  // is NEVER committed to the store; `onFinish` folds the final text in the
+  // moment the tail stops rendering.
   const lines = useMemo<readonly TerminalLine[]>(() => {
-    if (!busy) return localLines;
+    if (!busy) return sessionLines;
     const last = messages[messages.length - 1];
-    if (!last || last.role !== "assistant") return localLines;
+    if (!last || last.role !== "assistant") return sessionLines;
     const tail = messageText(last);
-    if (tail.length === 0) return localLines;
-    return [
-      ...localLines,
-      { id: "streaming-tail", tone: "reply", text: tail },
-    ];
-  }, [busy, localLines, messages]);
+    if (tail.length === 0) return sessionLines;
+    return [...sessionLines, { id: "streaming-tail", tone: "reply", text: tail }];
+  }, [busy, sessionLines, messages]);
 
-  return { lines, busy, submit, atSessionLimit };
+  return { lines, busy, submit, atSessionLimit, login, history };
 }
