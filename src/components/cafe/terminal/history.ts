@@ -29,8 +29,12 @@ export function cycleHistory(
   direction: "up" | "down",
   currentInput: string,
 ): HistoryCycleResult {
+  if (history.length === 0) {
+    // Nothing to cycle through: stay home, leave the input untouched.
+    return { cursor: HISTORY_CURSOR_HOME, value: currentInput };
+  }
+
   if (direction === "up") {
-    if (history.length === 0) return { cursor, value: currentInput };
     if (cursor.index === null) {
       // Enter cycling: save the draft, show the newest entry.
       const index = history.length - 1;
@@ -39,7 +43,10 @@ export function cycleHistory(
         value: history[index],
       };
     }
-    const index = Math.max(0, cursor.index - 1);
+    // Clamp defensively: if `history` shrank while cycling (e.g. a reset),
+    // re-anchor to its current newest entry rather than reading undefined.
+    const anchored = Math.min(cursor.index, history.length - 1);
+    const index = Math.max(0, anchored - 1);
     return { cursor: { ...cursor, index }, value: history[index] };
   }
 

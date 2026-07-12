@@ -5,10 +5,6 @@
  * shell; `admin` moves to a password prompt whose every submission is denied
  * in character (there is NO real auth here — the admin console is a future,
  * properly-authenticated story). Pure: (state, input) → (next state, lines).
- *
- * CONTRACT STUB for the parallel build — the full fiction lands in the
- * term/pure workstream. This stub logs every input straight into the guest
- * shell so dependent workstreams compile and run.
  */
 
 import { makeLine, type TerminalLine } from "./terminalLines";
@@ -24,16 +20,55 @@ export interface LoginStepResult {
   readonly lines: readonly TerminalLine[];
 }
 
+/** Normalize submitted input for account/command matching: trim + lowercase. */
+function normalize(input: string): string {
+  return input.trim().toLowerCase();
+}
+
 /** Advance the login fiction by one submitted input. Pure. */
 export function handleLoginInput(
   current: LoginState,
   input: string,
 ): LoginStepResult {
-  void input;
   if (current === "authed") return { next: "authed", lines: [] };
-  // STUB: everyone is a guest. Full guest/admin/denied flow replaces this.
+
+  if (current === "password") {
+    // Every password is denied in character — there is no real admin auth here.
+    return {
+      next: "login",
+      lines: [
+        makeLine("prompt", "password: ••••••"),
+        makeLine("error", "ACCESS DENIED — admin console offline. guest services only."),
+        makeLine("system", LOGIN_PROMPT),
+      ],
+    };
+  }
+
+  // current === "login"
+  const account = normalize(input);
+
+  if (account === "" || account === "guest") {
+    return {
+      next: "authed",
+      lines: [
+        makeLine("prompt", "login: guest"),
+        makeLine("system", "guest session started. type 'help' or ask a question."),
+      ],
+    };
+  }
+
+  if (account === "admin") {
+    return {
+      next: "password",
+      lines: [makeLine("prompt", "login: admin"), makeLine("system", "password:")],
+    };
+  }
+
   return {
-    next: "authed",
-    lines: [makeLine("system", "guest session started. type 'help' or ask a question.")],
+    next: "login",
+    lines: [
+      makeLine("prompt", `login: ${input.trim()}`),
+      makeLine("error", `unknown account '${input.trim()}' — guest services only.`),
+    ],
   };
 }
