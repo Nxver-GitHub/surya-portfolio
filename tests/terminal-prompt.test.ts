@@ -14,6 +14,30 @@ describe("terminal prompt — facts digest", () => {
     expect(digest.length).toBeLessThanOrEqual(DIGEST_CHAR_CAP);
   });
 
+  // Regression: a 6k cap silently dropped whole blocks (CAREER included), so
+  // the model answered career questions from scraps and guessed tenure wrong.
+  it("keeps every content block — CAREER must never drop", () => {
+    for (const header of [
+      "CONTACT",
+      "CAREER",
+      "PROJECTS:",
+      "SKILLS",
+      "COMPETITIONS:",
+      "GUIDED TOURS",
+    ]) {
+      expect(digest, `missing block: ${header}`).toContain(header);
+    }
+  });
+
+  // Regression: the model called a "Present"-dated role "former" — currency
+  // must be explicit in the digest and enforced by a hard rule in the prompt.
+  it("marks Present-dated roles as current", () => {
+    expect(digest).toContain("[CURRENT — ongoing role]");
+    expect(buildSystemPrompt()).toContain(
+      "Never describe them as former, past, or previous",
+    );
+  });
+
   it("never leaks undefined or [object Object]", () => {
     expect(digest).not.toContain("undefined");
     expect(digest).not.toContain("[object");

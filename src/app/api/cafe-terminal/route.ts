@@ -38,9 +38,13 @@ const GROQ_MODEL = "openai/gpt-oss-120b";
 const MAX_OUTPUT_TOKENS = 350;
 const TEMPERATURE = 0.6;
 
-/** Per-message content bounds (after trim). */
+/** Per-message content bounds (after trim), BY ROLE. User input mirrors the
+ * UI's 500-char input cap; assistant history must admit our OWN replies
+ * (maxOutputTokens ≈ 350 stays well under 2400 chars) — a single shared cap
+ * made every follow-up turn 400 on its previous answer. */
 const MIN_CONTENT_CHARS = 1;
-const MAX_CONTENT_CHARS = 500;
+export const MAX_USER_CONTENT_CHARS = 500;
+export const MAX_ASSISTANT_CONTENT_CHARS = 2400;
 /** Max messages accepted in one request (whole conversation). */
 const MAX_MESSAGES = 30;
 
@@ -53,15 +57,27 @@ const MAX_MESSAGES = 30;
  * Content is trimmed then bounded; `.strict()` rejects any extra keys (e.g. a
  * smuggled `system`).
  */
-export const chatMessageSchema = z
-  .object({
-    role: z.enum(["user", "assistant"]),
-    content: z
-      .string()
-      .transform((s) => s.trim())
-      .pipe(z.string().min(MIN_CONTENT_CHARS).max(MAX_CONTENT_CHARS)),
-  })
-  .strict();
+function boundedContent(maxChars: number) {
+  return z
+    .string()
+    .transform((s) => s.trim())
+    .pipe(z.string().min(MIN_CONTENT_CHARS).max(maxChars));
+}
+
+export const chatMessageSchema = z.discriminatedUnion("role", [
+  z
+    .object({
+      role: z.literal("user"),
+      content: boundedContent(MAX_USER_CONTENT_CHARS),
+    })
+    .strict(),
+  z
+    .object({
+      role: z.literal("assistant"),
+      content: boundedContent(MAX_ASSISTANT_CONTENT_CHARS),
+    })
+    .strict(),
+]);
 
 export const chatRequestSchema = z
   .object({

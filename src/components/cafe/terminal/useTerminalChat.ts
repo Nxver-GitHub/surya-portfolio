@@ -39,11 +39,14 @@ import {
 
 const API_PATH = "/api/cafe-terminal";
 
-/** Extract the concatenated text of a UIMessage's text parts. */
+/** Extract the concatenated text of a UIMessage's text parts. The model is
+ * told plain-text-only but still leaks markdown bold markers occasionally;
+ * the terminal renders raw text, so strip `**` rather than display it. */
 function messageText(message: UIMessage): string {
   return message.parts
     .map((part) => (part.type === "text" ? part.text : ""))
-    .join("");
+    .join("")
+    .replaceAll("**", "");
 }
 
 export interface UseTerminalChat {
@@ -89,8 +92,16 @@ export function useTerminalChat({
           body: {
             messages: uiMessages
               .filter((m) => m.role === "user" || m.role === "assistant")
-              .map((m) => ({ role: m.role, content: messageText(m) }))
-              .filter((m) => m.content.trim().length > 0),
+              .map((m) => ({
+                role: m.role,
+                // Mirror the route's per-role caps (user 500 / assistant
+                // 2400) so an unusually long reply can never poison the next
+                // turn's validation.
+                content: messageText(m)
+                  .trim()
+                  .slice(0, m.role === "assistant" ? 2400 : 500),
+              }))
+              .filter((m) => m.content.length > 0),
           },
         }),
       }),
