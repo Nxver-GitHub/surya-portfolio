@@ -366,7 +366,10 @@ function CameraRig({
       autoRotateSpeed={0.5}
       enablePan={false}
       enableZoom
-      minDistance={1.4}
+      // The docked eye sits ~0.3m off the CRT face — far inside the room-view
+      // zoom floor. ctrl.update() enforces these even while disabled, so the
+      // floor must relax during a dock or it shoves the camera back to 1.4m.
+      minDistance={docked ? 0.1 : 1.4}
       maxDistance={6.6}
       minPolarAngle={1.05}
       maxPolarAngle={Math.PI / 2.05}
@@ -431,6 +434,18 @@ export function CafeScene({
   // from CrtScreenSurface once its mesh search resolves.
   const [screenFound, setScreenFound] = useState(false);
   const [screenBounds, setScreenBounds] = useState<ScreenBounds | null>(null);
+
+  // CrtScreenSurface mounts as a sibling of the suspending model, so its first
+  // mesh search can see an empty graph. CafeModel reports in (onCrtFound) only
+  // after the glb is attached — bump a revision then to re-key the search.
+  const [modelRevision, setModelRevision] = useState(0);
+  const handleCrtFound = useCallback(
+    (present: boolean) => {
+      setModelRevision((rev) => rev + 1);
+      onCrtFound?.(present);
+    },
+    [onCrtFound],
+  );
 
   // Notify the 2D shell exactly once per resolution so it can fall back to the
   // overlay when the mesh is absent. Wrap the parent callback so a null-mesh
@@ -508,7 +523,7 @@ export function CafeScene({
         <Lightformer form="rect" intensity={0.4} color="#3a2f1e" scale={[10, 10, 1]} position={[0, -2, 0]} target={[0, 0, 0]} />
       </Environment>
 
-      <CafeModel onCrtFound={onCrtFound} onSelectCrt={onSelectCrt} />
+      <CafeModel onCrtFound={handleCrtFound} onSelectCrt={onSelectCrt} />
 
       {/* Hybrid CRT screen feed: mirrors the 2D terminal onto the in-scene
           monitor while the overlay is open; restores the screen on close.
@@ -524,6 +539,7 @@ export function CafeScene({
         onBounds={handleScreenBounds}
         powerKey={powerKey}
         reducedMotion={reducedMotion}
+        sceneRevision={modelRevision}
       >
         {screenContent}
       </CrtScreenSurface>

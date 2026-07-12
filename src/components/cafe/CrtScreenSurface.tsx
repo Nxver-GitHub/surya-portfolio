@@ -118,6 +118,11 @@ interface CrtScreenSurfaceProps {
   powerKey?: number;
   /** Skip the power-on wake animation (reduced motion). */
   reducedMotion?: boolean;
+  /** Bumps once the café model has actually loaded. This component mounts as a
+   *  SIBLING of the suspending model, so its first search can run against a
+   *  still-empty scene graph — this prop re-keys the search after the meshes
+   *  are attached. */
+  sceneRevision?: number;
 }
 
 /**
@@ -131,19 +136,21 @@ export function CrtScreenSurface({
   children,
   powerKey = 0,
   reducedMotion = false,
+  sceneRevision = 0,
 }: CrtScreenSurfaceProps) {
   const scene = useThree((state) => state.scene);
 
-  // Resolve + measure the screen mesh once per loaded scene. This is a pure
-  // read of the (stable) R3F scene graph — `CafeModel` suspends on the glb, so
-  // by the time this renders the graph is populated — so it's a `useMemo`
-  // derivation, not setState-in-effect. Null when the mesh/material is absent.
+  // Resolve + measure the screen mesh. Pure read of the R3F scene graph — but
+  // NOT once-per-mount: this component is a sibling of the suspending model,
+  // so the first pass can see an empty graph. `sceneRevision` bumps when the
+  // model reports in, re-keying the search. Null when the mesh is absent.
   const bounds = useMemo<ScreenBounds | null>(() => {
+    void sceneRevision; // re-key: the graph mutates without changing identity
     const crtNode = scene.getObjectByName(CRT_NODE_NAME);
     const searchRoot = crtNode ?? scene;
     const mesh = findMeshByMaterialName(searchRoot, SCREEN_MATERIAL_NAME);
     return mesh ? measureScreen(mesh, scene) : null;
-  }, [scene]);
+  }, [scene, sceneRevision]);
 
   // Report the resolution up to the 2D shell (found → keep on the tube; not
   // found → fall back to the overlay) and hand CafeScene the measured bounds
@@ -175,9 +182,10 @@ export function CrtScreenSurface({
 
   if (!docked || !layout) return null;
 
-  // The screen faces +X. drei's Html transform defaults to facing +Z, so rotate
-  // −90° about Y to bring the DOM's outward normal from +Z round to +X.
-  const faceX = new Euler(0, -Math.PI / 2, 0);
+  // The screen faces +X. drei's Html transform defaults to facing +Z; rotating
+  // +90° about Y brings the DOM's outward normal from +Z round to +X. (−90°
+  // points it INTO the wall — the room then sees the back face, mirrored.)
+  const faceX = new Euler(0, Math.PI / 2, 0);
   const tubeClass = reducedMotion ? "crt-tube" : "crt-tube crt-tube--waking";
 
   return (
