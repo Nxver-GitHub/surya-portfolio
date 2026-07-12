@@ -209,11 +209,18 @@ export function useTerminalChat({
       switch (resolved.kind) {
         case "print":
           // Echo the command, then its output (echo only for non-empty input).
+          // Command output is plain strings; the one marker line localCommands
+          // can't express (its result type is string-only) becomes the real
+          // portrait media card here — the seam is the "[portrait:" prefix.
           if (input.trim().length > 0) {
             pushSessionHistory(input);
             appendSessionLines([
               makeLine("prompt", `> ${input.trim()}`),
-              ...makeLines("system", resolved.lines),
+              ...resolved.lines.map((text) =>
+                text.startsWith("[portrait:")
+                  ? makePortraitLine()
+                  : makeLine("system", text),
+              ),
             ]);
           }
           return;

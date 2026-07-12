@@ -1,7 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useCallback, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
 import { exhibits, type Exhibit } from "../../../content/cafe-exhibits";
@@ -11,13 +17,30 @@ import { CafeBackdrop } from "./CafeBackdrop";
 import { ExhibitList } from "./ExhibitList";
 import { ExhibitPlate } from "./ExhibitPlate";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
-import { Terminal } from "./terminal/Terminal";
+import { Terminal, TerminalInputBar } from "./terminal/Terminal";
 import { useTerminalChat } from "./terminal/useTerminalChat";
+import { useReducedMotion } from "../garage/useReducedMotion";
 import type { CafeFocus } from "./CafeScene";
 
-/** Stable empty scrollback reference for the closed-terminal CRT feed (a fresh
- * `[]` each render would needlessly re-run the feed's repaint effect). */
-const EMPTY_LINES: readonly [] = [];
+/** Tailwind's `sm` breakpoint — below it the in-screen terminal drops its
+ * embedded input for the thumb-reachable bottom bar (soft-keyboard-safe). */
+const MOBILE_QUERY = "(max-width: 639px)";
+
+function subscribeMobileQuery(onChange: () => void): () => void {
+  const mql = window.matchMedia(MOBILE_QUERY);
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+}
+
+/** Is the viewport below the `sm` breakpoint? The media query is an external
+ * store (SSR snapshot: false), so it tracks live resizes without effects. */
+function useIsMobile(): boolean {
+  return useSyncExternalStore(
+    subscribeMobileQuery,
+    () => window.matchMedia(MOBILE_QUERY).matches,
+    () => false,
+  );
+}
 
 // Code-split the WebGL café off the initial bundle. Client-only: ssr:false is
 // required (and only allowed) inside a Client Component — this one.
@@ -116,20 +139,38 @@ export function CafeBrowser() {
 
   const selectCrt = useCallback(() => setFocus({ kind: "crt" }), []);
   const roomView = useCallback(() => setFocus({ kind: "room" }), []);
+
+  // Whether the CRT's screen mesh was found (gates the in-monitor terminal).
+  const [screenSurface, setScreenSurface] = useState(false);
+  // Visitor popped the terminal out of the 3D screen into the flat overlay.
+  const [expanded, setExpanded] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+
   // Close the terminal: back to room view. The session persists in the module
-  // store, so reopening restores the conversation for the rest of the visit.
+  // store, so reopening restores the conversation — and each open starts back
+  // in the immersive in-screen mode.
   const closeTerminal = useCallback(() => {
     setFocus({ kind: "room" });
+    setExpanded(false);
   }, []);
 
-  // The terminal's session controller — called ONCE here and passed down to the
-  // panel. `open` gates the cold boot to the first open (not page load); the
-  // scrollback lives in the module store, so we read chat.lines directly to
-  // mirror it onto the 3D CRT screen (no onLinesChange callback anymore).
+  // The terminal's session controller — called ONCE here and passed down to
+  // every surface (in-screen panel, overlay, mobile input bar). `open` gates
+  // the cold boot to the first open (not page load).
   const chat = useTerminalChat({ open: terminalOpen, onExit: closeTerminal });
-  // Mirror the scrollback onto the 3D CRT screen only while the terminal is
-  // open; empty otherwise so the in-scene monitor clears on close.
-  const terminalLines = terminalOpen ? chat.lines : EMPTY_LINES;
+
+  // The immersive path: terminal rendered ON the 3D CRT screen. Falls back to
+  // the flat overlay when there's no scene/screen mesh, when the visitor
+  // prefers reduced motion (no camera dock, no perspective transform), or when
+  // they explicitly expanded out.
+  const inScreen =
+    terminalOpen &&
+    sceneReady &&
+    crtPresent &&
+    screenSurface &&
+    !expanded &&
+    !reducedMotion;
 
   const selectExhibit = useCallback((exhibit: Exhibit) => {
     setFocus({ kind: "exhibit", exhibitId: exhibit.id });
@@ -189,12 +230,27 @@ export function CafeBrowser() {
                 onCrtFound={onCrtFound}
                 onSelectExhibit={selectExhibit}
                 onExhibitAvailability={onExhibitAvailability}
-                terminalActive={terminalOpen && crtPresent}
-                terminalLines={terminalLines}
+                terminalActive={crtPresent && chat.lines.length > 0}
+                terminalLines={chat.lines}
+                onScreenSurface={setScreenSurface}
+                screenContent={
+                  inScreen ? (
+                    <Terminal
+                      chat={chat}
+                      variant={isMobile ? "log-only" : "screen"}
+                      onClose={closeTerminal}
+                      onToggleExpand={() => setExpanded(true)}
+                    />
+                  ) : null
+                }
               />
             </Suspense>
           </SceneErrorBoundary>
         </div>
+
+        {/* Mobile in-screen mode: the scrollback lives on the CRT; typing
+            happens in this thumb-reachable, soft-keyboard-safe bar. */}
+        {inScreen && isMobile ? <TerminalInputBar chat={chat} /> : null}
 
         {/* Scene controls — gated on the 3D scene actually being present, so
             nothing dangles when the glb failed to load (2D fallback path). */}
@@ -256,14 +312,22 @@ export function CafeBrowser() {
           </div>
         ) : null}
 
-        {/* The house terminal. Rendered whenever the CRT is the focus — beside
-            the visible scene on desktop, full-width below on mobile, and as the
-            sole surface in the no-WebGL fallback. Escape / `exit` closes it back
-            to room view. The scrollback lives in the shared session store, which
-            the 3D CRT feed reads via chat.lines (see CrtScreenFeed). */}
-        {terminalOpen ? (
+        {/* The flat overlay terminal — the fallback (no WebGL, no screen mesh,
+            reduced motion) and the "Expand" target from the in-screen view.
+            Escape / `exit` closes back to room view; the toggle returns to the
+            3D screen only when that path actually exists. */}
+        {terminalOpen && !inScreen ? (
           <div className="h-[420px] sm:h-[460px]">
-            <Terminal chat={chat} variant="overlay" onClose={closeTerminal} />
+            <Terminal
+              chat={chat}
+              variant="overlay"
+              onClose={closeTerminal}
+              onToggleExpand={
+                sceneReady && crtPresent && screenSurface && !reducedMotion
+                  ? () => setExpanded(false)
+                  : undefined
+              }
+            />
           </div>
         ) : null}
 
