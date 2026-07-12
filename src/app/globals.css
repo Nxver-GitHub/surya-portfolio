@@ -135,6 +135,98 @@ body {
   );
   box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.55);
 }
+
+/* CRT tube: the phosphor "glass" the docked terminal DOM renders inside on the
+   3D monitor face (see CrtScreenSurface). Slight inset + rounded corners so the
+   3D model's bezel reads around it; inner phosphor glow + a faint curvature
+   vignette sell the tube. The wrapper carries the size; the terminal DOM fills
+   it. Kept dark so it never washes to a flat bright field. */
+.crt-tube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* inset from the model bezel edge */
+  padding: 4%;
+  border-radius: 6% / 8%;
+  background: #030c07;
+  box-shadow:
+    inset 0 0 22px rgba(0, 0, 0, 0.85),
+    inset 0 0 60px rgba(6, 40, 18, 0.55),
+    0 0 12px rgba(80, 255, 140, 0.16);
+}
+
+/* Curvature vignette + phosphor bloom, painted over the DOM without eating
+   pointer events. */
+.crt-tube::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 120% at 50% 50%,
+    rgba(125, 255, 155, 0.06) 0%,
+    rgba(0, 0, 0, 0) 55%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+}
+
+.crt-tube__placeholder {
+  margin: 0;
+  color: #7dff9b;
+  font-family: ui-monospace, monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  text-shadow: 0 0 6px rgba(125, 255, 155, 0.55);
+}
+
+/* Power-on wake: a scanline wipe reveals the phosphor while the tube glow
+   blooms up, 380ms mechanical. Replayed each dock via a bumped React key on the
+   element (see CrtScreenSurface `powerKey`). Reduced motion → straight to
+   content (guarded in the media block below). */
+@keyframes crt-power-on {
+  0% {
+    clip-path: inset(48% 0 48% 0);
+    filter: brightness(2.4) saturate(0.2);
+    opacity: 0.2;
+  }
+  55% {
+    clip-path: inset(0 0 0 0);
+    filter: brightness(1.5) saturate(0.6);
+    opacity: 1;
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    filter: brightness(1) saturate(1);
+    opacity: 1;
+  }
+}
+
+@keyframes crt-power-glow {
+  0% {
+    box-shadow:
+      inset 0 0 22px rgba(0, 0, 0, 0.85),
+      0 0 4px rgba(80, 255, 140, 0.05);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 18px rgba(0, 0, 0, 0.7),
+      0 0 28px rgba(120, 255, 160, 0.4);
+  }
+  100% {
+    box-shadow:
+      inset 0 0 22px rgba(0, 0, 0, 0.85),
+      inset 0 0 60px rgba(6, 40, 18, 0.55),
+      0 0 12px rgba(80, 255, 140, 0.16);
+  }
+}
+
+.crt-tube--waking {
+  animation:
+    crt-power-on var(--duration-panel) var(--ease-mech),
+    crt-power-glow 400ms var(--ease-mech);
+}
 }
 
 /* Café terminal caret blink — hard on/off, no easing (terminal feel). Stilled
@@ -179,6 +271,10 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .locked-shake {
+    animation: none;
+  }
+  /* Skip the CRT power-on wipe/glow — the tube shows finished content at once. */
+  .crt-tube--waking {
     animation: none;
   }
   *,

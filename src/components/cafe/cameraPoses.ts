@@ -93,6 +93,96 @@ export const CRT_POSE: CameraPose = {
 } as const;
 
 /**
+ * World-space bounds of the CRT screen plane, as located by CrtScreenSurface
+ * (the `MAT_CRTScreen` mesh under `CRT_Terminal`). The screen faces +X (its
+ * outward normal points into the room, toward increasing x), so its own extent
+ * lives in Y (height) and Z (width); `x` is the plane's depth position.
+ */
+export interface ScreenBounds {
+  /** Screen-plane center in world space [x, y, z]. */
+  readonly center: readonly [number, number, number];
+  /** Screen face width along Z (metres). */
+  readonly width: number;
+  /** Screen face height along Y (metres). */
+  readonly height: number;
+}
+
+/**
+ * Fraction of the 3:2 scene panel's HEIGHT the screen should fill when docked.
+ * 0.78 lands inside the requested 70–80% window and leaves the model's bezel /
+ * desk reading around the live surface rather than a full-bleed rectangle.
+ */
+export const CRT_DOCK_FILL = 0.78;
+
+/**
+ * The Canvas camera's vertical field of view (degrees). MUST match the `fov`
+ * CafeScene sets on its `<Canvas camera>` (currently 60) — the dock distance is
+ * derived from it, so if that changes this must change with it.
+ */
+export const CRT_DOCK_FOV_DEG = 60;
+
+/**
+ * Aspect ratio (width / height) of the scene panel the docked view fills. The
+ * CafeBrowser panel is 3:2 on desktop (`lg:aspect-[3/2]`); the horizontal fov
+ * derives from the vertical fov and this ratio, so the fit picks whichever of
+ * width/height is binding.
+ */
+export const CRT_DOCK_PANEL_ASPECT = 3 / 2;
+
+/**
+ * Head-on docked pose for the interactive terminal: the camera sits directly in
+ * front of the screen plane along its +X normal, at the screen's own y/z, pulled
+ * back just far enough that the screen fills {@link CRT_DOCK_FILL} of the panel
+ * height at {@link CRT_DOCK_FOV_DEG}. Pure — derives everything from the passed
+ * bounds, then clamps the eye into {@link CAMERA_BOUNDS}.
+ *
+ * Distance math (fit the binding dimension): at distance `d` the camera sees a
+ * world height `visibleH = 2·d·tan(vFov/2)` and width `visibleW = visibleH·AR`
+ * (AR = {@link CRT_DOCK_PANEL_ASPECT}). We want each screen dimension to reach
+ * `fill` of its frame dimension, so:
+ *     dHeight = screenH / (2·fill·tan(vFov/2))
+ *     dWidth  = screenW / (2·fill·tan(vFov/2)·AR)
+ * and take `d = max(dHeight, dWidth)` — the larger distance guarantees BOTH the
+ * full width and full height stay on-frame (whichever fills first governs). The
+ * eye is placed at `center + [+d, 0, 0]` (head-on, into the room). clampToRoom
+ * then guarantees the eye never crosses minX; for the real ~0.2–0.3m-tall CRT
+ * face the raw eye sits ~0.2–0.35m off the screen — comfortably inside minX =
+ * −6.2 (eye x ≈ −5.8…−5.9) — so the clamp is a safety net, not the governing
+ * value. A physically larger measured screen pushes the eye proportionally
+ * further back (distance scales linearly with screen size).
+ */
+export function crtDockPose(screen: ScreenBounds): CameraPose {
+  const [cx, cy, cz] = screen.center;
+  const halfFov = (CRT_DOCK_FOV_DEG * Math.PI) / 180 / 2;
+  const tanHalf = Math.tan(halfFov);
+  const denom = 2 * CRT_DOCK_FILL * tanHalf;
+  const distHeight = screen.height / denom;
+  const distWidth = screen.width / (denom * CRT_DOCK_PANEL_ASPECT);
+  // The larger distance keeps the whole face on-frame (bezel margin around it).
+  const dist = Math.max(distHeight, distWidth) || 0.6;
+
+  return clampPose({
+    // Eye: straight out along +X from the screen center (head-on), same y/z.
+    position: [cx + dist, cy, cz],
+    // Look dead-center at the screen plane.
+    target: [cx, cy, cz],
+  });
+}
+
+/**
+ * Hardcoded fallback dock pose, derived from {@link CRT_POSE} for when the
+ * screen mesh can't be measured (missing/renamed material). Uses the CRT_POSE
+ * target as the screen center and a nominal ~0.3m screen height so the framing
+ * still reads as "sat at the monitor". Kept as a constant so CafeScene needs no
+ * bounds to fall back cleanly.
+ */
+export const CRT_DOCK_FALLBACK: CameraPose = crtDockPose({
+  center: CRT_POSE.target,
+  width: 0.4,
+  height: 0.3,
+});
+
+/**
  * Table-front derivation constants. One rule frames all five books: stand the
  * camera back from the anchor toward room center (so tables on the room's left
  * are viewed from the room's interior), lifted to eye height, looking at the
