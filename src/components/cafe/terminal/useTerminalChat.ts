@@ -99,6 +99,10 @@ export function useTerminalChat({
 
   const { messages, sendMessage, status } = useChat({
     transport,
+    // Groq streams hundreds of chunks/second; unthrottled, every chunk is a
+    // state update whose render cascades (via the parent scrollback mirror)
+    // past React's update-depth limit. Batch UI updates to ~16fps.
+    experimental_throttle: 60,
     onError: (error) => {
       appendLocal([makeLine("error", themedErrorLine(error))]);
     },

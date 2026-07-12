@@ -67,9 +67,14 @@ export function Terminal({ onClose, onLinesChange }: TerminalProps) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [lines]);
 
-  // Mirror the scrollback up to the parent (for the 3D CRT feed).
+  // Mirror the scrollback up to the parent (for the 3D CRT feed), debounced a
+  // beat: the feed repaints at ~4fps anyway, and calling the parent's setState
+  // for every streamed chunk is the other half of what blew React's
+  // update-depth limit on Groq-speed streams.
   useEffect(() => {
-    onLinesChange?.(lines);
+    if (!onLinesChange) return;
+    const t = setTimeout(() => onLinesChange(lines), 120);
+    return () => clearTimeout(t);
   }, [lines, onLinesChange]);
 
   const onSubmit = useCallback(
