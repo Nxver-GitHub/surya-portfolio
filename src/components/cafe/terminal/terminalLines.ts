@@ -15,6 +15,9 @@ export interface TerminalLine {
   id: string;
   tone: LineTone;
   text: string;
+  /** Optional image card rendered with the line (e.g. the portrait). The
+   * texture mirror (CrtScreenFeed) ignores media and paints `text` only. */
+  media?: { readonly src: string; readonly alt: string };
 }
 
 let lineSeq = 0;
@@ -32,6 +35,14 @@ export function makeLine(tone: LineTone, text: string): TerminalLine {
 /** Build several lines of the same tone at once (e.g. a command's output). */
 export function makeLines(tone: LineTone, texts: readonly string[]): TerminalLine[] {
   return texts.map((t) => makeLine(tone, t));
+}
+
+/** Build a line carrying an image card (caption in `text`, may be empty). */
+export function makeMediaLine(
+  media: { readonly src: string; readonly alt: string },
+  caption = "",
+): TerminalLine {
+  return { id: nextLineId(), tone: "system", text: caption, media };
 }
 
 /** Fast boot chatter shown on open (instant under reduced motion). */
