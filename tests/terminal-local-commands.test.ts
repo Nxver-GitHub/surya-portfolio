@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   LOCAL_COMMANDS,
+  makePortraitCaptionLine,
   resolveLocalCommand,
 } from "../src/components/cafe/terminal/localCommands";
 import {
@@ -71,6 +72,21 @@ describe("terminal local commands — resolution", () => {
       const text = result.lines.join("\n");
       expect(text).toContain("github.com/Nxver-GitHub");
       expect(text).toContain("linkedin.com/in/surya-pugazhenthi");
+    }
+  });
+
+  it("projects output references the Garage path", () => {
+    const result = resolveLocalCommand("projects");
+    if (result.kind === "print") {
+      const text = result.lines.join("\n");
+      expect(text).toContain("/garage");
+    }
+  });
+
+  it("about output ends with the portrait caption line", () => {
+    const result = resolveLocalCommand("about");
+    if (result.kind === "print") {
+      expect(result.lines[result.lines.length - 1]).toBe(makePortraitCaptionLine());
     }
   });
 

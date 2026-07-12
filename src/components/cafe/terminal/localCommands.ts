@@ -13,6 +13,7 @@
 
 import { cars } from "../../../../content/cars";
 import { joinControls, statusChips } from "../../../../content/lobby";
+import { PORTRAIT_ALT, PORTRAIT_SRC } from "./portrait";
 
 /** Outcome of resolving a line of input against the local command table. */
 export type LocalCommandResult =
@@ -52,7 +53,13 @@ function helpLines(): readonly string[] {
   ];
 }
 
-/** `about` output — in-character description of the terminal. */
+/**
+ * `about` output — in-character description of the terminal, ending with the
+ * portrait card. `resolveLocalCommand` stays pure and its `print` result is
+ * frozen to `lines: readonly string[]`, so this layer can only describe the
+ * portrait in text — see makePortraitCaptionLine() below and the integration
+ * note in the module docblock for wiring the actual `<img>` media card.
+ */
 function aboutLines(): readonly string[] {
   const availability = statusChips.map((s) => s.label).join(" / ");
   return [
@@ -61,7 +68,19 @@ function aboutLines(): readonly string[] {
     "reach him, grounded in this site's real content.",
     "",
     `Status: ${availability}.`,
+    "",
+    makePortraitCaptionLine(),
   ];
+}
+
+/**
+ * The `about` command's closing line, standing in for makePortraitLine()'s
+ * media card until `useTerminalChat.ts` (frozen, out of scope here) grows a
+ * path to render `TerminalLine.media` from a local-command result. Kept as
+ * its own named export so the integration workstream has one obvious seam.
+ */
+export function makePortraitCaptionLine(): string {
+  return `[portrait: ${PORTRAIT_ALT} — ${PORTRAIT_SRC}]`;
 }
 
 /** `projects` output — the browsable builds, from content/cars.ts (no network). */
@@ -73,7 +92,7 @@ function projectsLines(): readonly string[] {
     lines.push(`  ${car.name}${tag}`);
   }
   lines.push("");
-  lines.push("Open the Garage to inspect any of them in 3D.");
+  lines.push("Open the Garage (/garage) to inspect any of them in 3D.");
   return lines;
 }
 
