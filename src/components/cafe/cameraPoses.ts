@@ -200,16 +200,26 @@ export function crtDockFallback(panelAspect: number): CameraPose {
 
 /** Room center the camera backs away from, so it always faces inward. */
 export const ROOM_CENTER: readonly [number, number, number] = [0, 0.95, 0];
-/** How far the camera sits back from the anchor, toward room center (metres). */
-export const TABLE_BACK_OFFSET = 1.35;
-/** How far above the anchor the camera floats, for a seated-eye framing. */
-export const TABLE_UP_OFFSET = 0.55;
+/**
+ * How far the camera sits back from the anchor, toward room center (metres).
+ * Backed well off the table (was 1.35, which jammed the eye against the book so
+ * furniture/walls filled the frame and the marker's HTML label ballooned over
+ * everything). At this distance the whole table + its chairs read in frame.
+ */
+export const TABLE_BACK_OFFSET = 2.5;
+/** How far above the anchor the camera floats, for a standing-eye framing that
+ * clears the tabletop even for low anchors (the Venture table sits at y≈0.82). */
+export const TABLE_UP_OFFSET = 0.85;
+/** Look slightly ABOVE the anchor so the framing centres on the book/table, not
+ * the floor beneath it (keeps the tabletop and chairbacks in the lower frame). */
+export const TABLE_TARGET_LIFT = 0.2;
 
 /**
  * Derive the table-front pose for a book from its anchor. Position = anchor
  * pushed `TABLE_BACK_OFFSET` toward `ROOM_CENTER` (on the floor plane) and
- * lifted `TABLE_UP_OFFSET`; target = the anchor itself. Pure and deterministic,
- * so the same rule holds for every book and stays correct after re-anchoring.
+ * lifted `TABLE_UP_OFFSET`; target = the anchor lifted `TABLE_TARGET_LIFT`. Pure
+ * and deterministic, so the same rule holds for every book and stays correct
+ * after re-anchoring.
  */
 export function tableFrontPose(anchor: BookAnchor): CameraPose {
   const toCenterX = ROOM_CENTER[0] - anchor.x;
@@ -224,7 +234,7 @@ export function tableFrontPose(anchor: BookAnchor): CameraPose {
       anchor.y + TABLE_UP_OFFSET,
       anchor.z + unitZ * TABLE_BACK_OFFSET,
     ],
-    target: [anchor.x, anchor.y, anchor.z],
+    target: [anchor.x, anchor.y + TABLE_TARGET_LIFT, anchor.z],
   });
 }
 
