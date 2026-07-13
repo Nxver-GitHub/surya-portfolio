@@ -30,7 +30,7 @@ import {
   CRT_NODE_NAME,
   OVERVIEW_POSE,
   CRT_POSE,
-  CRT_DOCK_FALLBACK,
+  crtDockFallback,
   clampToRoom,
   crtDockPose,
   exhibitFramePose,
@@ -256,6 +256,10 @@ function CameraRig({
   // scroll can't write to the camera in the same frame as the tween.
   const [flying, setFlying] = useState(false);
 
+  // Live canvas aspect — the dock pose must fit the REAL panel (4:5 portrait
+  // on phones, 3:2 on desktop), not a hardcoded ratio. Re-renders on resize.
+  const panelAspect = useThree((state) => state.size.width / state.size.height);
+
   const pose = useMemo<CameraPose>(() => {
     // Fixed poses (CRT/overview) are authored inside the box; derived table/
     // exhibit poses are already clamped in cameraPoses. Clamp the eye here too
@@ -266,7 +270,9 @@ function CameraRig({
       // have it, else the hardcoded fallback). Not docked → the desk-front
       // CRT_POSE approach framing.
       if (docked) {
-        raw = screenBounds ? crtDockPose(screenBounds) : CRT_DOCK_FALLBACK;
+        raw = screenBounds
+          ? crtDockPose(screenBounds, panelAspect)
+          : crtDockFallback(panelAspect);
       } else {
         raw = CRT_POSE;
       }
@@ -278,7 +284,7 @@ function CameraRig({
       raw = exhibit ? exhibitFramePose(exhibit) : OVERVIEW_POSE;
     } else raw = OVERVIEW_POSE;
     return { position: clampToRoom(raw.position), target: raw.target };
-  }, [focus, docked, screenBounds]);
+  }, [focus, docked, screenBounds, panelAspect]);
 
   // Begin (or, under reduced motion / on first mount, immediately complete) a
   // flight whenever the destination pose changes. A rapid focus change mid-
@@ -462,20 +468,24 @@ export function CafeScene({
     [],
   );
 
-  // Docked = the terminal is the live surface on the tube: CRT focused, real DOM
-  // handed in, and the screen mesh actually present. Only then does the camera
-  // fly head-on and OrbitControls lock.
-  const docked =
-    focus.kind === "crt" && screenContent != null && screenFound;
+  // Two docking notions since the mobile rework:
+  //  - camDocked: the CAMERA flies head-on to the tube and orbit locks —
+  //    whenever the CRT is focused and the screen mesh is known. On phones
+  //    this is the whole cinematic (the DOM terminal lives in the 2D panel;
+  //    the texture mirror keeps the tube alive in-frame).
+  //  - htmlDocked: the real terminal DOM additionally owns the screen face
+  //    (desktop in-monitor mode; requires screenContent to be handed in).
+  const camDocked = focus.kind === "crt" && screenFound;
+  const htmlDocked = camDocked && screenContent != null;
 
-  // Power-on key: bump each time docking (re)begins so the tube replays its
-  // phosphor wake. Increment on the false→true edge of `docked`.
+  // Power-on key: bump each time the DOM takes the tube so it replays its
+  // phosphor wake. Increment on the false→true edge of `htmlDocked`.
   const [powerKey, setPowerKey] = useState(0);
   const wasDockedRef = useRef(false);
   useEffect(() => {
-    if (docked && !wasDockedRef.current) setPowerKey((k) => k + 1);
-    wasDockedRef.current = docked;
-  }, [docked]);
+    if (htmlDocked && !wasDockedRef.current) setPowerKey((k) => k + 1);
+    wasDockedRef.current = htmlDocked;
+  }, [htmlDocked]);
 
   // Which exhibit id is hovered in-scene (drives its HTML name label). Local to
   // the scene — hover is a pure enhancement, not mirrored in the 2D UI.
@@ -529,12 +539,17 @@ export function CafeScene({
           monitor while the overlay is open; restores the screen on close.
           Suppressed while docked — the live DOM surface (CrtScreenSurface) then
           owns the screen face, and both would fight over `mesh.material`. */}
-      <CrtScreenFeed active={terminalActive && !docked} lines={terminalLines} />
+      {/* Texture mirror runs whenever the DOM doesn't own the tube — including
+          the mobile close-up, where it IS the live screen. */}
+      <CrtScreenFeed
+        active={terminalActive && !htmlDocked}
+        lines={terminalLines}
+      />
 
       {/* Interactive terminal surface: locates + measures the screen mesh, and
           when docked renders the real terminal DOM on the physical CRT face. */}
       <CrtScreenSurface
-        docked={docked}
+        docked={htmlDocked}
         onFound={handleScreenFound}
         onBounds={handleScreenBounds}
         powerKey={powerKey}
@@ -570,7 +585,7 @@ export function CafeScene({
         focus={focus}
         idle={idle}
         reducedMotion={reducedMotion}
-        docked={docked}
+        docked={camDocked}
         screenBounds={screenBounds}
       />
     </Canvas>

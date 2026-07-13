@@ -4,7 +4,9 @@ import dynamic from "next/dynamic";
 import {
   Suspense,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -17,7 +19,7 @@ import { CafeBackdrop } from "./CafeBackdrop";
 import { ExhibitList } from "./ExhibitList";
 import { ExhibitPlate } from "./ExhibitPlate";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
-import { Terminal, TerminalInputBar } from "./terminal/Terminal";
+import { Terminal } from "./terminal/Terminal";
 import { useTerminalChat } from "./terminal/useTerminalChat";
 import { useReducedMotion } from "../garage/useReducedMotion";
 import type { CafeFocus } from "./CafeScene";
@@ -160,17 +162,37 @@ export function CafeBrowser() {
   // the cold boot to the first open (not page load).
   const chat = useTerminalChat({ open: terminalOpen, onExit: closeTerminal });
 
-  // The immersive path: terminal rendered ON the 3D CRT screen. Falls back to
-  // the flat overlay when there's no scene/screen mesh, when the visitor
-  // prefers reduced motion (no camera dock, no perspective transform), or when
-  // they explicitly expanded out.
+  // The immersive path: terminal rendered ON the 3D CRT screen. Desktop only —
+  // on phones the camera still docks for the cinematic (the texture mirror
+  // keeps the tube alive) but reading/typing happens in the flat panel, which
+  // a ~390px-wide perspective plane can't do readably. Also falls back to the
+  // overlay when there's no scene/screen mesh, under reduced motion, or when
+  // the visitor explicitly expanded out.
   const inScreen =
     terminalOpen &&
+    !isMobile &&
     sceneReady &&
     crtPresent &&
     screenSurface &&
     !expanded &&
     !reducedMotion;
+
+  // On phones, when the terminal opens, bring the panel (and the scene strip
+  // above it) into view — otherwise the dock flight happens off-screen and the
+  // visitor sees nothing change.
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!terminalOpen || !isMobile) return;
+    const node = overlayRef.current;
+    if (!node) return;
+    const id = requestAnimationFrame(() => {
+      node.scrollIntoView({
+        behavior: reducedMotion ? "auto" : "smooth",
+        block: "center",
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [terminalOpen, isMobile, reducedMotion]);
 
   const selectExhibit = useCallback((exhibit: Exhibit) => {
     setFocus({ kind: "exhibit", exhibitId: exhibit.id });
@@ -219,7 +241,16 @@ export function CafeBrowser() {
             floor-to-ceiling of the room is visible, ~3:2 with real height on
             desktop. Height is viewport-relative and capped so it never
             dominates the page. */}
-        <div className="aspect-[4/5] max-h-[620px] min-h-[420px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] sm:aspect-[16/10] sm:max-h-none sm:min-h-[480px] lg:aspect-[3/2] lg:min-h-[520px]">
+        <div
+          className={
+            terminalOpen && isMobile
+              ? // Phone + terminal open: the scene collapses to a cinematic
+                // strip — the docked camera on the glowing monitor — and the
+                // flat terminal panel below gets the room to breathe.
+                "h-[32svh] min-h-[220px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)]"
+              : "aspect-[4/5] max-h-[620px] min-h-[420px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] sm:aspect-[16/10] sm:max-h-none sm:min-h-[480px] lg:aspect-[3/2] lg:min-h-[520px]"
+          }
+        >
           <SceneErrorBoundary fallback={<CafeBackdrop reason="error" />}>
             <Suspense fallback={<CafeBackdrop reason="loading" />}>
               <CafeScene
@@ -248,9 +279,6 @@ export function CafeBrowser() {
           </SceneErrorBoundary>
         </div>
 
-        {/* Mobile in-screen mode: the scrollback lives on the CRT; typing
-            happens in this thumb-reachable, soft-keyboard-safe bar. */}
-        {inScreen && isMobile ? <TerminalInputBar chat={chat} /> : null}
 
         {/* Scene controls — gated on the 3D scene actually being present, so
             nothing dangles when the glb failed to load (2D fallback path). */}
@@ -317,13 +345,17 @@ export function CafeBrowser() {
             Escape / `exit` closes back to room view; the toggle returns to the
             3D screen only when that path actually exists. */}
         {terminalOpen && !inScreen ? (
-          <div className="h-[420px] sm:h-[460px]">
+          <div ref={overlayRef} className="h-[52svh] min-h-[340px] sm:h-[460px]">
             <Terminal
               chat={chat}
               variant="overlay"
               onClose={closeTerminal}
               onToggleExpand={
-                sceneReady && crtPresent && screenSurface && !reducedMotion
+                !isMobile &&
+                sceneReady &&
+                crtPresent &&
+                screenSurface &&
+                !reducedMotion
                   ? () => setExpanded(false)
                   : undefined
               }

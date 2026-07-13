@@ -151,13 +151,19 @@ export const CRT_DOCK_PANEL_ASPECT = 3 / 2;
  * value. A physically larger measured screen pushes the eye proportionally
  * further back (distance scales linearly with screen size).
  */
-export function crtDockPose(screen: ScreenBounds): CameraPose {
+export function crtDockPose(
+  screen: ScreenBounds,
+  // The LIVE canvas aspect must be passed on real panels — hardcoding 3:2 made
+  // the tube overflow the frame sideways on the 4:5 mobile panel (the
+  // horizontal fov is much narrower than the math assumed).
+  panelAspect: number = CRT_DOCK_PANEL_ASPECT,
+): CameraPose {
   const [cx, cy, cz] = screen.center;
   const halfFov = (CRT_DOCK_FOV_DEG * Math.PI) / 180 / 2;
   const tanHalf = Math.tan(halfFov);
   const denom = 2 * CRT_DOCK_FILL * tanHalf;
   const distHeight = screen.height / denom;
-  const distWidth = screen.width / (denom * CRT_DOCK_PANEL_ASPECT);
+  const distWidth = screen.width / (denom * Math.max(panelAspect, 0.1));
   // The larger distance keeps the whole face on-frame (bezel margin around it).
   const dist = Math.max(distHeight, distWidth) || 0.6;
 
@@ -169,18 +175,21 @@ export function crtDockPose(screen: ScreenBounds): CameraPose {
   });
 }
 
-/**
- * Hardcoded fallback dock pose, derived from {@link CRT_POSE} for when the
- * screen mesh can't be measured (missing/renamed material). Uses the CRT_POSE
- * target as the screen center and a nominal ~0.3m screen height so the framing
- * still reads as "sat at the monitor". Kept as a constant so CafeScene needs no
- * bounds to fall back cleanly.
- */
-export const CRT_DOCK_FALLBACK: CameraPose = crtDockPose({
+/** Nominal screen bounds for when the mesh can't be measured: the CRT_POSE
+ * target as center, ~0.3m tall — the framing still reads "sat at the monitor". */
+const FALLBACK_SCREEN: ScreenBounds = {
   center: CRT_POSE.target,
   width: 0.4,
   height: 0.3,
-});
+};
+
+/**
+ * Fallback dock pose for when the screen mesh can't be measured
+ * (missing/renamed material), at the panel's LIVE aspect ratio.
+ */
+export function crtDockFallback(panelAspect: number): CameraPose {
+  return crtDockPose(FALLBACK_SCREEN, panelAspect);
+}
 
 /**
  * Table-front derivation constants. One rule frames all five books: stand the
