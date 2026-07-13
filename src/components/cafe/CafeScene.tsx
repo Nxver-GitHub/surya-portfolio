@@ -22,15 +22,21 @@ import { menuBooks, type MenuBook } from "../../../content/menu-books";
 import { exhibits, exhibitById, type Exhibit } from "../../../content/cafe-exhibits";
 import { useReducedMotion } from "../garage/useReducedMotion";
 import { ExhibitPiece } from "./ExhibitPiece";
+import { CrtScreenFeed } from "./terminal/CrtScreenFeed";
+import { CrtScreenSurface } from "./CrtScreenSurface";
+import type { TerminalLine } from "./terminal/terminalLines";
 import {
   CAMERA_BOUNDS,
   CRT_NODE_NAME,
   OVERVIEW_POSE,
   CRT_POSE,
+  crtDockFallback,
   clampToRoom,
+  crtDockPose,
   exhibitFramePose,
   tableFrontPose,
   type CameraPose,
+  type ScreenBounds,
 } from "./cameraPoses";
 
 /** Contract: the café model lives here. Blender agent exports meshopt-
@@ -212,6 +218,13 @@ interface CameraRigProps {
   focus: CafeFocus;
   idle: boolean;
   reducedMotion: boolean;
+  /** True while docked to the CRT (terminal is the live surface): the rig flies
+   *  to the head-on dock pose instead of the desk-front CRT_POSE, and orbit is
+   *  disabled just as during a flight. */
+  docked: boolean;
+  /** Measured screen bounds (from CrtScreenSurface) — when present the dock pose
+   *  is derived from them; when null the hardcoded CRT_DOCK_FALLBACK is used. */
+  screenBounds: ScreenBounds | null;
 }
 
 /**
@@ -221,7 +234,13 @@ interface CameraRigProps {
  * current values to the focus pose over FLIGHT_MS with mechanical easing.
  * Reduced motion → instant cut. Auto-rotate is on only in room view.
  */
-function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
+function CameraRig({
+  focus,
+  idle,
+  reducedMotion,
+  docked,
+  screenBounds,
+}: CameraRigProps) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const camera = useThree((state) => state.camera);
 
@@ -237,13 +256,27 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
   // scroll can't write to the camera in the same frame as the tween.
   const [flying, setFlying] = useState(false);
 
+  // Live canvas aspect — the dock pose must fit the REAL panel (4:5 portrait
+  // on phones, 3:2 on desktop), not a hardcoded ratio. Re-renders on resize.
+  const panelAspect = useThree((state) => state.size.width / state.size.height);
+
   const pose = useMemo<CameraPose>(() => {
     // Fixed poses (CRT/overview) are authored inside the box; derived table/
     // exhibit poses are already clamped in cameraPoses. Clamp the eye here too
     // so every flight destination is provably inside the room.
     let raw: CameraPose;
-    if (focus.kind === "crt") raw = CRT_POSE;
-    else if (focus.kind === "book") {
+    if (focus.kind === "crt") {
+      // Docked → head-on dock pose (derived from the measured screen when we
+      // have it, else the hardcoded fallback). Not docked → the desk-front
+      // CRT_POSE approach framing.
+      if (docked) {
+        raw = screenBounds
+          ? crtDockPose(screenBounds, panelAspect)
+          : crtDockFallback(panelAspect);
+      } else {
+        raw = CRT_POSE;
+      }
+    } else if (focus.kind === "book") {
       const book = menuBooks.find((b) => b.id === focus.bookId);
       raw = book ? tableFrontPose(book.anchor) : OVERVIEW_POSE;
     } else if (focus.kind === "exhibit") {
@@ -251,7 +284,7 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
       raw = exhibit ? exhibitFramePose(exhibit) : OVERVIEW_POSE;
     } else raw = OVERVIEW_POSE;
     return { position: clampToRoom(raw.position), target: raw.target };
-  }, [focus]);
+  }, [focus, docked, screenBounds, panelAspect]);
 
   // Begin (or, under reduced motion / on first mount, immediately complete) a
   // flight whenever the destination pose changes. A rapid focus change mid-
@@ -330,13 +363,19 @@ function CameraRig({ focus, idle, reducedMotion }: CameraRigProps) {
   return (
     <OrbitControls
       ref={controls}
-      enabled={!flying}
+      // Disabled during a scripted flight AND while docked — a docked terminal
+      // is a fixed head-on read; orbiting would fight the DOM plane and re-open
+      // walls behind the monitor. The per-frame clamp block still runs.
+      enabled={!flying && !docked}
       enableDamping={false}
       autoRotate={autoRotate}
       autoRotateSpeed={0.5}
       enablePan={false}
       enableZoom
-      minDistance={1.4}
+      // The docked eye sits ~0.3m off the CRT face — far inside the room-view
+      // zoom floor. ctrl.update() enforces these even while disabled, so the
+      // floor must relax during a dock or it shoves the camera back to 1.4m.
+      minDistance={docked ? 0.1 : 1.4}
       maxDistance={6.6}
       minPolarAngle={1.05}
       maxPolarAngle={Math.PI / 2.05}
@@ -354,6 +393,17 @@ interface CafeSceneProps {
   onSelectExhibit: (exhibit: Exhibit) => void;
   /** Reports an exhibit's glb load result, so the UI lists only live pieces. */
   onExhibitAvailability: (exhibit: Exhibit, available: boolean) => void;
+  /** True while the 2D terminal overlay is open — wakes the CRT screen feed. */
+  terminalActive?: boolean;
+  /** The terminal scrollback to mirror onto the CRT screen (set dressing). */
+  terminalLines?: readonly TerminalLine[];
+  /** The live terminal DOM to render on the physical CRT face when docked. When
+   *  present (and the CRT is focused and the screen mesh is found), the camera
+   *  docks head-on and this renders on the tube via CrtScreenSurface. */
+  screenContent?: React.ReactNode;
+  /** Fires once the screen-mesh search resolves (true = found). The 2D shell
+   *  uses `false` to keep the terminal in its overlay instead of the tube. */
+  onScreenSurface?: (found: boolean) => void;
 }
 
 /**
@@ -373,6 +423,10 @@ export function CafeScene({
   onCrtFound,
   onSelectExhibit,
   onExhibitAvailability,
+  terminalActive = false,
+  terminalLines = [],
+  screenContent = null,
+  onScreenSurface,
 }: CafeSceneProps) {
   const reducedMotion = useReducedMotion();
   const idle = !reducedMotion;
@@ -380,6 +434,58 @@ export function CafeScene({
   // stable list references for the marker/exhibit maps
   const books = useMemo(() => menuBooks, []);
   const pieces = useMemo(() => exhibits, []);
+
+  // Screen-surface state: whether the CRT screen mesh was located, and its
+  // measured world bounds (drives the head-on dock pose). Both are reported up
+  // from CrtScreenSurface once its mesh search resolves.
+  const [screenFound, setScreenFound] = useState(false);
+  const [screenBounds, setScreenBounds] = useState<ScreenBounds | null>(null);
+
+  // CrtScreenSurface mounts as a sibling of the suspending model, so its first
+  // mesh search can see an empty graph. CafeModel reports in (onCrtFound) only
+  // after the glb is attached — bump a revision then to re-key the search.
+  const [modelRevision, setModelRevision] = useState(0);
+  const handleCrtFound = useCallback(
+    (present: boolean) => {
+      setModelRevision((rev) => rev + 1);
+      onCrtFound?.(present);
+    },
+    [onCrtFound],
+  );
+
+  // Notify the 2D shell exactly once per resolution so it can fall back to the
+  // overlay when the mesh is absent. Wrap the parent callback so a null-mesh
+  // report still threads a definitive `false`.
+  const handleScreenFound = useCallback(
+    (found: boolean) => {
+      setScreenFound(found);
+      onScreenSurface?.(found);
+    },
+    [onScreenSurface],
+  );
+  const handleScreenBounds = useCallback(
+    (bounds: ScreenBounds | null) => setScreenBounds(bounds),
+    [],
+  );
+
+  // Two docking notions since the mobile rework:
+  //  - camDocked: the CAMERA flies head-on to the tube and orbit locks —
+  //    whenever the CRT is focused and the screen mesh is known. On phones
+  //    this is the whole cinematic (the DOM terminal lives in the 2D panel;
+  //    the texture mirror keeps the tube alive in-frame).
+  //  - htmlDocked: the real terminal DOM additionally owns the screen face
+  //    (desktop in-monitor mode; requires screenContent to be handed in).
+  const camDocked = focus.kind === "crt" && screenFound;
+  const htmlDocked = camDocked && screenContent != null;
+
+  // Power-on key: bump each time the DOM takes the tube so it replays its
+  // phosphor wake. Increment on the false→true edge of `htmlDocked`.
+  const [powerKey, setPowerKey] = useState(0);
+  const wasDockedRef = useRef(false);
+  useEffect(() => {
+    if (htmlDocked && !wasDockedRef.current) setPowerKey((k) => k + 1);
+    wasDockedRef.current = htmlDocked;
+  }, [htmlDocked]);
 
   // Which exhibit id is hovered in-scene (drives its HTML name label). Local to
   // the scene — hover is a pure enhancement, not mirrored in the 2D UI.
@@ -427,7 +533,31 @@ export function CafeScene({
         <Lightformer form="rect" intensity={0.4} color="#3a2f1e" scale={[10, 10, 1]} position={[0, -2, 0]} target={[0, 0, 0]} />
       </Environment>
 
-      <CafeModel onCrtFound={onCrtFound} onSelectCrt={onSelectCrt} />
+      <CafeModel onCrtFound={handleCrtFound} onSelectCrt={onSelectCrt} />
+
+      {/* Hybrid CRT screen feed: mirrors the 2D terminal onto the in-scene
+          monitor while the overlay is open; restores the screen on close.
+          Suppressed while docked — the live DOM surface (CrtScreenSurface) then
+          owns the screen face, and both would fight over `mesh.material`. */}
+      {/* Texture mirror runs whenever the DOM doesn't own the tube — including
+          the mobile close-up, where it IS the live screen. */}
+      <CrtScreenFeed
+        active={terminalActive && !htmlDocked}
+        lines={terminalLines}
+      />
+
+      {/* Interactive terminal surface: locates + measures the screen mesh, and
+          when docked renders the real terminal DOM on the physical CRT face. */}
+      <CrtScreenSurface
+        docked={htmlDocked}
+        onFound={handleScreenFound}
+        onBounds={handleScreenBounds}
+        powerKey={powerKey}
+        reducedMotion={reducedMotion}
+        sceneRevision={modelRevision}
+      >
+        {screenContent}
+      </CrtScreenSurface>
 
       {books.map((book) => (
         <BookMarker
@@ -451,7 +581,13 @@ export function CafeScene({
         />
       ))}
 
-      <CameraRig focus={focus} idle={idle} reducedMotion={reducedMotion} />
+      <CameraRig
+        focus={focus}
+        idle={idle}
+        reducedMotion={reducedMotion}
+        docked={camDocked}
+        screenBounds={screenBounds}
+      />
     </Canvas>
   );
 }

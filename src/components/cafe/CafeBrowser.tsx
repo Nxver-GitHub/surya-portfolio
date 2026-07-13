@@ -1,7 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useCallback, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
 import { exhibits, type Exhibit } from "../../../content/cafe-exhibits";
@@ -11,7 +18,30 @@ import { CafeBackdrop } from "./CafeBackdrop";
 import { ExhibitList } from "./ExhibitList";
 import { ExhibitPlate } from "./ExhibitPlate";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
+import { Terminal } from "./terminal/Terminal";
+import { useTerminalChat } from "./terminal/useTerminalChat";
+import { useReducedMotion } from "../garage/useReducedMotion";
 import type { CafeFocus } from "./CafeScene";
+
+/** Tailwind's `sm` breakpoint — below it the in-screen terminal drops its
+ * embedded input for the thumb-reachable bottom bar (soft-keyboard-safe). */
+const MOBILE_QUERY = "(max-width: 639px)";
+
+function subscribeMobileQuery(onChange: () => void): () => void {
+  const mql = window.matchMedia(MOBILE_QUERY);
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+}
+
+/** Is the viewport below the `sm` breakpoint? The media query is an external
+ * store (SSR snapshot: false), so it tracks live resizes without effects. */
+function useIsMobile(): boolean {
+  return useSyncExternalStore(
+    subscribeMobileQuery,
+    () => window.matchMedia(MOBILE_QUERY).matches,
+    () => false,
+  );
+}
 
 // Code-split the WebGL café off the initial bundle. Client-only: ssr:false is
 // required (and only allowed) inside a Client Component — this one.
@@ -94,6 +124,10 @@ export function CafeBrowser() {
     () => new Set(),
   );
 
+  // The terminal is "open" whenever the CRT is the focus. It works with the 3D
+  // scene present (real CRT) or, via the fallback lozenge below, without it.
+  const terminalOpen = focus.kind === "crt";
+
   const select = useCallback(
     (book: MenuBook) => {
       if (book.id !== selected.id) {
@@ -104,8 +138,79 @@ export function CafeBrowser() {
     [router, selected.id],
   );
 
-  const selectCrt = useCallback(() => setFocus({ kind: "crt" }), []);
+  // Mobile full-screen takeover: after the tap, the dock flight plays as a
+  // short cinematic, then the terminal hard-cuts to a fixed full-screen
+  // window (the café page sits untouched behind it). Reset on every open so
+  // the zoom beat replays.
+  const [mobileTakeover, setMobileTakeover] = useState(false);
+
+  const selectCrt = useCallback(() => {
+    setMobileTakeover(false);
+    setFocus({ kind: "crt" });
+  }, []);
   const roomView = useCallback(() => setFocus({ kind: "room" }), []);
+
+  // Whether the CRT's screen mesh was found (gates the in-monitor terminal).
+  const [screenSurface, setScreenSurface] = useState(false);
+  // Visitor popped the terminal out of the 3D screen into the flat overlay.
+  const [expanded, setExpanded] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const isMobile = useIsMobile();
+
+  // Close the terminal: back to room view. The session persists in the module
+  // store, so reopening restores the conversation — and each open starts back
+  // in the immersive in-screen mode.
+  const closeTerminal = useCallback(() => {
+    setFocus({ kind: "room" });
+    setExpanded(false);
+    setMobileTakeover(false);
+  }, []);
+
+  // The terminal's session controller — called ONCE here and passed down to
+  // every surface (in-screen panel, overlay, mobile input bar). `open` gates
+  // the cold boot to the first open (not page load).
+  const chat = useTerminalChat({ open: terminalOpen, onExit: closeTerminal });
+
+  // The immersive path: terminal rendered ON the 3D CRT screen. Desktop only —
+  // on phones the camera still docks for the cinematic (the texture mirror
+  // keeps the tube alive) but reading/typing happens in the flat panel, which
+  // a ~390px-wide perspective plane can't do readably. Also falls back to the
+  // overlay when there's no scene/screen mesh, under reduced motion, or when
+  // the visitor explicitly expanded out.
+  const inScreen =
+    terminalOpen &&
+    !isMobile &&
+    sceneReady &&
+    crtPresent &&
+    screenSurface &&
+    !expanded &&
+    !reducedMotion;
+
+  // Phone takeover timing: give the dock flight ~0.95s to read as a zoom
+  // into the monitor, then present the full-screen window (instant under
+  // reduced motion — the flight is an instant cut there too).
+  useEffect(() => {
+    if (!terminalOpen || !isMobile) return;
+    const t = setTimeout(
+      () => setMobileTakeover(true),
+      reducedMotion ? 0 : 950,
+    );
+    return () => clearTimeout(t);
+  }, [terminalOpen, isMobile, reducedMotion]);
+
+  const takeoverVisible = terminalOpen && isMobile && mobileTakeover;
+
+  // While the full-screen window is up, the page behind must not scroll (this
+  // is also what keeps the soft keyboard from shoving the log out of view —
+  // the window is fixed, only the scrollback scrolls).
+  useEffect(() => {
+    if (!takeoverVisible) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [takeoverVisible]);
 
   const selectExhibit = useCallback((exhibit: Exhibit) => {
     setFocus({ kind: "exhibit", exhibitId: exhibit.id });
@@ -165,10 +270,24 @@ export function CafeBrowser() {
                 onCrtFound={onCrtFound}
                 onSelectExhibit={selectExhibit}
                 onExhibitAvailability={onExhibitAvailability}
+                terminalActive={crtPresent && chat.lines.length > 0}
+                terminalLines={chat.lines}
+                onScreenSurface={setScreenSurface}
+                screenContent={
+                  inScreen ? (
+                    <Terminal
+                      chat={chat}
+                      variant={isMobile ? "log-only" : "screen"}
+                      onClose={closeTerminal}
+                      onToggleExpand={() => setExpanded(true)}
+                    />
+                  ) : null
+                }
               />
             </Suspense>
           </SceneErrorBoundary>
         </div>
+
 
         {/* Scene controls — gated on the 3D scene actually being present, so
             nothing dangles when the glb failed to load (2D fallback path). */}
@@ -181,6 +300,15 @@ export function CafeBrowser() {
               >
                 <span aria-hidden="true">⤢</span> Room view
               </LozengeButton>
+              {/* Keyboard path to the house terminal — the 3D CRT is a
+                  pointer-only target, so mirror it here like the exhibits'
+                  "On display" buttons. Hidden while the terminal is open
+                  (the status chip below takes its place). */}
+              {crtPresent && focus.kind !== "crt" ? (
+                <LozengeButton onClick={selectCrt}>
+                  <span aria-hidden="true">▸</span> Terminal
+                </LozengeButton>
+              ) : null}
               {/* Book chip only while a book is the focus — during an exhibit
                   or CRT visit the dedicated plate below carries the context. */}
               {focus.kind === "book" || focus.kind === "room" ? (
@@ -192,7 +320,7 @@ export function CafeBrowser() {
                     Terminal
                   </span>
                   <span className="font-display text-xs font-bold tracking-wide text-white uppercase">
-                    Coming online soon
+                    Online — CAFE-OS v2.2
                   </span>
                 </span>
               ) : null}
@@ -208,6 +336,53 @@ export function CafeBrowser() {
 
             {/* The focused exhibit's plate: name, flavour, and full CC credit. */}
             {focusedExhibit ? <ExhibitPlate exhibit={focusedExhibit} /> : null}
+          </div>
+        ) : null}
+
+        {/* No-WebGL fallback: a plain lozenge to open the terminal, so the
+            (pure-DOM) house terminal still works without the 3D scene. */}
+        {!sceneReady && !terminalOpen ? (
+          <div>
+            <LozengeButton onClick={selectCrt}>
+              <span aria-hidden="true">▸</span> Open terminal
+            </LozengeButton>
+          </div>
+        ) : null}
+
+        {/* The flat overlay terminal — the fallback (no WebGL, no screen mesh,
+            reduced motion) and the "Expand" target from the in-screen view.
+            Escape / `exit` closes back to room view; the toggle returns to the
+            3D screen only when that path actually exists. */}
+        {terminalOpen && !inScreen && !isMobile ? (
+          <div className="h-[420px] sm:h-[460px]">
+            <Terminal
+              chat={chat}
+              variant="overlay"
+              onClose={closeTerminal}
+              onToggleExpand={
+                sceneReady && crtPresent && screenSurface && !reducedMotion
+                  ? () => setExpanded(false)
+                  : undefined
+              }
+            />
+          </div>
+        ) : null}
+
+        {/* Phone: full-screen terminal window. The tap's dock flight plays as
+            a zoom into the monitor, then this hard-cuts over everything —
+            fixed at 100dvh so the soft keyboard resizes the window instead of
+            scrolling the page, and Exit drops back to the café overview. */}
+        {takeoverVisible ? (
+          <div
+            className="fixed inset-0 z-50 bg-[#020604] p-2"
+            style={{ height: "100dvh" }}
+          >
+            <Terminal
+              chat={chat}
+              variant="overlay"
+              onClose={closeTerminal}
+              closeLabel="Exit ✕"
+            />
           </div>
         ) : null}
 
