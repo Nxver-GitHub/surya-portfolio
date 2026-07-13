@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import {
   PORTRAIT_SRC,
   isWhoIsSurya,
@@ -25,11 +27,16 @@ describe("portrait — isWhoIsSurya", () => {
 });
 
 describe("portrait — makePortraitLine", () => {
-  it("returns a line pointing at the placeholder portrait with non-empty alt", () => {
+  it("returns a line pointing at the real portrait with non-empty alt", () => {
     const line = makePortraitLine();
-    expect(line.media?.src).toBe("/terminal/portrait-placeholder.svg");
+    expect(line.media?.src).toBe("/terminal/portrait.jpg");
     expect(line.media?.alt).toBeTruthy();
     expect(line.media?.alt.length).toBeGreaterThan(0);
-    expect(PORTRAIT_SRC).toBe("/terminal/portrait-placeholder.svg");
+    expect(PORTRAIT_SRC).toBe("/terminal/portrait.jpg");
+  });
+
+  it("ships the portrait file the card points at", () => {
+    // The src is a public/ path; the file must actually be committed.
+    expect(existsSync(join(__dirname, "..", "public", PORTRAIT_SRC))).toBe(true);
   });
 });
