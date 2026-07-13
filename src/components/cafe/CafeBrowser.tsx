@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -26,6 +27,20 @@ import type { CafeFocus } from "./CafeScene";
 /** Tailwind's `sm` breakpoint — below it the in-screen terminal drops its
  * embedded input for the thumb-reachable bottom bar (soft-keyboard-safe). */
 const MOBILE_QUERY = "(max-width: 639px)";
+
+/** Keys that drive free-roam. Lowercased; arrow keys use their `key` names.
+ * Captured ONLY while the scene is engaged, so the BookList tablist keeps its
+ * own arrow-key navigation everywhere else. */
+const MOVE_KEYS: ReadonlySet<string> = new Set([
+  "w",
+  "a",
+  "s",
+  "d",
+  "arrowup",
+  "arrowdown",
+  "arrowleft",
+  "arrowright",
+]);
 
 function subscribeMobileQuery(onChange: () => void): () => void {
   const mql = window.matchMedia(MOBILE_QUERY);
@@ -157,6 +172,57 @@ export function CafeBrowser() {
   const reducedMotion = useReducedMotion();
   const isMobile = useIsMobile();
 
+  // Free-roam: WASD/arrow keys pan the café camera. Held keys live in a ref so
+  // the render loop reads them without re-rendering. `engaged` (scene hovered or
+  // focused) gates capture so global arrow keys still drive the tablist/page.
+  const roamKeys = useRef<Set<string>>(new Set());
+  const [engaged, setEngaged] = useState(false);
+  const engagedRef = useRef(false);
+  const focusKindRef = useRef(focus.kind);
+  useEffect(() => {
+    engagedRef.current = engaged;
+  }, [engaged]);
+  useEffect(() => {
+    focusKindRef.current = focus.kind;
+  }, [focus.kind]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (!engagedRef.current) return;
+      const key = event.key.toLowerCase();
+      if (!MOVE_KEYS.has(key)) return;
+      // The terminal owns the keyboard while it's open; never roam then.
+      if (focusKindRef.current === "crt") return;
+      const el = document.activeElement;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+      event.preventDefault();
+      roamKeys.current.add(key);
+      // First movement drops any scripted focus into free-roam — the camera
+      // stays put (no flight) and the keys take over from there.
+      setFocus((f) => (f.kind === "free" || f.kind === "crt" ? f : { kind: "free" }));
+    }
+    function onKeyUp(event: KeyboardEvent) {
+      roamKeys.current.delete(event.key.toLowerCase());
+    }
+    function clearKeys() {
+      roamKeys.current.clear();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", clearKeys);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", clearKeys);
+    };
+  }, []);
+
+  const engageScene = useCallback(() => setEngaged(true), []);
+  const disengageScene = useCallback(() => {
+    setEngaged(false);
+    roamKeys.current.clear();
+  }, []);
+
   // Close the terminal: back to room view. The session persists in the module
   // store, so reopening restores the conversation — and each open starts back
   // in the immersive in-screen mode.
@@ -256,10 +322,20 @@ export function CafeBrowser() {
       <div className="flex flex-col gap-6 lg:order-2">
         {/* 3D café — enhancement only; falls back to a 2D backdrop. Sized to
             read like a ROOM, not a letterbox: portrait-ish on mobile so the
-            floor-to-ceiling of the room is visible, ~3:2 with real height on
-            desktop. Height is viewport-relative and capped so it never
-            dominates the page. */}
-        <div className="aspect-[4/5] max-h-[620px] min-h-[420px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] sm:aspect-[16/10] sm:max-h-none sm:min-h-[480px] lg:aspect-[3/2] lg:min-h-[520px]">
+            floor-to-ceiling of the room is visible, a touch under 5:3 on desktop
+            (trimmed from 3:2 so it takes less vertical space — the fixed 60° FOV
+            keeps the room's full height in frame, just shows a little more
+            width). Focusable so keyboard users can enter free-roam; hover/focus
+            marks the scene "engaged" (pauses the idle spin, arms WASD/arrows). */}
+        <div
+          className="relative aspect-[4/5] max-h-[560px] min-h-[400px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-chrome sm:aspect-[16/10] sm:max-h-none sm:min-h-[440px] lg:aspect-[5/3] lg:min-h-[470px]"
+          tabIndex={0}
+          aria-label="GT Café 3D view — drag to look, scroll to zoom, WASD or arrow keys to move around the room"
+          onPointerEnter={engageScene}
+          onPointerLeave={disengageScene}
+          onFocus={engageScene}
+          onBlur={disengageScene}
+        >
           <SceneErrorBoundary fallback={<CafeBackdrop reason="error" />}>
             <Suspense fallback={<CafeBackdrop reason="loading" />}>
               <CafeScene
@@ -273,6 +349,8 @@ export function CafeBrowser() {
                 terminalActive={crtPresent && chat.lines.length > 0}
                 terminalLines={chat.lines}
                 onScreenSurface={setScreenSurface}
+                roamKeys={roamKeys}
+                engaged={engaged}
                 screenContent={
                   inScreen ? (
                     <Terminal
@@ -286,6 +364,16 @@ export function CafeBrowser() {
               />
             </Suspense>
           </SceneErrorBoundary>
+
+          {/* Navigation hint — pointer users only (no keyboard on touch). Sits
+              over the canvas, never intercepts its drag. Hidden while the
+              terminal owns the view. */}
+          {sceneReady && !isMobile && focus.kind !== "crt" ? (
+            <div className="pointer-events-none absolute bottom-2 left-2 select-none rounded-sm border border-white/15 bg-black/55 px-2.5 py-1 font-display text-[10px] font-semibold tracking-wide text-white/70 uppercase backdrop-blur-sm">
+              Drag to look · Scroll to zoom ·{" "}
+              <span className="text-chrome">WASD / Arrows</span> to move
+            </div>
+          ) : null}
         </div>
 
 
@@ -309,9 +397,11 @@ export function CafeBrowser() {
                   <span aria-hidden="true">▸</span> Terminal
                 </LozengeButton>
               ) : null}
-              {/* Book chip only while a book is the focus — during an exhibit
-                  or CRT visit the dedicated plate below carries the context. */}
-              {focus.kind === "book" || focus.kind === "room" ? (
+              {/* Book chip while a book/room/free-roam is the focus — during an
+                  exhibit or CRT visit the dedicated plate below carries context. */}
+              {focus.kind === "book" ||
+              focus.kind === "room" ||
+              focus.kind === "free" ? (
                 <FocusLabel book={selected} />
               ) : null}
               {focus.kind === "crt" && crtPresent ? (

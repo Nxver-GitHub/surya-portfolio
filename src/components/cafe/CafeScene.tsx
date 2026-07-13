@@ -60,7 +60,10 @@ export type CafeFocus =
   | { kind: "room" }
   | { kind: "book"; bookId: string }
   | { kind: "crt" }
-  | { kind: "exhibit"; exhibitId: string };
+  | { kind: "exhibit"; exhibitId: string }
+  // Free-roam: the user is driving the camera with WASD/arrows. No scripted
+  // pose — the rig stops flying and lets the keyboard pan the eye + target.
+  | { kind: "free" };
 
 interface CafeModelProps {
   onCrtFound: (present: boolean) => void;
@@ -118,12 +121,16 @@ interface BookMarkerProps {
   isActive: boolean;
   onSelect: (book: MenuBook) => void;
   idle: boolean;
+  /** True when the camera is flown-in and framing THIS book. The in-scene label
+   *  is suppressed then — the camera sits ~2.5m off so the label would balloon
+   *  over the whole object, and the 2D FocusLabel plate already names it. */
+  focused: boolean;
 }
 
 /** A floating, glowing stylized book that marks a Menu Book on a café table.
  * Uses the book's own enamel cover color. Clicking it selects that book. Bobs
  * gently unless reduced motion is set; hover/active shows an HTML label. */
-function BookMarker({ book, isActive, onSelect, idle }: BookMarkerProps) {
+function BookMarker({ book, isActive, onSelect, idle, focused }: BookMarkerProps) {
   const ref = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
   const { x, y, z } = book.anchor;
@@ -178,8 +185,9 @@ function BookMarker({ book, isActive, onSelect, idle }: BookMarkerProps) {
         position={[0, 0, 0.3]}
       />
       {/* Hover/active label — enhancement-only; the same info is mirrored in the
-          2D UI for keyboard users, so this is never the sole source. */}
-      {lit ? (
+          2D UI for keyboard users, so this is never the sole source. Suppressed
+          while this book is the flown-in focus (label would fill the frame). */}
+      {lit && !focused ? (
         <Html center distanceFactor={6} position={[0, 0.34, 0]} zIndexRange={[20, 0]}>
           <div
             style={{
@@ -225,7 +233,16 @@ interface CameraRigProps {
   /** Measured screen bounds (from CrtScreenSurface) — when present the dock pose
    *  is derived from them; when null the hardcoded CRT_DOCK_FALLBACK is used. */
   screenBounds: ScreenBounds | null;
+  /** Live set of held free-roam keys (lowercased: w/a/s/d + arrow names). A ref
+   *  so key presses drive useFrame without re-rendering the scene. */
+  roamKeys: React.RefObject<Set<string>>;
+  /** The scene is engaged (hovered/focused): auto-rotate pauses so the idle spin
+   *  doesn't fight the user looking around or roaming. */
+  engaged: boolean;
 }
+
+/** Free-roam translation speed (metres/second) for WASD/arrow movement. */
+const ROAM_SPEED = 3.2;
 
 /**
  * Drives the scripted camera flights. Keeps the base OrbitControls (so the user
@@ -240,6 +257,8 @@ function CameraRig({
   reducedMotion,
   docked,
   screenBounds,
+  roamKeys,
+  engaged,
 }: CameraRigProps) {
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null);
   const camera = useThree((state) => state.camera);
@@ -252,6 +271,10 @@ function CameraRig({
   const elapsed = useRef(0);
   const playing = useRef(false);
   const mounted = useRef(false);
+  // Scratch vectors for the roam math (per-instance; the rig is a singleton).
+  const roamFwd = useRef(new Vector3());
+  const roamRight = useRef(new Vector3());
+  const roamMove = useRef(new Vector3());
   // State mirror of `playing` — gates OrbitControls so a mid-flight drag or
   // scroll can't write to the camera in the same frame as the tween.
   const [flying, setFlying] = useState(false);
@@ -260,7 +283,10 @@ function CameraRig({
   // on phones, 3:2 on desktop), not a hardcoded ratio. Re-renders on resize.
   const panelAspect = useThree((state) => state.size.width / state.size.height);
 
-  const pose = useMemo<CameraPose>(() => {
+  const pose = useMemo<CameraPose | null>(() => {
+    // Free-roam owns the camera directly (no scripted destination) — return null
+    // so the flight effect leaves the eye where the keys put it.
+    if (focus.kind === "free") return null;
     // Fixed poses (CRT/overview) are authored inside the box; derived table/
     // exhibit poses are already clamped in cameraPoses. Clamp the eye here too
     // so every flight destination is provably inside the room.
@@ -294,6 +320,14 @@ function CameraRig({
     const ctrl = controls.current;
     if (!ctrl) return;
 
+    // Free-roam: no destination — cancel any flight (ref only; useFrame syncs
+    // the `flying` state off `playing` so OrbitControls re-enables) and hand
+    // control to the keys.
+    if (!pose) {
+      playing.current = false;
+      return;
+    }
+
     toPos.current.set(pose.position[0], pose.position[1], pose.position[2]);
     toTarget.current.set(pose.target[0], pose.target[1], pose.target[2]);
 
@@ -321,6 +355,11 @@ function CameraRig({
     const ctrl = controls.current;
     if (!ctrl) return;
 
+    // Sync the flight-gate state off the ref: entering free-roam clears
+    // `playing` without a setState (that's banned in effects), so re-enable
+    // OrbitControls here the next frame.
+    if (!playing.current && flying) setFlying(false);
+
     if (playing.current) {
       // Accumulate clamped frame deltas so a tab-throttled or very long first
       // frame can't collapse the whole flight into a single snap.
@@ -335,6 +374,53 @@ function CameraRig({
       if (raw >= 1) {
         playing.current = false;
         setFlying(false);
+      }
+    }
+
+    // Free-roam: WASD/arrows pan the eye + target together across the floor
+    // plane. Only when not flying and not docked (the terminal owns the keys
+    // then). Movement is relative to where the camera looks, projected flat.
+    const keys = roamKeys.current;
+    if (keys && keys.size > 0 && !playing.current && !docked && focus.kind !== "crt") {
+      const fwd =
+        (keys.has("w") || keys.has("arrowup") ? 1 : 0) -
+        (keys.has("s") || keys.has("arrowdown") ? 1 : 0);
+      const strafe =
+        (keys.has("d") || keys.has("arrowright") ? 1 : 0) -
+        (keys.has("a") || keys.has("arrowleft") ? 1 : 0);
+      if (fwd !== 0 || strafe !== 0) {
+        // Forward = eye→target on the floor plane; right = forward × up.
+        roamFwd.current.set(
+          ctrl.target.x - camera.position.x,
+          0,
+          ctrl.target.z - camera.position.z,
+        );
+        if (roamFwd.current.lengthSq() < 1e-6) roamFwd.current.set(0, 0, -1);
+        roamFwd.current.normalize();
+        roamRight.current.set(-roamFwd.current.z, 0, roamFwd.current.x);
+        roamMove.current
+          .set(0, 0, 0)
+          .addScaledVector(roamFwd.current, fwd)
+          .addScaledVector(roamRight.current, strafe);
+        if (roamMove.current.lengthSq() > 0) {
+          roamMove.current
+            .normalize()
+            .multiplyScalar(ROAM_SPEED * Math.min(delta, 0.1));
+          // Method calls only (camera is a hook value — no property assignment).
+          // roamMove has y=0, so this pans on the floor plane. The per-frame
+          // clamp block below keeps the eye inside the room.
+          camera.position.add(roamMove.current);
+          // Pan the target with the eye, clamped into the room so you can't aim
+          // the pivot out through a wall.
+          ctrl.target.add(roamMove.current);
+          ctrl.target.setX(
+            Math.min(CAMERA_BOUNDS.maxX, Math.max(CAMERA_BOUNDS.minX, ctrl.target.x)),
+          );
+          ctrl.target.setZ(
+            Math.min(CAMERA_BOUNDS.maxZ, Math.max(CAMERA_BOUNDS.minZ, ctrl.target.z)),
+          );
+          ctrl.update();
+        }
       }
     }
 
@@ -354,8 +440,10 @@ function CameraRig({
     }
   });
 
-  // Auto-rotate only when idling in room view and no flight is running.
-  const autoRotate = idle && focus.kind === "room";
+  // Auto-rotate only when idling in room view, no flight is running, and the
+  // user isn't engaging the scene (hovering/roaming) — the idle spin must never
+  // fight the user trying to look around or drive with the keys.
+  const autoRotate = idle && focus.kind === "room" && !engaged;
 
   // No declarative `target` prop: the rig owns the target imperatively (the
   // mount effect seeds it, flights tween it). Damping off — it would layer
@@ -404,6 +492,11 @@ interface CafeSceneProps {
   /** Fires once the screen-mesh search resolves (true = found). The 2D shell
    *  uses `false` to keep the terminal in its overlay instead of the tube. */
   onScreenSurface?: (found: boolean) => void;
+  /** Live held-key set for WASD/arrow free-roam (owned by the 2D shell so the
+   *  same keydown gating that protects the tablist lives next to it). */
+  roamKeys: React.RefObject<Set<string>>;
+  /** Scene is hovered/focused — pauses the idle auto-rotate. */
+  engaged: boolean;
 }
 
 /**
@@ -427,9 +520,12 @@ export function CafeScene({
   terminalLines = [],
   screenContent = null,
   onScreenSurface,
+  roamKeys,
+  engaged,
 }: CafeSceneProps) {
   const reducedMotion = useReducedMotion();
   const idle = !reducedMotion;
+  const focusedBookId = focus.kind === "book" ? focus.bookId : null;
 
   // stable list references for the marker/exhibit maps
   const books = useMemo(() => menuBooks, []);
@@ -566,6 +662,7 @@ export function CafeScene({
           isActive={book.id === selectedId}
           onSelect={onSelect}
           idle={idle}
+          focused={book.id === focusedBookId}
         />
       ))}
 
@@ -587,6 +684,8 @@ export function CafeScene({
         reducedMotion={reducedMotion}
         docked={camDocked}
         screenBounds={screenBounds}
+        roamKeys={roamKeys}
+        engaged={engaged}
       />
     </Canvas>
   );
