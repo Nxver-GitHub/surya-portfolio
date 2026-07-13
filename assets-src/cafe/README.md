@@ -57,4 +57,38 @@ scene lights). Everything else is Background-shader → `KHR_materials_unlit`.
 All liveries, memorabilia, art, and the tire are abstract/logo-free — no real
 brand marks, wordmarks, or recognizable trademarked liveries.
 
-Current build: 15,576 tris, 824 KB glb.
+Current build: 15,576 tris, 816 KB glb. The five wall-art canvases in
+`T_DecorSrc` are gallery motorsport posters (numpy-painted, 4× supersampled):
+Monaco circuit ribbon, Le Mans dusk endurance, Gulf colour study, Group-B
+tricolour wedge, Martini stripe study — pure shape/colour, no text/logos. The
+rug (top ~78%×50% of `T_CafeDecor`) is preserved byte-for-byte across re-bakes:
+the decor identity-bake result is spliced into the shipped `T_CafeDecor` only at
+the five art UV rects, never over rug texels.
+
+## Motorsport-corner exhibits (`wing.blend`, `simrig.blend`)
+Two self-contained exhibit pieces for the east-wall motorsport corner. Both
+follow the café's **Background-shader → `KHR_materials_unlit`** convention: a
+neutral bright-gallery light rig (bake-only, deleted before export) is baked
+COMBINED into ONE 1024 atlas, then every material becomes an unlit Background
+sampling that atlas via `UVMap` — matching the room's baked value range. Same
+export recipe as the café: `@gltf-transform optimize … --compress meshopt
+--texture-compress webp --join false --flatten false --simplify false` (never
+draco; join/flatten off preserves the single root node name). **Recalc normals
+outside before baking** — inward-flipped faces bake pure black.
+
+- **`wing.blend` → `public/models/cafe-wing.glb`** — Group C / GT1-style
+  single-element endurance rear wing (wall display). One `Cafe_Wing` node,
+  664 tris, 42 KB. glTF Y-up; display face toward −X; SPAN along Z (~1.51 m);
+  cleat plate back flush on x=0; vertically centred at y=0. W×H×D ≈
+  1.51 × 0.32 × 0.32 m. Carbon airfoil + two endplates with a Gulf-orange
+  accent band + twin swan-neck pylons on a slim dark wall cleat. Site mounts at
+  `MOUNTS.wingWall` (6.44, 1.6, −1.2). Suggested `frameDistance` ≈ 2.0.
+- **`simrig.blend` → `public/models/cafe-simrig.glb`** — modern sim-racing rig
+  (floor display). One `Cafe_SimRig` node, 880 tris, 78 KB. glTF Y-up; origin at
+  footprint centre on the floor (sits on y=0); driver faces −X (rotationY 0 puts
+  the monitor back toward the east wall, seat reads three-quarter from the room).
+  Footprint 1.48 (X) × 1.90 (Z) m, height 1.22 m. 8020-style anodised frame,
+  black bucket seat with a red livery accent stripe, 3-pedal tray, wheel-base +
+  round suede wheel, ~32″ monitor with a faint blue screen tint on a
+  frame-mounted stand, thin floor mat. Site mounts at `MOUNTS.simRigFloor`
+  (5.6, 0.01, −2.7). Suggested `frameDistance` ≈ 2.4.

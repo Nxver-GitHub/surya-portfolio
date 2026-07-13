@@ -235,6 +235,58 @@ export const exhibits: readonly Exhibit[] = [
       licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
     },
   },
+  {
+    id: "wing",
+    name: "Endurance Rear Wing",
+    flavor:
+      "A Group C-style single-element rear wing — carbon plane, swan-neck mounts, Gulf-orange endplate accents — hung on the gallery wall.",
+    modelPath: "/models/cafe-wing.glb",
+    mount: {
+      // East-wall cleat: the glb is authored with the cleat back on its x=0
+      // plane facing −X, so the wall point puts the plate flush on x=6.44.
+      position: MOUNTS.wingWall.position,
+      rotationY: 0,
+    },
+    // Authored pose instead of the derived one: the default rule floats the
+    // eye 0.7m above a wall piece and looks down at it — a straight-on,
+    // near-level view reads far better for wall-hung aero.
+    cameraOverride: {
+      position: [4.77, 1.68, -0.89],
+      target: [6.44, 1.6, -1.2],
+    },
+    credit: {
+      title: "Endurance Rear Wing",
+      author: "Surya Pugazhenthi",
+      authorUrl: "https://github.com/Nxver-GitHub",
+      source: "Original model (Blender)",
+      url: "https://github.com/Nxver-GitHub/surya-portfolio",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
+  },
+  {
+    id: "simrig",
+    name: "Sim Racing Rig",
+    flavor:
+      "A modern sim-racing cockpit — aluminium-profile frame, bucket seat, wheel base and a frame-mounted monitor — parked in the motorsport corner.",
+    modelPath: "/models/cafe-simrig.glb",
+    mount: {
+      // Sim-rig floor zone; authored driver-facing −X with the origin at the
+      // footprint centre on the floor, so the mount drops it onto its mat.
+      position: MOUNTS.simRigFloor.position,
+      rotationY: 0,
+    },
+    frameDistance: 2.4,
+    credit: {
+      title: "Sim Racing Rig",
+      author: "Surya Pugazhenthi",
+      authorUrl: "https://github.com/Nxver-GitHub",
+      source: "Original model (Blender)",
+      url: "https://github.com/Nxver-GitHub/surya-portfolio",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
+  },
 ];
 
 /** Exhibit lookup by id, for the scene and UI to resolve a focus target. */
