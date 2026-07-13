@@ -6,7 +6,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -139,7 +138,16 @@ export function CafeBrowser() {
     [router, selected.id],
   );
 
-  const selectCrt = useCallback(() => setFocus({ kind: "crt" }), []);
+  // Mobile full-screen takeover: after the tap, the dock flight plays as a
+  // short cinematic, then the terminal hard-cuts to a fixed full-screen
+  // window (the café page sits untouched behind it). Reset on every open so
+  // the zoom beat replays.
+  const [mobileTakeover, setMobileTakeover] = useState(false);
+
+  const selectCrt = useCallback(() => {
+    setMobileTakeover(false);
+    setFocus({ kind: "crt" });
+  }, []);
   const roomView = useCallback(() => setFocus({ kind: "room" }), []);
 
   // Whether the CRT's screen mesh was found (gates the in-monitor terminal).
@@ -155,6 +163,7 @@ export function CafeBrowser() {
   const closeTerminal = useCallback(() => {
     setFocus({ kind: "room" });
     setExpanded(false);
+    setMobileTakeover(false);
   }, []);
 
   // The terminal's session controller — called ONCE here and passed down to
@@ -177,22 +186,31 @@ export function CafeBrowser() {
     !expanded &&
     !reducedMotion;
 
-  // On phones, when the terminal opens, bring the panel (and the scene strip
-  // above it) into view — otherwise the dock flight happens off-screen and the
-  // visitor sees nothing change.
-  const overlayRef = useRef<HTMLDivElement>(null);
+  // Phone takeover timing: give the dock flight ~0.95s to read as a zoom
+  // into the monitor, then present the full-screen window (instant under
+  // reduced motion — the flight is an instant cut there too).
   useEffect(() => {
     if (!terminalOpen || !isMobile) return;
-    const node = overlayRef.current;
-    if (!node) return;
-    const id = requestAnimationFrame(() => {
-      node.scrollIntoView({
-        behavior: reducedMotion ? "auto" : "smooth",
-        block: "center",
-      });
-    });
-    return () => cancelAnimationFrame(id);
+    const t = setTimeout(
+      () => setMobileTakeover(true),
+      reducedMotion ? 0 : 950,
+    );
+    return () => clearTimeout(t);
   }, [terminalOpen, isMobile, reducedMotion]);
+
+  const takeoverVisible = terminalOpen && isMobile && mobileTakeover;
+
+  // While the full-screen window is up, the page behind must not scroll (this
+  // is also what keeps the soft keyboard from shoving the log out of view —
+  // the window is fixed, only the scrollback scrolls).
+  useEffect(() => {
+    if (!takeoverVisible) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [takeoverVisible]);
 
   const selectExhibit = useCallback((exhibit: Exhibit) => {
     setFocus({ kind: "exhibit", exhibitId: exhibit.id });
@@ -241,16 +259,7 @@ export function CafeBrowser() {
             floor-to-ceiling of the room is visible, ~3:2 with real height on
             desktop. Height is viewport-relative and capped so it never
             dominates the page. */}
-        <div
-          className={
-            terminalOpen && isMobile
-              ? // Phone + terminal open: the scene collapses to a cinematic
-                // strip — the docked camera on the glowing monitor — and the
-                // flat terminal panel below gets the room to breathe.
-                "h-[32svh] min-h-[220px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)]"
-              : "aspect-[4/5] max-h-[620px] min-h-[420px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] sm:aspect-[16/10] sm:max-h-none sm:min-h-[480px] lg:aspect-[3/2] lg:min-h-[520px]"
-          }
-        >
+        <div className="aspect-[4/5] max-h-[620px] min-h-[420px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] sm:aspect-[16/10] sm:max-h-none sm:min-h-[480px] lg:aspect-[3/2] lg:min-h-[520px]">
           <SceneErrorBoundary fallback={<CafeBackdrop reason="error" />}>
             <Suspense fallback={<CafeBackdrop reason="loading" />}>
               <CafeScene
@@ -344,21 +353,35 @@ export function CafeBrowser() {
             reduced motion) and the "Expand" target from the in-screen view.
             Escape / `exit` closes back to room view; the toggle returns to the
             3D screen only when that path actually exists. */}
-        {terminalOpen && !inScreen ? (
-          <div ref={overlayRef} className="h-[52svh] min-h-[340px] sm:h-[460px]">
+        {terminalOpen && !inScreen && !isMobile ? (
+          <div className="h-[420px] sm:h-[460px]">
             <Terminal
               chat={chat}
               variant="overlay"
               onClose={closeTerminal}
               onToggleExpand={
-                !isMobile &&
-                sceneReady &&
-                crtPresent &&
-                screenSurface &&
-                !reducedMotion
+                sceneReady && crtPresent && screenSurface && !reducedMotion
                   ? () => setExpanded(false)
                   : undefined
               }
+            />
+          </div>
+        ) : null}
+
+        {/* Phone: full-screen terminal window. The tap's dock flight plays as
+            a zoom into the monitor, then this hard-cuts over everything —
+            fixed at 100dvh so the soft keyboard resizes the window instead of
+            scrolling the page, and Exit drops back to the café overview. */}
+        {takeoverVisible ? (
+          <div
+            className="fixed inset-0 z-50 bg-[#020604] p-2"
+            style={{ height: "100dvh" }}
+          >
+            <Terminal
+              chat={chat}
+              variant="overlay"
+              onClose={closeTerminal}
+              closeLabel="Exit ✕"
             />
           </div>
         ) : null}

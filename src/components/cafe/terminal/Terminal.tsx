@@ -51,6 +51,9 @@ interface TerminalProps {
   onClose: () => void;
   /** Toggle between the overlay panel and the in-3D-screen view, if wired. */
   onToggleExpand?: () => void;
+  /** Label for the close control. "Esc ✕" fits desktop; the mobile full-screen
+   * window passes "Exit ✕" (phones have no Escape key). */
+  closeLabel?: string;
 }
 
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
@@ -265,6 +268,7 @@ export function Terminal({
   variant,
   onClose,
   onToggleExpand,
+  closeLabel = "Esc ✕",
 }: TerminalProps) {
   const reducedMotion = useReducedMotion();
 
@@ -328,7 +332,7 @@ export function Terminal({
               </ScreenButton>
             ) : null}
             <ScreenButton onClick={onClose} label="Close terminal">
-              Esc ✕
+              {closeLabel}
             </ScreenButton>
           </div>
         </div>
@@ -382,7 +386,7 @@ export function Terminal({
             aria-label="Close terminal"
             className="lozenge ts-hard px-3 py-0.5 font-display text-[11px] font-bold tracking-widest text-white uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
           >
-            Esc ✕
+            {closeLabel}
           </button>
         </div>
       </div>
