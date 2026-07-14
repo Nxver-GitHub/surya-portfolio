@@ -269,6 +269,195 @@ body {
   animation: locked-shake var(--duration-slide) var(--ease-mech);
 }
 
+/* ── Signature intro (BootSequence) ──────────────────────────────────────
+   GT2 boot-to-menu homage: a studio monogram under a spotlight, a hard-cut
+   heritage montage on a fixed beat grid, then the title. All motion is
+   mechanical (ease-mech / step-end), never bouncy. The whole overlay only
+   renders when motion is allowed and once per session (see BootSequence),
+   so these are inert for reduced-motion users; the global reset below is a
+   second safety net. */
+
+/* Beat 1: old film-projector flicker over the monogram. */
+@keyframes intro-flicker {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  8% {
+    opacity: 0.72;
+    filter: brightness(1.35);
+  }
+  14% {
+    opacity: 1;
+  }
+  42% {
+    opacity: 0.86;
+  }
+  46% {
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+  70% {
+    opacity: 0.66;
+  }
+  74% {
+    opacity: 1;
+  }
+}
+
+.intro-flicker {
+  animation: intro-flicker 850ms steps(1, end) 1;
+}
+
+/* Beat 1: monogram scales up a hair as it seats under the spotlight. */
+@keyframes intro-seat {
+  0% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.intro-seat {
+  animation: intro-seat 620ms var(--ease-mech) 1;
+}
+
+/* Beat 2 accent transition: a hard directional whip-slide onto the beat. */
+@keyframes intro-whip {
+  0% {
+    transform: translate3d(42%, 0, 0) skewX(-14deg);
+    opacity: 0.2;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) skewX(0);
+    opacity: 1;
+  }
+}
+
+.intro-whip {
+  animation: intro-whip 130ms var(--ease-mech) 1;
+}
+
+/* Beat 2 accent transition: a scanline wipe reveal. */
+@keyframes intro-wipe {
+  0% {
+    clip-path: inset(0 0 100% 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.intro-wipe {
+  animation: intro-wipe 130ms steps(6, end) 1;
+}
+
+/* Beat 2: spinning wheel/rim. */
+@keyframes intro-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.intro-spin {
+  animation: intro-spin 700ms linear infinite;
+}
+
+/* Beat 2: redline / accent flash (tach + numerals). */
+@keyframes intro-flash {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.7);
+  }
+}
+
+.intro-flash {
+  animation: intro-flash 130ms steps(2, end) infinite;
+}
+
+/* Beat 3: PRESS START prompt — hard on/off blink, no easing. */
+@keyframes intro-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.intro-blink {
+  animation: intro-blink 900ms step-end infinite;
+}
+
+/* Spotlight pool the monogram sits in. */
+.intro-spotlight {
+  background: radial-gradient(
+    62% 58% at 50% 46%,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.05) 26%,
+    rgba(0, 0, 0, 0) 62%
+  );
+}
+
+/* CRT-ish scanline veil laid over montage frames for the pre-rendered feel. */
+.intro-scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.22) 0px,
+    rgba(0, 0, 0, 0.22) 1px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0) 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* Beat 2: horizontal speed-blur streaks. */
+.intro-speedlines {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0) 26px,
+      rgba(255, 255, 255, 0.5) 30px,
+      rgba(255, 255, 255, 0) 34px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 176, 0, 0) 0,
+      rgba(255, 176, 0, 0) 60px,
+      rgba(255, 176, 0, 0.35) 64px,
+      rgba(255, 176, 0, 0) 68px
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-flicker,
+  .intro-seat,
+  .intro-whip,
+  .intro-wipe,
+  .intro-spin,
+  .intro-flash,
+  .intro-blink {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .locked-shake {
     animation: none;
