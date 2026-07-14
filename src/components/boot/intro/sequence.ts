@@ -46,7 +46,7 @@ export interface FrameEntry {
 /** The only words the reel may slam — brand identity only, nothing datable. */
 export const ALLOWED_WORDS = ["SURYA", "RACING"] as const;
 
-/** Desktop reel (~21 cuts @ 130ms ≈ 2.7s): each hero car after its livery. */
+/** Desktop reel (~21 cuts @ 165ms ≈ 3.5s): each hero car after its livery. */
 export const FRAMES: readonly FrameEntry[] = [
   { frame: { kind: "grid" } },
   { frame: { kind: "livery", livery: "calsonic" } },
@@ -71,7 +71,7 @@ export const FRAMES: readonly FrameEntry[] = [
   { frame: { kind: "grid" } },
 ];
 
-/** Mobile reel (~12 cuts ≈ 1.6s) — same beats, fewer of them. */
+/** Mobile reel (~12 cuts @ 165ms ≈ 2.0s) — same beats, fewer of them. */
 export const FRAMES_COMPACT: readonly FrameEntry[] = [
   { frame: { kind: "grid" } },
   { frame: { kind: "livery", livery: "calsonic" } },

@@ -5,8 +5,10 @@ import { FrameView } from "./frames";
 import { CAR_SILHOUETTES, FRAMES, FRAMES_COMPACT } from "./sequence";
 
 /** Beat 2 — the hard-cut heritage montage on a fixed beat grid. Silent: the
- *  ~130ms grid IS the rhythm, so it reads music-synced without any audio. */
-const GRID_MS = 130;
+ *  grid IS the rhythm, so it reads music-synced without any audio. 165ms keeps
+ *  the machine-gun energy while giving each cut (esp. the car silhouettes)
+ *  enough dwell to actually register. */
+const GRID_MS = 165;
 
 interface IntroMontageProps {
   compact: boolean;

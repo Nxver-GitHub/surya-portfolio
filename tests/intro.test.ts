@@ -98,12 +98,12 @@ describe("intro montage — car silhouette assets", () => {
 });
 
 describe("intro montage — pacing", () => {
-  const GRID_MS = 130;
+  const GRID_MS = 165;
 
   it("desktop reel runs a montage of a few seconds", () => {
     const ms = FRAMES.length * GRID_MS;
-    expect(ms).toBeGreaterThanOrEqual(2000);
-    expect(ms).toBeLessThanOrEqual(3200);
+    expect(ms).toBeGreaterThanOrEqual(2500);
+    expect(ms).toBeLessThanOrEqual(4000);
   });
 
   it("mobile reel is shorter than desktop", () => {

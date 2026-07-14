@@ -271,7 +271,7 @@ body {
 
 /* ── Signature intro (BootSequence) ──────────────────────────────────────
    GT2 boot-to-menu homage: a studio monogram under a spotlight, a hard-cut
-   heritage montage on a fixed beat grid, then the title. All motion is
+   heritage montage on a fixed ~165ms beat grid, then the title. All motion is
    mechanical (ease-mech / step-end), never bouncy. The whole overlay only
    renders when motion is allowed and once per session (see BootSequence),
    so these are inert for reduced-motion users; the global reset below is a
