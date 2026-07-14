@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FrameView } from "./frames";
-import { FRAMES, FRAMES_COMPACT } from "./sequence";
+import { CAR_SILHOUETTES, FRAMES, FRAMES_COMPACT } from "./sequence";
 
 /** Beat 2 — the hard-cut heritage montage on a fixed beat grid. Silent: the
  *  ~130ms grid IS the rhythm, so it reads music-synced without any audio. */
@@ -16,6 +16,14 @@ interface IntroMontageProps {
 export function IntroMontage({ compact, onComplete }: IntroMontageProps) {
   const frames = compact ? FRAMES_COMPACT : FRAMES;
   const [index, setIndex] = useState(0);
+
+  // Warm the car-silhouette masks so no cut flashes empty while it decodes.
+  useEffect(() => {
+    for (const id of CAR_SILHOUETTES) {
+      const img = new Image();
+      img.src = `/intro/cars/${id}.png`;
+    }
+  }, []);
 
   useEffect(() => {
     let i = 0;

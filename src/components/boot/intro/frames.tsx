@@ -1,19 +1,23 @@
 import { liveries, type LiveryId } from "../../../../content/liveries";
-import { CarSilhouette } from "./CarSilhouette";
-import type { Frame } from "./sequence";
+import type { CarSilhouetteId, Frame } from "./sequence";
 
 /**
- * Beat 2 montage renderer — one CSS/SVG view per frame kind. The reel itself
- * (which frames, in what order) lives in sequence.ts; this file only draws.
- * Every hero centres inside a 9:16 story-safe band while colour backgrounds
- * bleed full. No glbs, no raster, no render pass.
+ * Beat 2 montage renderer — one view per frame kind. The reel itself (which
+ * frames, in what order) lives in sequence.ts; this file only draws. Every hero
+ * centres inside a 9:16 story-safe band while colour backgrounds bleed full.
+ *
+ * Car silhouettes are the garage's real hero cars: their glb side profiles were
+ * rendered to transparent PNGs (public/intro/cars/<id>.png) and are used here as
+ * CSS masks so they tint to any tone. Cars are normalised to face right.
  */
 
 const HERO = "absolute inset-0 flex items-center justify-center bg-asphalt";
-const SIL_TONE = {
-  chrome: "text-chrome",
-  orange: "text-gt-bright",
-  outline: "text-gt-bright",
+
+/** Cars whose rendered profile faces left — flipped so all face right. */
+const FACE_LEFT = new Set<CarSilhouetteId>(["nodegent"]);
+const TONE_COLOR = {
+  chrome: "var(--color-chrome)",
+  orange: "var(--color-gt-bright)",
 } as const;
 
 function LiverySlam({ livery }: { livery: LiveryId }) {
@@ -55,20 +59,32 @@ function StartLights({ lit }: { lit: boolean }) {
 }
 
 function Silhouette({
+  car,
   tone,
-  flip,
 }: {
-  tone: "chrome" | "orange" | "outline";
-  flip?: boolean;
+  car: CarSilhouetteId;
+  tone: "chrome" | "orange";
 }) {
+  const url = `/intro/cars/${car}.png`;
+  const flip = FACE_LEFT.has(car);
   return (
     <div className={HERO}>
       <div
-        className={`${SIL_TONE[tone]} w-[clamp(280px,76vw,900px)]`}
-        style={flip ? { transform: "scaleX(-1)" } : undefined}
-      >
-        <CarSilhouette outline={tone === "outline"} className="w-full" />
-      </div>
+        className="w-[clamp(300px,84vw,1040px)]"
+        style={{
+          aspectRatio: "1600 / 666",
+          transform: flip ? "scaleX(-1)" : undefined,
+          background: TONE_COLOR[tone],
+          WebkitMaskImage: `url(${url})`,
+          maskImage: `url(${url})`,
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          WebkitMaskPosition: "center",
+          maskPosition: "center",
+          WebkitMaskSize: "contain",
+          maskSize: "contain",
+        }}
+      />
     </div>
   );
 }
@@ -208,7 +224,7 @@ export function FrameView({ frame }: { frame: Frame }) {
     case "lights":
       return <StartLights lit={frame.lit} />;
     case "silhouette":
-      return <Silhouette tone={frame.tone} flip={frame.flip} />;
+      return <Silhouette car={frame.car} tone={frame.tone} />;
     case "blur":
       return <SpeedBlur />;
     case "tach":

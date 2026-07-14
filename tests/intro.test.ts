@@ -1,11 +1,17 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { liveries } from "../content/liveries";
+import { carById } from "../content/cars";
 import {
   ALLOWED_WORDS,
+  CAR_SILHOUETTES,
   FRAMES,
   FRAMES_COMPACT,
   type FrameEntry,
 } from "../src/components/boot/intro/sequence";
+
+const CARS_DIR = join(__dirname, "..", "public", "intro", "cars");
 
 /**
  * The intro is a signature FIRST-LOAD moment that must stay TIMELESS — it may
@@ -46,6 +52,19 @@ describe.each(Object.entries(reels))("intro montage — %s reel", (_name, reel) 
     expect(words.slice(-2)).toEqual(["SURYA", "RACING"]);
   });
 
+  it("only shows silhouettes of real hero cars", () => {
+    const ids = reel
+      .filter((e) => e.frame.kind === "silhouette")
+      .map((e) => (e.frame as { kind: "silhouette"; car: string }).car);
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) {
+      expect(CAR_SILHOUETTES).toContain(id);
+      const car = carById.get(id);
+      expect(car?.status).toBe("hero");
+      expect(car?.modelPath).toBeTruthy();
+    }
+  });
+
   it("uses only known frame kinds", () => {
     const known = new Set([
       "grid",
@@ -60,6 +79,20 @@ describe.each(Object.entries(reels))("intro montage — %s reel", (_name, reel) 
     ]);
     for (const e of reel) {
       expect(known).toContain(e.frame.kind);
+    }
+  });
+});
+
+describe("intro montage — car silhouette assets", () => {
+  it("every hero car silhouette PNG exists", () => {
+    for (const id of CAR_SILHOUETTES) {
+      expect(existsSync(join(CARS_DIR, `${id}.png`))).toBe(true);
+    }
+  });
+
+  it("references only cars that exist in the garage", () => {
+    for (const id of CAR_SILHOUETTES) {
+      expect(carById.has(id)).toBe(true);
     }
   });
 });
