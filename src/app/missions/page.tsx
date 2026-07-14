@@ -2,8 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { missionPacks, type Mission } from "../../../content/missions";
 import { carById } from "../../../content/cars";
+import { pavilions } from "../../../content/pavilions";
+import type { LiveryId } from "../../../content/liveries";
+import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
+
+/** The Missions pavilion's livery nod (Jägermeister DTM orange/green), applied
+ * to card/section chrome like the other pavilions. */
+const MISSIONS_LIVERY: LiveryId =
+  pavilions.find((p) => p.slug === "missions")?.livery ?? "jager";
 
 export const metadata: Metadata = {
   title: "Missions — Surya Pugazhenthi",
@@ -22,6 +30,11 @@ function MissionCard({ mission }: { mission: Mission }) {
 
   return (
     <article className="relative flex flex-col border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
+      <LiveryStripe
+        livery={MISSIONS_LIVERY}
+        className="absolute inset-x-0 top-0"
+        muted={mission.stamp === "RETIRED"}
+      />
       <span
         aria-label={`Status: ${mission.stamp.toLowerCase()}`}
         className={`ts-hard absolute top-3 right-3 -rotate-6 border-2 px-2 py-0.5 font-display text-sm font-black tracking-[0.2em] uppercase ${STAMP_STYLES[mission.stamp]}`}
