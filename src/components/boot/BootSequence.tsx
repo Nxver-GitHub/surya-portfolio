@@ -1,25 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { IntroMonogram } from "./intro/IntroMonogram";
+import { IntroMontage } from "./intro/IntroMontage";
+import { IntroTitle } from "./intro/IntroTitle";
 
 const SESSION_KEY = "sr-boot-seen";
 
-type Phase = "cut-orange" | "cut-black" | "title" | "exit" | "done";
+type Phase = "logo" | "montage" | "title" | "exit" | "done";
 
-const PHASE_MS: Record<Exclude<Phase, "done">, number> = {
-  "cut-orange": 280,
-  "cut-black": 220,
-  title: 1300,
-  exit: 250,
-};
+const LOGO_MS = 850;
+const TITLE_MS = 1300;
+const EXIT_MS = 250;
 
 /**
- * First-load boot: hard cuts between solid fields, then the wordmark,
- * then a slide out — GT2 console-on energy, no sound, no bounce.
- * Runs once per session; any input skips it; reduced motion skips it.
+ * Signature first-load intro — a trademark-safe homage to the GT2 boot-to-menu:
+ * studio monogram (Beat 1) → heritage hard-cut montage (Beat 2) → title +
+ * PRESS START (Beat 3) → slide out to reveal the World Map. Timeless by design
+ * (no projects/stats). Runs once per session; any input skips it; reduced
+ * motion skips it entirely. The montage self-advances via onComplete; the other
+ * beats are timed. Every beat centres its content for a 9:16 story-safe frame.
  */
 export function BootSequence() {
   const [phase, setPhase] = useState<Phase | null>(null);
+  const [compact, setCompact] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const finish = useCallback(() => {
@@ -28,6 +32,8 @@ export function BootSequence() {
     setPhase("done");
   }, []);
 
+  const startTitle = useCallback(() => setPhase("title"), []);
+
   useEffect(() => {
     // decide after paint: avoids SSR/hydration mismatch on sessionStorage
     const id = requestAnimationFrame(() => {
@@ -35,33 +41,28 @@ export function BootSequence() {
         "(prefers-reduced-motion: reduce)",
       ).matches;
       const seen = sessionStorage.getItem(SESSION_KEY);
-      setPhase(reducedMotion || seen ? "done" : "cut-orange");
+      setCompact(window.innerWidth < 768);
+      setPhase(reducedMotion || seen ? "done" : "logo");
     });
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // Timed beats. The montage is self-driven (advances on onComplete), so it has
+  // no timer here.
   useEffect(() => {
-    if (!phase || phase === "done") return;
-    if (phase === "exit") {
-      timer.current = setTimeout(finish, PHASE_MS.exit);
-      return () => {
-        if (timer.current) clearTimeout(timer.current);
-      };
-    }
-    const order: Exclude<Phase, "done">[] = [
-      "cut-orange",
-      "cut-black",
-      "title",
-      "exit",
-    ];
-    const next = order[order.indexOf(phase) + 1];
-    timer.current = setTimeout(() => setPhase(next), PHASE_MS[phase]);
+    if (phase !== "logo" && phase !== "title" && phase !== "exit") return;
+    const ms = phase === "logo" ? LOGO_MS : phase === "title" ? TITLE_MS : EXIT_MS;
+    timer.current = setTimeout(() => {
+      if (phase === "logo") setPhase("montage");
+      else if (phase === "title") setPhase("exit");
+      else finish();
+    }, ms);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
   }, [phase, finish]);
 
-  // Any key or click skips
+  // Any key or click skips the whole intro.
   useEffect(() => {
     if (!phase || phase === "done") return;
     const skip = () => finish();
@@ -79,24 +80,15 @@ export function BootSequence() {
     <div
       role="presentation"
       aria-hidden="true"
-      className={`fixed inset-0 z-60 transition-transform duration-(--duration-panel) ease-(--ease-mech) ${
+      className={`fixed inset-0 z-60 overflow-hidden bg-asphalt transition-transform duration-(--duration-panel) ease-(--ease-mech) ${
         phase === "exit" ? "-translate-y-full" : ""
-      } ${phase === "cut-orange" ? "bg-gt" : "bg-asphalt"}`}
+      }`}
     >
-      {(phase === "title" || phase === "exit") && (
-        <div className="flex h-full flex-col items-center justify-center px-6">
-          <p className="ts-hard font-display text-sm font-bold tracking-[0.4em] text-gt-bright uppercase">
-            Portfolio system
-          </p>
-          <h1 className="gt-title mt-2 text-center text-5xl text-chrome md:text-7xl">
-            Surya Racing
-          </h1>
-          <div className="gt-rule mt-3 w-48 md:w-72" />
-          <p className="mt-6 font-display text-xs font-semibold tracking-[0.3em] text-silver uppercase">
-            Press any key
-          </p>
-        </div>
+      {phase === "logo" && <IntroMonogram />}
+      {phase === "montage" && (
+        <IntroMontage compact={compact} onComplete={startTitle} />
       )}
+      {(phase === "title" || phase === "exit") && <IntroTitle />}
     </div>
   );
 }
