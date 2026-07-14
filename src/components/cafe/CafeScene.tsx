@@ -492,6 +492,9 @@ interface CafeSceneProps {
   /** Fires once the screen-mesh search resolves (true = found). The 2D shell
    *  uses `false` to keep the terminal in its overlay instead of the tube. */
   onScreenSurface?: (found: boolean) => void;
+  /** Reports the measured CRT screen bounds so the 2D shell can size the
+   *  in-monitor terminal overlay to the screen's real aspect ratio. */
+  onScreenBounds?: (bounds: ScreenBounds | null) => void;
   /** Live held-key set for WASD/arrow free-roam (owned by the 2D shell so the
    *  same keydown gating that protects the tablist lives next to it). */
   roamKeys: React.RefObject<Set<string>>;
@@ -520,6 +523,7 @@ export function CafeScene({
   terminalLines = [],
   screenContent = null,
   onScreenSurface,
+  onScreenBounds,
   roamKeys,
   engaged,
 }: CafeSceneProps) {
@@ -560,8 +564,11 @@ export function CafeScene({
     [onScreenSurface],
   );
   const handleScreenBounds = useCallback(
-    (bounds: ScreenBounds | null) => setScreenBounds(bounds),
-    [],
+    (bounds: ScreenBounds | null) => {
+      setScreenBounds(bounds);
+      onScreenBounds?.(bounds);
+    },
+    [onScreenBounds],
   );
 
   // Two docking notions since the mobile rework:

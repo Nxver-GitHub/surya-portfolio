@@ -22,7 +22,12 @@ import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { Terminal } from "./terminal/Terminal";
 import { useTerminalChat } from "./terminal/useTerminalChat";
 import { useReducedMotion } from "../garage/useReducedMotion";
+import { CRT_DOCK_FILL, type ScreenBounds } from "./cameraPoses";
 import type { CafeFocus } from "./CafeScene";
+
+/** Fallback CRT screen aspect (width/height) before the mesh is measured — the
+ * café glb's screen is ~0.34×0.26m. Replaced by the real measured aspect. */
+const FALLBACK_SCREEN_ASPECT = 0.34 / 0.26;
 
 /** Tailwind's `sm` breakpoint — below it the in-screen terminal drops its
  * embedded input for the thumb-reachable bottom bar (soft-keyboard-safe). */
@@ -167,6 +172,12 @@ export function CafeBrowser() {
 
   // Whether the CRT's screen mesh was found (gates the in-monitor terminal).
   const [screenSurface, setScreenSurface] = useState(false);
+  // Measured CRT screen aspect (width/height) — sizes the in-monitor terminal
+  // overlay to the real screen. Defaults to the glb's screen aspect until measured.
+  const [screenAspect, setScreenAspect] = useState(FALLBACK_SCREEN_ASPECT);
+  const handleScreenBounds = useCallback((bounds: ScreenBounds | null) => {
+    if (bounds && bounds.height > 0) setScreenAspect(bounds.width / bounds.height);
+  }, []);
   // Visitor popped the terminal out of the 3D screen into the flat overlay.
   const [expanded, setExpanded] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -251,6 +262,23 @@ export function CafeBrowser() {
     screenSurface &&
     !expanded &&
     !reducedMotion;
+
+  // Hold the in-monitor terminal overlay until the ~800ms dock flight lands, so
+  // the camera reads as zooming INTO the tube before the terminal appears. The
+  // terminal is a flat 2D overlay aligned to the screen (drei's <Html transform>
+  // 3D projection rendered off-screen in production builds — this composites
+  // reliably everywhere).
+  const [dockSettled, setDockSettled] = useState(false);
+  useEffect(() => {
+    // Both branches set state via a timer (never synchronously in the effect
+    // body — that's the banned pattern; the deferred set mirrors the phone
+    // takeover effect). Reset defers to 0 so a re-open replays the zoom beat.
+    const t = setTimeout(
+      () => setDockSettled(inScreen),
+      inScreen && !reducedMotion ? 820 : 0,
+    );
+    return () => clearTimeout(t);
+  }, [inScreen, reducedMotion]);
 
   // Phone takeover timing: give the dock flight ~0.95s to read as a zoom
   // into the monitor, then present the full-screen window (instant under
@@ -349,21 +377,41 @@ export function CafeBrowser() {
                 terminalActive={crtPresent && chat.lines.length > 0}
                 terminalLines={chat.lines}
                 onScreenSurface={setScreenSurface}
+                onScreenBounds={handleScreenBounds}
                 roamKeys={roamKeys}
                 engaged={engaged}
-                screenContent={
-                  inScreen ? (
-                    <Terminal
-                      chat={chat}
-                      variant={isMobile ? "log-only" : "screen"}
-                      onClose={closeTerminal}
-                      onToggleExpand={() => setExpanded(true)}
-                    />
-                  ) : null
-                }
               />
             </Suspense>
           </SceneErrorBoundary>
+
+          {/* In-monitor terminal — a flat 2D overlay aligned to the docked CRT
+              screen (~78% of the panel height, screen's own aspect, centred).
+              The camera docks head-on so this reads as "on the tube", but it
+              composites reliably in every build (unlike drei's 3D-projected
+              <Html transform>). Appears once the dock flight lands. */}
+          {inScreen && dockSettled ? (
+            <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+              {/* Sizing wrapper: height = dock fill of the panel, width derived
+                  from the screen's real aspect (the .crt-tube forces 100%×100%,
+                  so the aspect must live on this wrapper). */}
+              <div
+                className="pointer-events-auto"
+                style={{
+                  height: `${CRT_DOCK_FILL * 100}%`,
+                  aspectRatio: String(screenAspect),
+                }}
+              >
+                <div className="crt-tube crt-tube--waking h-full w-full">
+                  <Terminal
+                    chat={chat}
+                    variant="screen"
+                    onClose={closeTerminal}
+                    onToggleExpand={() => setExpanded(true)}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {/* Navigation hint — pointer users only (no keyboard on touch). Sits
               over the canvas, never intercepts its drag. Hidden while the
