@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { cars, type Car } from "../../../content/cars";
 import { liveries } from "../../../content/liveries";
 import { LiveryStripe } from "../livery/LiveryStripe";
+import { SceneErrorBoundary } from "../cafe/SceneErrorBoundary";
+import { GarageSceneFallback } from "./GarageSceneFallback";
 import { SpecSheet } from "./SpecSheet";
 
 const GarageScene = dynamic(
@@ -117,7 +119,11 @@ export function CarBrowser() {
           <>
             {/* stable Canvas: scene reacts to car prop, no WebGL teardown */}
             <div aria-hidden="true" className="h-full">
-              <GarageScene car={selected} />
+              <SceneErrorBoundary
+                fallback={<GarageSceneFallback car={selected} />}
+              >
+                <GarageScene car={selected} />
+              </SceneErrorBoundary>
             </div>
             {!selected.modelPath ? (
               <p className="ts-hard pointer-events-none absolute right-3 bottom-2 font-display text-xs font-semibold tracking-widest text-silver uppercase">
