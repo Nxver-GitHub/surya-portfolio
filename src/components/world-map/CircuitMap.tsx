@@ -95,7 +95,7 @@ export function CircuitMap() {
                 {p.name}
               </span>
               <span
-                className={`mt-0.5 line-clamp-2 max-w-[16ch] text-center font-display text-xs leading-tight font-medium text-balance ${
+                className={`mt-0.5 line-clamp-2 w-[22ch] text-center font-display text-xs leading-tight font-medium text-balance ${
                   open ? "text-silver" : "text-silver/70"
                 }`}
               >
