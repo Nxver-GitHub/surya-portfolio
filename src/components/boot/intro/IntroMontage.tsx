@@ -10,6 +10,10 @@ import { CAR_SILHOUETTES, FRAMES, FRAMES_COMPACT } from "./sequence";
  *  enough dwell to actually register. */
 const GRID_MS = 165;
 
+/** Delay before the skip hint fades in — lets the opening cuts land clean
+ *  before any UI chrome appears. */
+const HINT_DELAY_MS = 1200;
+
 interface IntroMontageProps {
   compact: boolean;
   onComplete: () => void;
@@ -18,6 +22,7 @@ interface IntroMontageProps {
 export function IntroMontage({ compact, onComplete }: IntroMontageProps) {
   const frames = compact ? FRAMES_COMPACT : FRAMES;
   const [index, setIndex] = useState(0);
+  const [showHint, setShowHint] = useState(false);
 
   // Warm the car-silhouette masks so no cut flashes empty while it decodes.
   useEffect(() => {
@@ -40,6 +45,14 @@ export function IntroMontage({ compact, onComplete }: IntroMontageProps) {
     }, GRID_MS);
     return () => clearInterval(id);
   }, [frames, onComplete]);
+
+  // Invisible-affordance fix: surface a quiet skip hint once the montage has
+  // had a beat to establish itself. Mounts (rather than toggling opacity from
+  // the start) so its fade-in is the only animation it ever runs.
+  useEffect(() => {
+    const id = setTimeout(() => setShowHint(true), HINT_DELAY_MS);
+    return () => clearTimeout(id);
+  }, []);
 
   const entry = frames[index];
   const transitionClass =
@@ -64,6 +77,11 @@ export function IntroMontage({ compact, onComplete }: IntroMontageProps) {
         style={{ boxShadow: "inset 0 0 130px rgba(0,0,0,0.72)" }}
         aria-hidden="true"
       />
+      {showHint && (
+        <p className="intro-hint ts-hard pointer-events-none absolute inset-x-0 bottom-6 z-20 text-center font-display text-xs font-semibold tracking-[0.3em] text-silver uppercase">
+          {compact ? "Tap to skip" : "Press any key to skip"}
+        </p>
+      )}
     </div>
   );
 }

@@ -54,6 +54,15 @@ body {
     2px 2px 3px rgba(0, 0, 0, 0.55);
 }
 
+/* Same fine grid-paper texture as the page body (see the body rule above) —
+   reused so surfaces like the boot intro never fall back to a flat black void. */
+.bg-grid-paper {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
 /* Page title: heavy serif + red rule that kicks up diagonally at the end */
 .gt-title {
   font-family: var(--font-title);
@@ -406,6 +415,32 @@ body {
   );
 }
 
+/* Beat 3: a very subtle vignette so the title card reads as a lit frame
+   rather than flat grid paper — restrained, edges only. */
+.intro-vignette {
+  background: radial-gradient(
+    60% 55% at 50% 45%,
+    rgba(0, 0, 0, 0) 40%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
+/* Beat 2: quiet skip affordance — fades in once, then holds. Silver/low
+   opacity so it reads as UI chrome, never a button. */
+@keyframes intro-hint-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+
+.intro-hint {
+  opacity: 0;
+  animation: intro-hint-in 400ms var(--ease-mech) 1 forwards;
+}
+
 /* CRT-ish scanline veil laid over montage frames for the pre-rendered feel. */
 .intro-scanlines::after {
   content: "";
@@ -448,7 +483,8 @@ body {
   .intro-wipe,
   .intro-spin,
   .intro-flash,
-  .intro-blink {
+  .intro-blink,
+  .intro-hint {
     animation: none;
   }
 }
