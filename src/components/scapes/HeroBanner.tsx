@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { CategoryMeta, Photo } from "../../../content/photos";
 import type { LiveryId } from "../../../content/liveries";
 import { LiveryStripe } from "../livery/LiveryStripe";
+import { ViewfinderFrame } from "./ViewfinderFrame";
 
 interface HeroBannerProps {
   category: CategoryMeta;
@@ -23,21 +24,24 @@ export function HeroBanner({ category, featured, livery }: HeroBannerProps) {
 
       <div className="grid gap-0 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="relative aspect-[16/9] bg-asphalt md:aspect-auto">
-          <Image
-            src={featured.src}
-            alt={featured.title}
-            width={featured.width}
-            height={featured.height}
-            unoptimized={featured.src.endsWith(".svg")}
-            sizes="(min-width: 768px) 55vw, 100vw"
-            priority
-            className="h-full w-full object-cover"
-          />
           {featured.placeholder ? (
-            <span className="ts-hard absolute top-4 left-3 border border-steel bg-asphalt/80 px-2 py-0.5 font-display text-xs font-black tracking-widest text-silver uppercase">
-              Placeholder
-            </span>
-          ) : null}
+            <ViewfinderFrame
+              rollLabel="Roll 01"
+              frameNumber="01A"
+              className="absolute inset-0 h-full"
+            />
+          ) : (
+            <Image
+              src={featured.src}
+              alt={featured.title}
+              width={featured.width}
+              height={featured.height}
+              unoptimized={featured.src.endsWith(".svg")}
+              sizes="(min-width: 768px) 55vw, 100vw"
+              priority
+              className="h-full w-full object-cover"
+            />
+          )}
         </div>
 
         <div className="flex flex-col justify-center gap-2 p-5 md:p-6">
