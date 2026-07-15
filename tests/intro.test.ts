@@ -45,11 +45,11 @@ describe.each(Object.entries(reels))("intro montage — %s reel", (_name, reel) 
     }
   });
 
-  it("builds to the SURYA → RACING title hand-off", () => {
+  it("builds to the SURYA → PUGAZHENTHI title hand-off", () => {
     const words = reel
       .filter((e) => e.frame.kind === "word")
       .map((e) => (e.frame as { kind: "word"; text: string }).text);
-    expect(words.slice(-2)).toEqual(["SURYA", "RACING"]);
+    expect(words.slice(-2)).toEqual(["SURYA", "PUGAZHENTHI"]);
   });
 
   it("only shows silhouettes of real hero cars", () => {

@@ -80,7 +80,7 @@ export function BootSequence() {
     <div
       role="presentation"
       aria-hidden="true"
-      className={`fixed inset-0 z-60 overflow-hidden bg-asphalt transition-transform duration-(--duration-panel) ease-(--ease-mech) ${
+      className={`fixed inset-0 z-60 overflow-hidden bg-asphalt bg-grid-paper transition-transform duration-(--duration-panel) ease-(--ease-mech) ${
         phase === "exit" ? "-translate-y-full" : ""
       }`}
     >

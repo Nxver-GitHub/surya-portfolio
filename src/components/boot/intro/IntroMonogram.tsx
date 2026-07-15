@@ -1,8 +1,8 @@
 /**
  * Beat 1 — the "studio" mark. Mirrors GT2's developer logo (Polyphony Digital)
- * appearing before the game title: an enamel "SR" badge seats under a spotlight
+ * appearing before the game title: an enamel "SP" badge seats under a spotlight
  * with an old film-projector flicker, then the montage hard-cuts in. Kept
- * distinct from the Beat-3 "Surya Racing" wordmark so the intro reads as a
+ * distinct from the Beat-3 "Surya Pugazhenthi" wordmark so the intro reads as a
  * system booting, not one title card shown twice. Timeless: brand identity only.
  */
 export function IntroMonogram() {
@@ -13,7 +13,7 @@ export function IntroMonogram() {
         <div className="intro-seat badge-rim bg-gt">
           <div className="badge-face flex aspect-square w-[clamp(116px,24vh,208px)] items-center justify-center">
             <span className="font-display text-[clamp(52px,12vh,104px)] leading-none font-black tracking-[-0.04em] text-asphalt">
-              SR
+              SP
             </span>
           </div>
         </div>

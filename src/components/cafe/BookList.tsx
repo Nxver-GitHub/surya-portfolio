@@ -72,6 +72,7 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
             aria-selected={isActive}
             aria-controls={`book-panel-${book.id}`}
             tabIndex={isActive ? 0 : -1}
+            data-sfx="move"
             onClick={() => onSelect(book)}
             onKeyDown={(event) => onKeyDown(event, index)}
             className={`${
