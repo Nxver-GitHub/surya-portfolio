@@ -16,8 +16,9 @@ import {
   OrbitControls,
   useGLTF,
 } from "@react-three/drei";
-import { Vector3 } from "three";
+import { Color, Vector3 } from "three";
 import type { Group, Object3D } from "three";
+import { warmCafeMaterials } from "./warmCafe";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
 import { exhibits, exhibitById, type Exhibit } from "../../../content/cafe-exhibits";
 import { runOnIdle } from "../../lib/runOnIdle";
@@ -75,6 +76,12 @@ function CafeModel({ onCrtFound, onSelectCrt }: CafeModelProps) {
   // Throws to the SceneErrorBoundary if the glb is absent/malformed (the
   // proven path in this worktree until the real model lands at integration).
   const { scene } = useGLTF(CAFE_MODEL_PATH);
+
+  // Evening-warmth pass on the baked materials (idempotent per cached scene):
+  // tames the blown-white window panes and cool display glass toward a warm
+  // dusk, and lays a gentle warm multiply over the rest. Runs in render like
+  // GarageScene's prepareCar — the WeakMap guard makes repeat calls free.
+  warmCafeMaterials(scene);
 
   // Resolve the CRT node once per loaded scene; degrade gracefully if absent.
   const crt = useMemo<Object3D | null>(
@@ -146,7 +153,13 @@ function BookMarker({ book, isActive, onSelect, idle, focused }: BookMarkerProps
   });
 
   const lit = isActive || hovered;
-  const emissive = lit ? 0.9 : 0.35;
+  // Unlit world (see warmCafe): the marker matches it with meshBasicMaterial and
+  // fakes its "glow" purely through color. Resting sits a touch under the enamel
+  // cover so it reads as a solid object; lit brightens past it for the interactive
+  // pop the old emissive + halo used to carry. Memoized so the frame loop is free.
+  const restColor = useMemo(() => new Color(color).multiplyScalar(0.8), [color]);
+  const litColor = useMemo(() => new Color(color).multiplyScalar(1.5), [color]);
+  const bodyColor = lit ? litColor : restColor;
 
   return (
     <group
@@ -162,29 +175,16 @@ function BookMarker({ book, isActive, onSelect, idle, focused }: BookMarkerProps
       }}
       onPointerOut={() => setHovered(false)}
     >
-      {/* book body — the audience's enamel cover color */}
-      <mesh castShadow>
+      {/* book body — the audience's enamel cover color, unlit to match the world */}
+      <mesh>
         <boxGeometry args={[0.26, 0.34, 0.05]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={emissive}
-          roughness={0.5}
-          metalness={0.1}
-        />
+        <meshBasicMaterial color={bodyColor} toneMapped={false} />
       </mesh>
       {/* pages block, peeking from the fore-edge */}
       <mesh position={[0, 0, 0.028]}>
         <boxGeometry args={[0.22, 0.3, 0.012]} />
-        <meshStandardMaterial color="#f4f2ef" roughness={0.9} />
+        <meshBasicMaterial color="#f4f2ef" />
       </mesh>
-      {/* soft halo so the marker reads as "interactive" from across the room */}
-      <pointLight
-        color={color}
-        intensity={lit ? 0.9 : 0.3}
-        distance={1.6}
-        position={[0, 0, 0.3]}
-      />
       {/* Hover/active label — enhancement-only; the same info is mirrored in the
           2D UI for keyboard users, so this is never the sole source. Suppressed
           while this book is the flown-in focus (label would fill the frame). */}
