@@ -206,7 +206,7 @@ function ScreenButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="font-display text-[11px] font-bold tracking-widest uppercase outline-none hover:brightness-125 focus-visible:ring-2 focus-visible:ring-chrome"
+      className="font-display text-xs font-bold tracking-widest uppercase outline-none hover:brightness-125 focus-visible:ring-2 focus-visible:ring-chrome"
       style={{ color: PHOSPHOR_DIM }}
     >
       {children}
@@ -375,7 +375,7 @@ export function Terminal({
               type="button"
               onClick={onToggleExpand}
               aria-label="Expand into the café screen"
-              className="lozenge px-3 py-0.5 font-display text-[11px] font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+              className="lozenge relative px-3 py-0.5 font-display text-xs font-bold tracking-widest text-asphalt uppercase outline-none after:absolute after:inset-x-0 after:inset-y-[-13px] after:content-[''] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
             >
               Expand ⤢
             </button>
@@ -384,7 +384,7 @@ export function Terminal({
             type="button"
             onClick={onClose}
             aria-label="Close terminal"
-            className="lozenge px-3 py-0.5 font-display text-[11px] font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+            className="lozenge relative px-3 py-0.5 font-display text-xs font-bold tracking-widest text-asphalt uppercase outline-none after:absolute after:inset-x-0 after:inset-y-[-13px] after:content-[''] hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
           >
             {closeLabel}
           </button>

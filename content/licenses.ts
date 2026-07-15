@@ -133,7 +133,7 @@ export const licenses: readonly License[] = [
     name: "Class IB — WebGL / Three.js",
     theme: "React Three Fiber and 3D web pipelines",
     summary:
-      "International B: real-time 3D on the web with React Three Fiber and a Blender-to-glTF asset pipeline.",
+      "Real-time 3D on the web with React Three Fiber and a Blender-to-glTF asset pipeline (International B).",
     livery: "west",
     tests: [
       {
@@ -204,7 +204,7 @@ export const licenses: readonly License[] = [
     name: "Class S — Venture / Thesis",
     theme: "Venture scouting and investment thinking",
     summary:
-      "Super license: sourcing and evaluating early-stage startups, and forming investment theses.",
+      "Sourcing and evaluating early-stage startups, and forming investment theses (Super License).",
     livery: "west",
     tests: [
       {

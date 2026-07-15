@@ -21,7 +21,7 @@ export function ExhibitList({ available, activeId, onSelect }: ExhibitListProps)
 
   return (
     <section aria-label="On display" className="flex flex-col gap-2">
-      <h3 className="font-display text-[10px] font-black tracking-[0.18em] text-gt-bright uppercase">
+      <h3 className="font-display text-xs font-black tracking-[0.18em] text-gt-bright uppercase">
         On display
       </h3>
       <div className="flex flex-wrap gap-2">

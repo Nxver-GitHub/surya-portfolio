@@ -7,7 +7,7 @@
 export function IntroTitle() {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
-      <p className="ts-hard font-display text-[11px] font-bold tracking-[0.4em] text-gt-bright uppercase md:text-sm">
+      <p className="ts-hard font-display text-xs font-bold tracking-[0.4em] text-gt-bright uppercase md:text-sm">
         Start your engines
       </p>
       <h1 className="gt-title mt-2 text-center text-5xl text-chrome md:text-7xl">

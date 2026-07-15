@@ -7,6 +7,7 @@ import type { LiveryId } from "../../../content/liveries";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
+import { Glyph } from "@/components/gt/Glyph";
 
 /** The Missions pavilion's livery nod (Jägermeister DTM orange/green), applied
  * to card/section chrome like the other pavilions. */
@@ -92,9 +93,9 @@ function MissionCard({ mission }: { mission: Mission }) {
           {car ? (
             <Link
               href={`/garage?car=${car.id}`}
-              className="plate ts-hard px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
+              className="plate ts-hard inline-flex items-center gap-1.5 px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
             >
-              🏎 {car.name}
+              <Glyph kind="car" /> {car.name}
             </Link>
           ) : null}
           {mission.careerEventSlug ? (

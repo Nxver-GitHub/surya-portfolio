@@ -21,7 +21,7 @@ export function ExhibitPlate({ exhibit }: ExhibitPlateProps) {
   const { credit } = exhibit;
   return (
     <div className="plate ts-hard flex flex-col gap-1 px-3 py-2">
-      <span className="font-display text-[10px] font-black tracking-[0.18em] text-gt-bright uppercase">
+      <span className="font-display text-xs font-black tracking-[0.18em] text-gt-bright uppercase">
         On display
       </span>
       <span className="font-display text-sm font-bold tracking-wide text-chrome uppercase">

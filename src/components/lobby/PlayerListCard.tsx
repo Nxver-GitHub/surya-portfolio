@@ -34,7 +34,7 @@ export function PlayerListCard({ player, livery }: PlayerListCardProps) {
               href={player.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="ts-hard inline-flex items-center gap-1 border border-steel px-2.5 py-1 font-display text-[11px] font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
+              className="ts-hard inline-flex items-center gap-1 border border-steel px-2.5 py-1 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
             >
               <span aria-hidden="true">↗</span>
               <span>Visit</span>
@@ -43,7 +43,7 @@ export function PlayerListCard({ player, livery }: PlayerListCardProps) {
           {player.careerEventSlug ? (
             <Link
               href={`/career/${player.careerEventSlug}`}
-              className="ts-hard inline-flex items-center gap-1 border border-steel px-2.5 py-1 font-display text-[11px] font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
+              className="ts-hard inline-flex items-center gap-1 border border-steel px-2.5 py-1 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
             >
               <span aria-hidden="true">→</span>
               <span>Career</span>

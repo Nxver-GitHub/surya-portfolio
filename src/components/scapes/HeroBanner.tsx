@@ -34,7 +34,7 @@ export function HeroBanner({ category, featured, livery }: HeroBannerProps) {
             className="h-full w-full object-cover"
           />
           {featured.placeholder ? (
-            <span className="ts-hard absolute top-4 left-3 border border-steel bg-asphalt/80 px-2 py-0.5 font-display text-[10px] font-black tracking-widest text-silver uppercase">
+            <span className="ts-hard absolute top-4 left-3 border border-steel bg-asphalt/80 px-2 py-0.5 font-display text-xs font-black tracking-widest text-silver uppercase">
               Placeholder
             </span>
           ) : null}

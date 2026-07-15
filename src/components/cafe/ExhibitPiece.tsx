@@ -97,7 +97,12 @@ function ExhibitModel({
           <div
             style={{
               transform: "translateY(-100%)",
-              whiteSpace: "nowrap",
+              // Wraps instead of clipping via the canvas's overflow-hidden
+              // box, so a long exhibit name (e.g. "MP4/4 Steering Wheel
+              // (1988)") renders in full.
+              whiteSpace: "normal",
+              maxWidth: 150,
+              textAlign: "center",
               background: "#0a0a0b",
               border: "2px solid #ef8100",
               boxShadow: "2px 3px 0 rgba(0,0,0,0.7)",
