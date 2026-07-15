@@ -6,7 +6,8 @@
   --color-panel: #141416; /* raised surfaces */
   --color-steel: #34363a; /* hairline borders */
   --color-chrome: #f2f0ec; /* primary text (white w/ shadow) */
-  --color-silver: #a4a7ad; /* secondary text */
+  --color-ink: #c9ccd2; /* primary reading prose on dark (brighter than silver) */
+  --color-silver: #a4a7ad; /* de-emphasis: captions, credits, sub-labels */
   --color-gt: #ef8100; /* GT2 system orange — bars, plates, chips */
   --color-gt-bright: #ffb000; /* orange highlight / cursor */
   --color-accent: #c81f1f; /* red — title rules, LOCKED */

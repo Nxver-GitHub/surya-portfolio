@@ -1,4 +1,4 @@
-export type GlyphKind = "car" | "flag" | "lock";
+export type GlyphKind = "car" | "flag" | "lock" | "badge" | "signal";
 
 interface GlyphProps {
   kind: GlyphKind;
@@ -43,6 +43,19 @@ export function Glyph({ kind, size = "1em", className }: GlyphProps) {
         <>
           <path d="M8 11 V8 A4 4 0 0 1 16 8 V11 H14 V8 A2 2 0 0 0 10 8 V11 Z" />
           <rect x="5" y="11" width="14" height="10" rx="1.5" />
+        </>
+      ) : null}
+      {kind === "badge" ? (
+        <>
+          <path d="M12 2 L20 5 V11 Q20 18 12 22 Q4 18 4 11 V5 Z" />
+          <path d="M12 6 L13.6 9.4 L17.3 9.8 L14.5 12.3 L15.3 16 L12 14 L8.7 16 L9.5 12.3 L6.7 9.8 L10.4 9.4 Z" fill="var(--color-asphalt)" />
+        </>
+      ) : null}
+      {kind === "signal" ? (
+        <>
+          <circle cx="12" cy="18" r="2.4" />
+          <path d="M7.5 13.5 A6.4 6.4 0 0 1 16.5 13.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M4.6 10.6 A10.5 10.5 0 0 1 19.4 10.6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
         </>
       ) : null}
     </svg>

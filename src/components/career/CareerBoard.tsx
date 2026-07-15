@@ -1,21 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { seasons, type Season } from "../../../content/career";
+import { seasonRefs, seasons, type Season } from "../../../content/career";
 import { CarChip } from "./CarChip";
 import { MissionChip } from "./MissionChip";
 import { EventCard } from "./EventCard";
 import { OrgLogo } from "./OrgLogo";
-
-function seasonRefs(season: Season) {
-  const cars = new Set<string>();
-  const missions = new Set<string>();
-  for (const e of season.events) {
-    e.carIds?.forEach((c) => cars.add(c));
-    e.missionIds?.forEach((m) => missions.add(m));
-  }
-  return { cars: [...cars], missions: [...missions] };
-}
 
 export function CareerBoard() {
   const [selected, setSelected] = useState<Season>(
@@ -81,7 +71,7 @@ export function CareerBoard() {
           <h2 className="ts-hard font-display text-sm font-bold tracking-[0.2em] text-gt-bright uppercase">
             Season briefing
           </h2>
-          <p className="mt-2 text-sm text-silver">{selected.summary}</p>
+          <p className="mt-2 text-sm text-ink leading-snug">{selected.summary}</p>
 
           {refs.cars.length > 0 ? (
             <div className="mt-4">

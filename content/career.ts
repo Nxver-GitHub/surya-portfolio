@@ -329,3 +329,17 @@ export function findEvent(slug: string) {
 export const allEventSlugs = seasons.flatMap((s) =>
   s.events.map((e) => e.slug),
 );
+
+/** Distinct Garage cars and Missions referenced across a season's events. */
+export function seasonRefs(season: Season): {
+  cars: readonly string[];
+  missions: readonly string[];
+} {
+  const cars = new Set<string>();
+  const missions = new Set<string>();
+  for (const e of season.events) {
+    e.carIds?.forEach((c) => cars.add(c));
+    e.missionIds?.forEach((m) => missions.add(m));
+  }
+  return { cars: [...cars], missions: [...missions] };
+}

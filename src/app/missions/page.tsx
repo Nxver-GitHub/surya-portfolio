@@ -50,7 +50,7 @@ function MissionCard({ mission }: { mission: Mission }) {
             <h3 className="ts-hard font-display text-lg leading-tight font-bold tracking-wide text-chrome uppercase">
               {mission.name}
             </h3>
-            <p className="text-xs text-silver">
+            <p className="font-display text-xs tracking-wide text-silver uppercase">
               {mission.host} · {mission.date}
             </p>
           </div>
@@ -60,7 +60,7 @@ function MissionCard({ mission }: { mission: Mission }) {
           <h4 className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
             Objective
           </h4>
-          <p className="mt-1 text-sm text-silver">{mission.objective}</p>
+          <p className="mt-1 text-sm text-ink leading-snug">{mission.objective}</p>
         </div>
 
         <div>
@@ -126,7 +126,7 @@ export default function MissionsPage() {
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
           <GtTitle kicker="Special events">Missions</GtTitle>
-          <p className="mt-3 max-w-2xl text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Time-boxed races: hackathons, pitch competitions, and challenges.
             Each mission links to the machine it produced.
           </p>
@@ -138,7 +138,7 @@ export default function MissionsPage() {
               <h2 className="ts-hard font-display text-2xl font-bold tracking-wide text-chrome uppercase">
                 {pack.name}
               </h2>
-              <p className="text-sm text-silver">{pack.description}</p>
+              <p className="text-sm text-ink">{pack.description}</p>
             </div>
             <div className="mt-5 grid gap-5 md:grid-cols-2">
               {pack.missions.map((m) => (

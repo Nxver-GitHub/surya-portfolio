@@ -3,8 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { allEventSlugs, findEvent } from "../../../../content/career";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
-import { CarChip } from "@/components/career/CarChip";
-import { MissionChip } from "@/components/career/MissionChip";
+import { EventBriefing } from "@/components/career/EventBriefing";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 
@@ -70,71 +69,77 @@ export default async function EventPage({ params }: EventPageProps) {
           </GtTitle>
         </div>
 
-        <div className="mt-8 flex max-w-3xl items-center gap-3">
-          <OrgLogo logo={event.logo} org={event.org} size={40} />
-          <p className="ts-hard font-display text-lg font-bold tracking-wide text-chrome uppercase">
-            {event.org}
-          </p>
-        </div>
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+          <div className="flex min-w-0 flex-col gap-6">
+            <div className="flex items-center gap-3">
+              <OrgLogo logo={event.logo} org={event.org} size={40} />
+              <p className="ts-hard font-display text-lg font-bold tracking-wide text-chrome uppercase">
+                {event.org}
+              </p>
+            </div>
 
-        <dl className="mt-4 grid max-w-3xl grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <MetaField label="Track" value={event.org} />
-          <MetaField label="Team" value={event.role} />
-          <MetaField label="Stint" value={event.dates} />
-          <MetaField label="Result" value={event.result} />
-        </dl>
+            <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <MetaField label="Track" value={event.org} />
+              <MetaField label="Team" value={event.role} />
+              <MetaField label="Stint" value={event.dates} />
+              <MetaField label="Result" value={event.result} />
+            </dl>
 
-        <article className="mt-8 max-w-3xl border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
-          <LiveryStripe livery="marlboro" />
-          <div className="flex flex-col gap-6 p-6">
-            <section>
-              <SectionHeading>Briefing</SectionHeading>
-              <p className="mt-2 text-silver">{event.story.problem}</p>
-            </section>
-            <section>
-              <SectionHeading>On track</SectionHeading>
-              <ul className="mt-2 flex list-none flex-col gap-2">
-                {event.story.actions.map((action, i) => (
-                  <li key={i} className="flex gap-2.5 text-silver">
-                    <span
-                      aria-hidden="true"
-                      className="mt-1 font-display text-xs font-black text-gt-bright"
-                    >
-                      ▸
-                    </span>
-                    {action}
-                  </li>
+            <article className="border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
+              <LiveryStripe livery="marlboro" />
+              <div className="flex flex-col gap-6 p-6">
+                <section>
+                  <SectionHeading>Briefing</SectionHeading>
+                  <p className="mt-2 max-w-[62ch] text-ink leading-snug">
+                    {event.story.problem}
+                  </p>
+                </section>
+                <section>
+                  <SectionHeading>On track</SectionHeading>
+                  <ul className="mt-2 flex max-w-[62ch] list-none flex-col gap-2">
+                    {event.story.actions.map((action, i) => (
+                      <li key={i} className="flex gap-2.5 text-ink">
+                        <span
+                          aria-hidden="true"
+                          className="mt-1 font-display text-xs font-black text-gt-bright"
+                        >
+                          ▸
+                        </span>
+                        {action}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+                <section>
+                  <SectionHeading>Result</SectionHeading>
+                  <p className="ts-hard mt-2 max-w-[62ch] text-chrome leading-snug">
+                    {event.story.results}
+                  </p>
+                </section>
+              </div>
+            </article>
+
+            {event.links?.length ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {event.links.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="plate ts-hard px-3 py-1.5 font-display text-sm font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
+                  >
+                    {l.label} ↗
+                  </Link>
                 ))}
-              </ul>
-            </section>
-            <section>
-              <SectionHeading>Result</SectionHeading>
-              <p className="ts-hard mt-2 text-chrome">{event.story.results}</p>
-            </section>
+              </div>
+            ) : null}
           </div>
-        </article>
 
-        {(event.links?.length || event.carIds?.length || event.missionIds?.length) ? (
-          <div className="mt-6 flex max-w-3xl flex-wrap items-center gap-2">
-            {event.links?.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="plate ts-hard px-3 py-1.5 font-display text-sm font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
-              >
-                {l.label} ↗
-              </Link>
-            ))}
-            {event.carIds?.map((c) => (
-              <CarChip key={c} carId={c} />
-            ))}
-            {event.missionIds?.map((m) => (
-              <MissionChip key={m} missionId={m} />
-            ))}
-          </div>
-        ) : null}
+          <aside className="lg:sticky lg:top-6">
+            <EventBriefing season={season} event={event} />
+          </aside>
+        </div>
       </main>
     </div>
   );

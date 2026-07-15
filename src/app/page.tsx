@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BootSequence } from "@/components/boot/BootSequence";
 import { GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { CircuitMap } from "@/components/world-map/CircuitMap";
+import { HudTotals } from "@/components/world-map/HudTotals";
 import { PavilionList } from "@/components/world-map/PavilionList";
 
 export default function Home() {
@@ -19,7 +20,7 @@ export default function Home() {
       <main className="flex flex-1 flex-col">
         <div className="mt-10 md:mt-12">
           <GtTitle>World Map</GtTitle>
-          <p className="mt-3 text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Pick a pavilion to explore work, skills, and projects.
           </p>
           <Link
@@ -37,6 +38,8 @@ export default function Home() {
         <div className="md:hidden">
           <PavilionList />
         </div>
+
+        <HudTotals />
       </main>
     </div>
   );

@@ -23,7 +23,7 @@ export default function CafePage() {
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
           <GtTitle kicker="Menu books">GT Café</GtTitle>
-          <p className="mt-3 max-w-2xl text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Pull up a chair. Each Menu Book is a short reading path built for a
             specific guest — founders, VCs, hiring managers — pointing you at
             the work worth seeing first.

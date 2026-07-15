@@ -22,7 +22,7 @@ export default function CareerPage() {
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
           <GtTitle kicker="Story mode">Career</GtTitle>
-          <p className="mt-3 max-w-2xl text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Three seasons so far: community college, university, and the
             venture-and-agents era. Pick a season, open an event, read the
             race report.
