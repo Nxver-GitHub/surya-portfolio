@@ -75,9 +75,9 @@ export function CategoryTabs({
             onClick={() => onSelect(category.id)}
             onKeyDown={(event) => onKeyDown(event, index)}
             className={`${
-              isActive ? "plate-hot" : "plate"
-            } ts-hard px-4 py-2 font-display text-sm font-bold tracking-widest uppercase outline-none focus-visible:ring-2 focus-visible:ring-chrome ${
-              isActive ? "text-white" : "text-chrome"
+              isActive ? "plate-hot" : "plate ts-hard"
+            } px-4 py-2 font-display text-sm font-bold tracking-widest uppercase outline-none focus-visible:ring-2 focus-visible:ring-chrome ${
+              isActive ? "text-asphalt" : "text-chrome"
             }`}
           >
             {category.name}

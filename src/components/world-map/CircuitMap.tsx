@@ -158,7 +158,7 @@ export function CircuitMap() {
             <span className="text-silver">Select a pavilion</span>
           )}
         </p>
-        <p className="lozenge ts-hard px-4 py-1 font-display text-sm font-bold tracking-widest text-white uppercase">
+        <p className="lozenge px-4 py-1 font-display text-sm font-bold tracking-widest text-asphalt uppercase">
           {openCount}/{pavilions.length} open
         </p>
       </div>

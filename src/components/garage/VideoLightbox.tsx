@@ -51,7 +51,7 @@ export function VideoLightbox({ src, poster, note, title }: VideoLightboxProps) 
         ) : (
           <span className="block h-24 w-full bg-asphalt" />
         )}
-        <span className="plate-hot ts-hard absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1.5 font-display text-sm font-black tracking-widest text-white uppercase">
+        <span className="plate-hot absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-3 py-1.5 font-display text-sm font-black tracking-widest text-asphalt uppercase">
           ▶ Play
         </span>
       </button>
@@ -73,7 +73,7 @@ export function VideoLightbox({ src, poster, note, title }: VideoLightboxProps) 
           <button
             type="button"
             onClick={close}
-            className="lozenge ts-hard px-3 py-1 font-display text-xs font-bold tracking-widest text-white uppercase outline-none focus-visible:ring-2 focus-visible:ring-chrome"
+            className="lozenge px-3 py-1 font-display text-xs font-bold tracking-widest text-asphalt uppercase outline-none focus-visible:ring-2 focus-visible:ring-chrome"
           >
             Close ✕
           </button>

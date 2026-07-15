@@ -38,8 +38,8 @@ export function LicenseTierButton({
     >
       <LicenseBadge glyph={license.id} livery={license.livery} size={52} />
       <span
-        className={`ts-hard font-display text-sm leading-tight font-bold tracking-wide uppercase ${
-          isActive ? "text-white" : "text-chrome"
+        className={`font-display text-sm leading-tight font-bold tracking-wide uppercase ${
+          isActive ? "text-asphalt" : "ts-hard text-chrome"
         }`}
       >
         {license.theme}

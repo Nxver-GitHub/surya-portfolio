@@ -34,12 +34,12 @@ export function ExhibitList({ available, activeId, onSelect }: ExhibitListProps)
               aria-pressed={isActive}
               onClick={() => onSelect(exhibit)}
               className={`${
-                isActive ? "plate-hot" : "plate"
-              } ts-hard flex flex-col gap-0.5 px-3 py-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-chrome`}
+                isActive ? "plate-hot" : "plate ts-hard"
+              } flex flex-col gap-0.5 px-3 py-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-chrome`}
             >
               <span
                 className={`font-display text-xs font-bold tracking-wide uppercase ${
-                  isActive ? "text-white" : "text-chrome"
+                  isActive ? "text-asphalt" : "text-chrome"
                 }`}
               >
                 {exhibit.name}

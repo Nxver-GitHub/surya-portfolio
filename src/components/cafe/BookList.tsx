@@ -79,8 +79,8 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
             } flex w-full flex-col gap-0.5 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-chrome`}
           >
             <span
-              className={`ts-hard font-display text-base leading-tight font-bold tracking-wide uppercase ${
-                isActive ? "text-white" : "text-chrome"
+              className={`font-display text-base leading-tight font-bold tracking-wide uppercase ${
+                isActive ? "text-asphalt" : "ts-hard text-chrome"
               }`}
             >
               {book.title}
@@ -88,7 +88,7 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
             <span className="flex items-center gap-2">
               <span
                 className={`font-display text-[10px] font-black tracking-widest uppercase ${
-                  isActive ? "text-white/80" : "text-gt-bright"
+                  isActive ? "text-asphalt/80" : "text-gt-bright"
                 }`}
               >
                 {bookTypeLabel(book.type)}
