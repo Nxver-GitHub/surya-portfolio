@@ -2,6 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { SoundProvider } from "@/components/sound/SoundProvider";
+import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
 import { saira, satoshi, sourceSerif } from "./fonts";
 import "./globals.css";
 
@@ -23,6 +24,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <SoundProvider>{children}</SoundProvider>
+        <PageViewBeacon />
         <Analytics />
         <SpeedInsights />
       </body>

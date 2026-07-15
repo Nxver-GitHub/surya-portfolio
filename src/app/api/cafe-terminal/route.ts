@@ -23,6 +23,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
 import { buildSystemPrompt } from "@/lib/terminal-prompt";
+import { recordChatQuestion } from "@/lib/events";
 
 /** Node runtime: Upstash + AI SDK stream cleanly here, and it keeps the route
  * off the Edge (where our keyless-build assumptions differ). */
@@ -281,6 +282,12 @@ export async function POST(request: Request): Promise<Response> {
     console.error("[cafe-terminal] rate-limit backend error", error);
     return json({ error: "SYSTEM_BUSY" }, 503);
   }
+
+  // 3.5) Anonymized telemetry: log the visitor's latest question (fire-and-
+  //       forget, capped + truncated server-side; NO IP/response stored). Never
+  //       blocks or fails the chat — see lib/events.ts.
+  const lastUser = [...parsed.messages].reverse().find((m) => m.role === "user");
+  if (lastUser) void recordChatQuestion(lastUser.content);
 
   // 4) Call Groq and stream the UI-message response.
   try {
