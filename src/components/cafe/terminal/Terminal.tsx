@@ -375,7 +375,7 @@ export function Terminal({
               type="button"
               onClick={onToggleExpand}
               aria-label="Expand into the café screen"
-              className="lozenge ts-hard px-3 py-0.5 font-display text-[11px] font-bold tracking-widest text-white uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+              className="lozenge px-3 py-0.5 font-display text-[11px] font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
             >
               Expand ⤢
             </button>
@@ -384,7 +384,7 @@ export function Terminal({
             type="button"
             onClick={onClose}
             aria-label="Close terminal"
-            className="lozenge ts-hard px-3 py-0.5 font-display text-[11px] font-bold tracking-widest text-white uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+            className="lozenge px-3 py-0.5 font-display text-[11px] font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
           >
             {closeLabel}
           </button>

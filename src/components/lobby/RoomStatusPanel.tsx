@@ -40,7 +40,7 @@ export function RoomStatusPanel({ room, chips, livery }: RoomStatusPanelProps) {
         <ul className="flex flex-wrap gap-2" aria-label="Current status">
           {chips.map((chip) => (
             <li key={chip.label}>
-              <span className="lozenge ts-hard inline-block px-3 py-1.5 font-display text-xs font-bold tracking-widest text-white uppercase">
+              <span className="lozenge inline-block px-3 py-1.5 font-display text-xs font-bold tracking-widest text-asphalt uppercase">
                 {chip.label}
               </span>
             </li>

@@ -53,14 +53,16 @@ function CarListButton({
       />
       <span className="flex min-w-0 flex-1 flex-col">
         <span
-          className={`ts-hard truncate font-display text-base leading-tight font-bold tracking-wide uppercase ${
-            isActive ? "text-white" : locked ? "text-silver" : "text-chrome"
+          className={`truncate font-display text-base leading-tight font-bold tracking-wide uppercase ${
+            isActive
+              ? "text-asphalt"
+              : `ts-hard ${locked ? "text-silver" : "text-chrome"}`
           }`}
         >
           {car.name}
         </span>
         <span
-          className={`truncate text-xs ${isActive ? "text-white/80" : "text-silver"}`}
+          className={`truncate text-xs ${isActive ? "text-asphalt/80" : "text-silver"}`}
         >
           {locked ? "Locked" : car.carClass}
         </span>
@@ -68,7 +70,7 @@ function CarListButton({
       {car.status === "hero" ? (
         <span
           className={`font-display text-[10px] font-black tracking-widest uppercase ${
-            isActive ? "text-white/80" : "text-gt-bright"
+            isActive ? "text-asphalt/80" : "text-gt-bright"
           }`}
         >
           3D

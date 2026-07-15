@@ -89,7 +89,7 @@ function LozengeButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="lozenge ts-hard inline-flex items-center gap-2 px-4 py-1.5 font-display text-sm font-bold tracking-widest text-white uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome disabled:cursor-not-allowed disabled:opacity-40"
+      className="lozenge inline-flex items-center gap-2 px-4 py-1.5 font-display text-sm font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome disabled:cursor-not-allowed disabled:opacity-40"
     >
       {children}
     </button>
@@ -453,11 +453,11 @@ export function CafeBrowser() {
                 <FocusLabel book={selected} />
               ) : null}
               {focus.kind === "crt" && crtPresent ? (
-                <span className="plate-hot ts-hard inline-flex flex-col gap-0.5 px-3 py-1.5">
-                  <span className="font-display text-[10px] font-black tracking-[0.18em] text-white/80 uppercase">
+                <span className="plate-hot inline-flex flex-col gap-0.5 px-3 py-1.5">
+                  <span className="font-display text-[10px] font-black tracking-[0.18em] text-asphalt/80 uppercase">
                     Terminal
                   </span>
-                  <span className="font-display text-xs font-bold tracking-wide text-white uppercase">
+                  <span className="font-display text-xs font-bold tracking-wide text-asphalt uppercase">
                     Online — CAFE-OS v2.2
                   </span>
                 </span>

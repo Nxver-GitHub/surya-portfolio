@@ -4,7 +4,7 @@ import Link from "next/link";
 export function GtCrumb({ label }: { label: string }) {
   return (
     <div className="pointer-events-none absolute top-6 right-0 md:top-8">
-      <span className="gt-crumb ts-hard block py-1 pr-6 pl-5 font-display text-sm font-bold tracking-[0.2em] text-white uppercase md:pr-10">
+      <span className="gt-crumb block py-1 pr-6 pl-5 font-display text-sm font-bold tracking-[0.2em] text-asphalt uppercase md:pr-10">
         {label}
       </span>
     </div>
@@ -43,7 +43,7 @@ export function LozengeLink({
   return (
     <Link
       href={href}
-      className="lozenge ts-hard inline-flex items-center gap-2 px-4 py-1.5 font-display text-sm font-bold tracking-widest text-white uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+      className="lozenge inline-flex items-center gap-2 px-4 py-1.5 font-display text-sm font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
     >
       {children}
     </Link>

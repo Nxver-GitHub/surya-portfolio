@@ -40,8 +40,8 @@ export function CareerBoard() {
               } flex-1 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-chrome lg:flex-none`}
             >
               <span
-                className={`ts-hard block font-display text-xs font-bold tracking-[0.2em] uppercase ${
-                  isActive ? "text-white/80" : "text-gt-bright"
+                className={`block font-display text-xs font-bold tracking-[0.2em] uppercase ${
+                  isActive ? "text-asphalt/80" : "ts-hard text-gt-bright"
                 }`}
               >
                 {s.number}
@@ -51,15 +51,15 @@ export function CareerBoard() {
                   <OrgLogo logo={s.logo} org={s.name} size={22} />
                 ) : null}
                 <span
-                  className={`ts-hard block font-display text-lg leading-tight font-bold tracking-wide uppercase ${
-                    isActive ? "text-white" : "text-chrome"
+                  className={`block font-display text-lg leading-tight font-bold tracking-wide uppercase ${
+                    isActive ? "text-asphalt" : "ts-hard text-chrome"
                   }`}
                 >
                   {s.name}
                 </span>
               </span>
               <span
-                className={`block text-xs ${isActive ? "text-white/70" : "text-silver"}`}
+                className={`block text-xs ${isActive ? "text-asphalt/70" : "text-silver"}`}
               >
                 {s.period}
               </span>
