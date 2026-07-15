@@ -24,23 +24,22 @@ export function PhotoGrid({ photos }: { photos: readonly Photo[] }) {
     );
   }
 
-  let placeholdersSeen = 0;
-  const shown = photos.filter((photo) => {
-    if (!photo.placeholder) return true;
-    placeholdersSeen += 1;
-    return placeholdersSeen <= MAX_PLACEHOLDERS_PER_SECTION;
-  });
-
-  let placeholderIndex = 0;
+  const shown = photos.reduce<
+    ReadonlyArray<{ photo: Photo; rollIndex?: number }>
+  >((acc, photo) => {
+    if (!photo.placeholder) {
+      return [...acc, { photo, rollIndex: undefined }];
+    }
+    const placeholdersSoFar = acc.filter((item) => item.photo.placeholder)
+      .length;
+    if (placeholdersSoFar >= MAX_PLACEHOLDERS_PER_SECTION) return acc;
+    return [...acc, { photo, rollIndex: placeholdersSoFar }];
+  }, []);
 
   return (
     <div className="mt-6 columns-1 gap-4 sm:columns-2 lg:columns-3">
-      {shown.map((photo) => (
-        <PhotoTile
-          key={photo.id}
-          photo={photo}
-          rollIndex={photo.placeholder ? placeholderIndex++ : undefined}
-        />
+      {shown.map(({ photo, rollIndex }) => (
+        <PhotoTile key={photo.id} photo={photo} rollIndex={rollIndex} />
       ))}
     </div>
   );
