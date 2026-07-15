@@ -193,7 +193,13 @@ function BookMarker({ book, isActive, onSelect, idle, focused }: BookMarkerProps
           <div
             style={{
               transform: "translateY(-100%)",
-              whiteSpace: "nowrap",
+              // Wraps (rather than clipping via the canvas's overflow-hidden
+              // box) so the longest Menu Book title — "The Agent Collection",
+              // "Hackathon Grand Prix" — renders in full instead of cutting
+              // mid-word.
+              whiteSpace: "normal",
+              maxWidth: 150,
+              textAlign: "center",
               background: "#0a0a0b",
               border: `2px solid ${color}`,
               boxShadow: "2px 3px 0 rgba(0,0,0,0.7)",

@@ -4,8 +4,10 @@ interface JoinControlsProps {
   controls: readonly JoinControl[];
 }
 
+// Empty verb renders the channel's own label alone ("Email", not "Email
+// Email") — every other channel prefixes its label with a verb.
 const VERB_BY_CHANNEL: Record<JoinControl["channel"], string> = {
-  email: "Email",
+  email: "",
   github: "View on",
   linkedin: "Join via",
   x: "Ping on",
@@ -39,7 +41,9 @@ export function JoinControls({ controls }: JoinControlsProps) {
                 className="plate-hot inline-flex items-center gap-2 px-5 py-2.5 font-display text-sm font-bold tracking-widest text-asphalt uppercase outline-none transition-[filter] duration-(--duration-snap) ease-(--ease-mech) hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
               >
                 <span>
-                  {VERB_BY_CHANNEL[control.channel]} {control.label}
+                  {[VERB_BY_CHANNEL[control.channel], control.label]
+                    .filter(Boolean)
+                    .join(" ")}
                 </span>
                 <span aria-hidden="true">→</span>
               </a>

@@ -85,15 +85,15 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
             >
               {book.title}
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-start gap-2">
               <span
-                className={`font-display text-xs font-black tracking-widest uppercase ${
+                className={`shrink-0 font-display text-xs font-black tracking-widest uppercase ${
                   isActive ? "text-asphalt/80" : "text-gt-bright"
                 }`}
               >
                 {bookTypeLabel(book.type)}
               </span>
-              <span className="truncate text-xs text-silver">
+              <span className="line-clamp-2 text-xs text-silver">
                 {book.audience}
               </span>
             </span>
