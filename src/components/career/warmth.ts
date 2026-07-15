@@ -1,41 +1,48 @@
 /**
- * R4-warmth exploration (feat/p2-r4-warmth-exploration) — DRAFT / experimental.
+ * Season-tinted Career warmth (feat/p2-r4-warmth-exploration, R4).
  *
- * Season-tinted Career headers: one restrained flat warm field per season,
- * derived from that season's identity. The intent is Ridge Racer Type 4 warmth
- * — confident, authored warm color fields — never neon and never decoration.
- * Every field carries dark asphalt ink and clears WCAG AA (>= 4.5:1).
+ * One restrained flat warm field per season, scoped to career DETAIL pages
+ * (`/career/[slug]`) plus a slim accent on the selected season card in the
+ * index rail. The intent is Ridge Racer Type 4 warmth — confident, authored
+ * warm color fields — never neon and never decoration.
  *
- * Flip CAREER_WARMTH_VARIANT to screenshot both treatments:
- *  - "A" header band — a flat warm field behind the STORY MODE kicker + title
- *                       block only, bleeding to the left screen edge. (default)
- *  - "B" plate wash  — the selected season card + the Season Briefing rail take
- *                      the warm field as their fill; the content zone stays
- *                      asphalt. More contained, less bold.
+ * R3 verdict: the flat-header treatment (now the only variant) worked, but
+ * S1 (#DE9433) and S3 (#E7AB47) sat too close to the system orange
+ * (#EF8100, H 32° / S 100% / L 47%) — same hue family at high saturation, so
+ * they read as "more chrome" instead of season identity. R4 re-picks S1 and
+ * S3 to be clearly off-orange:
+ *  - S1 keeps the amber hue but drops saturation hard (desaturated sand/aged
+ *    paper, not a paler orange) — H 36° / S 37% vs. the system's S 100%.
+ *  - S2 (terracotta) is unchanged — it already read as its own season.
+ *  - S3 moves hue entirely, from gold (H 37°) to deep crimson (H 3°) — on
+ *    the opposite side of the wheel from the orange chrome, not just a
+ *    lighter/darker step of it.
+ *
+ * Every field carries solid ink (no reduced opacity — opacity blending
+ * against a colored field is fragile) and clears WCAG AA (>= 4.5:1). S1/S2
+ * use dark asphalt ink; S3's field is too dark for asphalt ink to clear AA,
+ * so it uses the warm off-white chrome ink instead (7.64:1).
  */
-export type CareerWarmthVariant = "A" | "B";
-
-export const CAREER_WARMTH_VARIANT: CareerWarmthVariant = "A";
-
 export interface SeasonTint {
   /** Flat warm field — no gradient, hard edges. */
   field: string;
-  /** Dark asphalt ink used for all text sitting on the field. */
+  /** Ink used for all text sitting on the field. */
   ink: string;
-  /** Contrast ratio of ink on field (WCAG), for the record. */
+  /** Which GtTitle ink mode reads this field correctly. */
+  inkMode: "dark" | "light";
+  /** Contrast ratio of ink on field (WCAG 2 relative-luminance formula). */
   contrast: number;
 }
 
-/**
- * Warm, era-plausible tints against the asphalt world. Contrast measured for
- * ink #0a0a0b on each field: S1 7.91:1, S2 5.69:1, S3 9.72:1 (all >= AA).
- * Hues are spread (amber / terracotta / gold) so they read as three distinct
- * seasons and stay clear of the GT system orange used on the chrome.
- */
 const SEASON_TINTS: Record<string, SeasonTint> = {
-  s1: { field: "#DE9433", ink: "#0a0a0b", contrast: 7.91 }, // deep sunset amber
-  s2: { field: "#CE7048", ink: "#0a0a0b", contrast: 5.69 }, // warm crimson-brown / terracotta
-  s3: { field: "#E7AB47", ink: "#0a0a0b", contrast: 9.72 }, // warm signal-gold
+  // Diablo Valley era — desaturated sand/aged-paper, not a paler orange.
+  s1: { field: "#C9B08A", ink: "#0a0a0b", inkMode: "dark", contrast: 9.48 },
+  // UC Santa Cruz — terracotta, kept from R3 (already read as its own season).
+  s2: { field: "#CE7048", ink: "#0a0a0b", inkMode: "dark", contrast: 5.69 },
+  // Venture & Agents — deep crimson, opposite side of the hue wheel from
+  // the orange chrome. Field is too dark for asphalt ink, so it takes the
+  // warm off-white chrome ink instead.
+  s3: { field: "#8C2621", ink: "#f2f0ec", inkMode: "light", contrast: 7.64 },
 };
 
 const FALLBACK: SeasonTint = SEASON_TINTS.s1;

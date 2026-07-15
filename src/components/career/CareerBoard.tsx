@@ -5,7 +5,7 @@ import { CarChip } from "./CarChip";
 import { MissionChip } from "./MissionChip";
 import { EventCard } from "./EventCard";
 import { OrgLogo } from "./OrgLogo";
-import { CAREER_WARMTH_VARIANT, seasonTint } from "./warmth";
+import { seasonTint } from "./warmth";
 
 interface CareerBoardProps {
   selected: Season;
@@ -14,10 +14,6 @@ interface CareerBoardProps {
 
 export function CareerBoard({ selected, onSelect }: CareerBoardProps) {
   const refs = seasonRefs(selected);
-  // Variant B — "plate wash": the selected season card + the Season Briefing
-  // rail take the season's warm field as their fill (content zone stays asphalt).
-  const variantB = CAREER_WARMTH_VARIANT === "B";
-  const tint = seasonTint(selected.id);
 
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_260px]">
@@ -25,8 +21,6 @@ export function CareerBoard({ selected, onSelect }: CareerBoardProps) {
       <nav aria-label="Seasons" className="flex gap-2 lg:flex-col">
         {seasons.map((s) => {
           const isActive = s.id === selected.id;
-          const bWash = variantB && isActive;
-          const cardTint = seasonTint(s.id);
           return (
             <button
               key={s.id}
@@ -34,14 +28,19 @@ export function CareerBoard({ selected, onSelect }: CareerBoardProps) {
               onClick={() => onSelect(s)}
               aria-current={isActive ? "true" : undefined}
               style={
-                bWash ? { backgroundColor: cardTint.field } : undefined
+                // Slim season-identity accent on the selected card only —
+                // the active state itself stays the shared plate-hot orange
+                // vocabulary; this is a secondary, quieter signal underneath it.
+                isActive
+                  ? {
+                      borderBottomWidth: "4px",
+                      borderBottomStyle: "solid",
+                      borderBottomColor: seasonTint(s.id).field,
+                    }
+                  : undefined
               }
               className={`${
-                bWash
-                  ? "border border-asphalt/40 shadow-[1px_2px_0_rgba(0,0,0,0.8)]"
-                  : isActive
-                    ? "plate-hot"
-                    : "plate"
+                isActive ? "plate-hot" : "plate"
               } flex-1 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-chrome lg:flex-none`}
             >
               <span
@@ -82,32 +81,17 @@ export function CareerBoard({ selected, onSelect }: CareerBoardProps) {
 
       {/* Season context panel */}
       <aside className="hidden lg:block">
-        <div
-          style={variantB ? { backgroundColor: tint.field } : undefined}
-          className={`p-4 shadow-[2px_3px_0_rgba(0,0,0,0.7)] ${
-            variantB ? "border border-asphalt/40" : "border border-steel bg-panel"
-          }`}
-        >
-          <h2
-            className={`font-display text-sm font-bold tracking-[0.2em] uppercase ${
-              variantB ? "text-asphalt" : "ts-hard text-gt-bright"
-            }`}
-          >
+        <div className="border border-steel bg-panel p-4 shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
+          <h2 className="ts-hard font-display text-sm font-bold tracking-[0.2em] text-gt-bright uppercase">
             Season briefing
           </h2>
-          <p
-            className={`mt-2 text-sm leading-snug ${variantB ? "text-asphalt/90" : "text-ink"}`}
-          >
+          <p className="mt-2 text-sm text-ink leading-snug">
             {selected.summary}
           </p>
 
           {refs.cars.length > 0 ? (
             <div className="mt-4">
-              <h3
-                className={`font-display text-xs font-bold tracking-[0.18em] uppercase ${
-                  variantB ? "text-asphalt" : "text-gt-bright"
-                }`}
-              >
+              <h3 className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
                 Cars unlocked
               </h3>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -120,11 +104,7 @@ export function CareerBoard({ selected, onSelect }: CareerBoardProps) {
 
           {refs.missions.length > 0 ? (
             <div className="mt-4">
-              <h3
-                className={`font-display text-xs font-bold tracking-[0.18em] uppercase ${
-                  variantB ? "text-asphalt" : "text-gt-bright"
-                }`}
-              >
+              <h3 className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
                 Missions cleared
               </h3>
               <div className="mt-1.5 flex flex-wrap gap-1.5">

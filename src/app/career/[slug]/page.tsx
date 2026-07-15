@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { allEventSlugs, findEvent } from "../../../../content/career";
-import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
+import { GtCrumb, LozengeLink } from "@/components/gt/GtChrome";
 import { EventBriefing } from "@/components/career/EventBriefing";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { CareerTitleBand } from "@/components/career/CareerTitleBand";
-import { CAREER_WARMTH_VARIANT } from "@/components/career/warmth";
 
 interface EventPageProps {
   params: Promise<{ slug: string }>;
@@ -65,20 +64,12 @@ export default async function EventPage({ params }: EventPageProps) {
       </header>
 
       <main className="flex flex-1 flex-col pb-10">
-        {CAREER_WARMTH_VARIANT === "A" ? (
-          <CareerTitleBand
-            seasonId={season.id}
-            kicker={`${season.number} · ${season.name}`}
-          >
-            {event.title}
-          </CareerTitleBand>
-        ) : (
-          <div className="mt-10 md:mt-12">
-            <GtTitle kicker={`${season.number} · ${season.name}`}>
-              {event.title}
-            </GtTitle>
-          </div>
-        )}
+        <CareerTitleBand
+          seasonId={season.id}
+          kicker={`${season.number} · ${season.name}`}
+        >
+          {event.title}
+        </CareerTitleBand>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
           <div className="flex min-w-0 flex-col gap-6">
