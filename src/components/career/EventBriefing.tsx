@@ -75,7 +75,7 @@ export function EventBriefing({
     const refs = seasonRefs(season);
     return (
       <RailShell title="Season briefing">
-        <p className="mt-2 text-sm text-ink">{season.summary}</p>
+        <p className="mt-2 text-sm text-ink leading-snug">{season.summary}</p>
         {refs.cars.length > 0 ? (
           <RailSection label="Cars unlocked">
             {refs.cars.map((c) => (

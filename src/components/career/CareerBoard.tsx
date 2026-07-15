@@ -71,7 +71,7 @@ export function CareerBoard() {
           <h2 className="ts-hard font-display text-sm font-bold tracking-[0.2em] text-gt-bright uppercase">
             Season briefing
           </h2>
-          <p className="mt-2 text-sm text-silver">{selected.summary}</p>
+          <p className="mt-2 text-sm text-ink leading-snug">{selected.summary}</p>
 
           {refs.cars.length > 0 ? (
             <div className="mt-4">

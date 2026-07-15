@@ -90,7 +90,7 @@ export default async function EventPage({ params }: EventPageProps) {
               <div className="flex flex-col gap-6 p-6">
                 <section>
                   <SectionHeading>Briefing</SectionHeading>
-                  <p className="mt-2 max-w-[62ch] text-silver">
+                  <p className="mt-2 max-w-[62ch] text-ink leading-snug">
                     {event.story.problem}
                   </p>
                 </section>
@@ -98,7 +98,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   <SectionHeading>On track</SectionHeading>
                   <ul className="mt-2 flex max-w-[62ch] list-none flex-col gap-2">
                     {event.story.actions.map((action, i) => (
-                      <li key={i} className="flex gap-2.5 text-silver">
+                      <li key={i} className="flex gap-2.5 text-ink">
                         <span
                           aria-hidden="true"
                           className="mt-1 font-display text-xs font-black text-gt-bright"
@@ -112,7 +112,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 </section>
                 <section>
                   <SectionHeading>Result</SectionHeading>
-                  <p className="ts-hard mt-2 max-w-[62ch] text-chrome">
+                  <p className="ts-hard mt-2 max-w-[62ch] text-chrome leading-snug">
                     {event.story.results}
                   </p>
                 </section>

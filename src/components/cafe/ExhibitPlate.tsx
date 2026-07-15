@@ -28,7 +28,7 @@ export function ExhibitPlate({ exhibit }: ExhibitPlateProps) {
         {exhibit.name}
       </span>
       <span className="text-xs text-silver">{exhibit.flavor}</span>
-      <span className="text-xs text-silver/80">
+      <span className="font-display text-xs tracking-wide text-silver/80 uppercase">
         Model:{" "}
         <a
           href={credit.url}

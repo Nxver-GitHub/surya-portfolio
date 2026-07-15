@@ -23,7 +23,7 @@ export default function GaragePage() {
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
           <GtTitle kicker="Car selection">Garage</GtTitle>
-          <p className="mt-3 max-w-2xl text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Every project is a machine. Pick one off the line to inspect its
             spec sheet — drivetrain, performance, lap records.
           </p>

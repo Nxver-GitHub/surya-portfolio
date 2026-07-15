@@ -23,7 +23,7 @@ export default function LicenseCenterPage() {
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
           <GtTitle kicker="License tests">License Center</GtTitle>
-          <p className="mt-3 max-w-2xl text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Skills as license classes, B through S. Pick a class to see its
             tests — each one graded and linked to the project, competition, or
             role that earned it.

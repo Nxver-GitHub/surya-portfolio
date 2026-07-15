@@ -20,7 +20,7 @@ export default function Home() {
       <main className="flex flex-1 flex-col">
         <div className="mt-10 md:mt-12">
           <GtTitle>World Map</GtTitle>
-          <p className="mt-3 text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Pick a pavilion to explore work, skills, and projects.
           </p>
           <Link

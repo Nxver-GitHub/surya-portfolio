@@ -29,7 +29,7 @@ export default function LobbyPage() {
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
           <GtTitle kicker="Multiplayer lobby">Online Lobby</GtTitle>
-          <p className="mt-3 max-w-2xl text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Contact and communities, framed as a lobby room. See what Surya is
             open to right now, join via a channel below, or browse the
             communities and organizations he&rsquo;s part of.

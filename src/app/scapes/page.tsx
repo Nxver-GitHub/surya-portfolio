@@ -27,7 +27,7 @@ export default function ScapesPage() {
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
           <GtTitle kicker="Photo mode">Scapes</GtTitle>
-          <p className="mt-3 max-w-2xl text-base text-silver">
+          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Frames between the races — nature, cars, and life on the road.
             Pick a category; a few shots link back to the machine or event
             they sit alongside.
