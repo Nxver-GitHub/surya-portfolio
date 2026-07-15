@@ -19,7 +19,7 @@ export function PhotoTile({ photo }: { photo: Photo }) {
       className="group relative mb-4 block break-inside-avoid overflow-hidden border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)] outline-none focus-visible:ring-2 focus-visible:ring-gt-bright"
     >
       {photo.placeholder ? (
-        <span className="ts-hard absolute top-2 left-2 z-10 border border-steel bg-asphalt/80 px-1.5 py-0.5 font-display text-[10px] font-black tracking-widest text-silver uppercase">
+        <span className="ts-hard absolute top-2 left-2 z-10 border border-steel bg-asphalt/80 px-1.5 py-0.5 font-display text-xs font-black tracking-widest text-silver uppercase">
           Placeholder
         </span>
       ) : null}

@@ -16,7 +16,7 @@ export function GradeChip({ grade }: GradeChipProps) {
   if (!meta.earned) {
     return (
       <span
-        className="ts-hard inline-flex items-center gap-1.5 border border-steel bg-panel px-2 py-0.5 font-display text-[11px] font-bold tracking-[0.16em] text-silver uppercase"
+        className="ts-hard inline-flex items-center gap-1.5 border border-steel bg-panel px-2 py-0.5 font-display text-xs font-bold tracking-[0.16em] text-silver uppercase"
         aria-label={meta.aria}
       >
         <span aria-hidden="true" className="text-silver">
@@ -35,7 +35,7 @@ export function GradeChip({ grade }: GradeChipProps) {
     >
       <span className="badge-face inline-flex items-center px-2 py-0.5">
         <span
-          className="font-display text-[11px] font-black tracking-[0.16em] uppercase"
+          className="font-display text-xs font-black tracking-[0.16em] uppercase"
           style={{ color: meta.rim, textShadow: "1px 1px 0 rgba(0,0,0,0.35)" }}
         >
           {meta.label}

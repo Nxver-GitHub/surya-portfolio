@@ -43,7 +43,7 @@ export function LozengeLink({
   return (
     <Link
       href={href}
-      className="lozenge inline-flex items-center gap-2 px-4 py-1.5 font-display text-sm font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+      className="lozenge inline-flex min-h-11 items-center gap-2 px-4 py-1.5 font-display text-sm font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
     >
       {children}
     </Link>

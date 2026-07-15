@@ -105,7 +105,7 @@ function FocusLabel({ book }: { book: MenuBook }) {
       style={{ borderColor: book.cover.color }}
     >
       <span
-        className="font-display text-[10px] font-black tracking-[0.18em] uppercase"
+        className="font-display text-xs font-black tracking-[0.18em] uppercase"
         style={{ color: book.cover.color }}
       >
         {book.cover.label}
@@ -417,7 +417,7 @@ export function CafeBrowser() {
               over the canvas, never intercepts its drag. Hidden while the
               terminal owns the view. */}
           {sceneReady && !isMobile && focus.kind !== "crt" ? (
-            <div className="pointer-events-none absolute bottom-2 left-2 select-none rounded-sm border border-white/15 bg-black/55 px-2.5 py-1 font-display text-[10px] font-semibold tracking-wide text-white/70 uppercase backdrop-blur-sm">
+            <div className="pointer-events-none absolute bottom-2 left-2 select-none rounded-sm border border-white/15 bg-black/55 px-2.5 py-1 font-display text-xs font-semibold tracking-wide text-white/70 uppercase backdrop-blur-sm">
               Drag to look · Scroll to zoom ·{" "}
               <span className="text-chrome">WASD / Arrows</span> to move
             </div>
@@ -454,7 +454,7 @@ export function CafeBrowser() {
               ) : null}
               {focus.kind === "crt" && crtPresent ? (
                 <span className="plate-hot inline-flex flex-col gap-0.5 px-3 py-1.5">
-                  <span className="font-display text-[10px] font-black tracking-[0.18em] text-asphalt/80 uppercase">
+                  <span className="font-display text-xs font-black tracking-[0.18em] text-asphalt/80 uppercase">
                     Terminal
                   </span>
                   <span className="font-display text-xs font-bold tracking-wide text-asphalt uppercase">

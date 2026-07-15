@@ -87,7 +87,7 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
             </span>
             <span className="flex items-center gap-2">
               <span
-                className={`font-display text-[10px] font-black tracking-widest uppercase ${
+                className={`font-display text-xs font-black tracking-widest uppercase ${
                   isActive ? "text-asphalt/80" : "text-gt-bright"
                 }`}
               >
