@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BootSequence } from "@/components/boot/BootSequence";
 import { GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { CircuitMap } from "@/components/world-map/CircuitMap";
+import { HudTotals } from "@/components/world-map/HudTotals";
 import { PavilionList } from "@/components/world-map/PavilionList";
 
 export default function Home() {
@@ -37,6 +38,8 @@ export default function Home() {
         <div className="md:hidden">
           <PavilionList />
         </div>
+
+        <HudTotals />
       </main>
     </div>
   );

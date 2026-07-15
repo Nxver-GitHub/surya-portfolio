@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { openCount, pavilions } from "../../../content/pavilions";
+import { pavilions } from "../../../content/pavilions";
 import { LicenseBadge } from "../gt/LicenseBadge";
 import { useLockedNotice } from "./useLockedNotice";
 
@@ -56,9 +56,6 @@ export function PavilionList() {
           </button>
         ),
       )}
-      <p className="ts-hard mt-1 text-center font-display text-xs font-semibold tracking-widest text-silver uppercase">
-        {openCount}/{pavilions.length} pavilions open
-      </p>
     </nav>
   );
 }

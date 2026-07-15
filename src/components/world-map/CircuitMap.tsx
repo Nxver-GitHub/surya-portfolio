@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  openCount,
-  pavilions,
-  type Pavilion,
-} from "../../../content/pavilions";
+import { pavilions, type Pavilion } from "../../../content/pavilions";
 import { LicenseBadge } from "../gt/LicenseBadge";
 import { useLockedNotice } from "./useLockedNotice";
 
@@ -141,13 +137,6 @@ export function CircuitMap() {
             </div>
           );
         })}
-      </div>
-
-      {/* GT2 bottom status bar: open-pavilion count, matches mobile PavilionList footer */}
-      <div className="mx-auto mt-6 flex w-full max-w-5xl items-center justify-end border-t border-steel pt-3">
-        <p className="lozenge px-4 py-1 font-display text-sm font-bold tracking-widest text-asphalt uppercase">
-          {openCount}/{pavilions.length} open
-        </p>
       </div>
     </div>
   );
