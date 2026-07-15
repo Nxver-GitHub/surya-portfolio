@@ -13,7 +13,7 @@ export default function Home() {
 
       <header className="flex items-baseline justify-between">
         <p className="ts-hard font-display text-lg font-black tracking-wide uppercase">
-          Surya <span className="text-gt-bright">Racing</span>
+          Surya <span className="text-gt-bright">Pugazhenthi</span>
         </p>
       </header>
 

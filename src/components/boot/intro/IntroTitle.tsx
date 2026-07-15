@@ -16,9 +16,9 @@ export function IntroTitle() {
           Start your engines
         </p>
         <h1 className="gt-title mt-2 text-center text-5xl text-chrome md:text-7xl">
-          Surya Racing
+          Surya Pugazhenthi
         </h1>
-        <div className="gt-rule mt-3 w-48 md:w-72" />
+        <div className="gt-rule mt-3 w-64 md:w-104" />
         <p className="intro-blink mt-8 font-display text-xs font-semibold tracking-[0.34em] text-silver uppercase">
           <span aria-hidden="true" className="text-gt-bright">
             ▸

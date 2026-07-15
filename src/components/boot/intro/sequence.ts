@@ -44,7 +44,7 @@ export interface FrameEntry {
 }
 
 /** The only words the reel may slam — brand identity only, nothing datable. */
-export const ALLOWED_WORDS = ["SURYA", "RACING"] as const;
+export const ALLOWED_WORDS = ["SURYA", "PUGAZHENTHI"] as const;
 
 /** Desktop reel (~21 cuts @ 165ms ≈ 3.5s): each hero car after its livery. */
 export const FRAMES: readonly FrameEntry[] = [
@@ -67,7 +67,7 @@ export const FRAMES: readonly FrameEntry[] = [
   { frame: { kind: "numerals" } },
   { frame: { kind: "lights", lit: true } },
   { frame: { kind: "word", text: "SURYA" }, transition: "whip" },
-  { frame: { kind: "word", text: "RACING" }, transition: "whip" },
+  { frame: { kind: "word", text: "PUGAZHENTHI" }, transition: "whip" },
   { frame: { kind: "grid" } },
 ];
 
@@ -84,5 +84,5 @@ export const FRAMES_COMPACT: readonly FrameEntry[] = [
   { frame: { kind: "silhouette", car: "nodegent", tone: "orange" }, transition: "whip" },
   { frame: { kind: "numerals" } },
   { frame: { kind: "word", text: "SURYA" }, transition: "whip" },
-  { frame: { kind: "word", text: "RACING" }, transition: "whip" },
+  { frame: { kind: "word", text: "PUGAZHENTHI" }, transition: "whip" },
 ];
