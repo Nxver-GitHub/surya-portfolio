@@ -47,7 +47,7 @@ export function ViewfinderFrame({
       <span className="absolute right-3 bottom-3 h-4 w-4 border-r-2 border-b-2 border-silver/50" />
 
       {/* film-edge frame number */}
-      <span className="absolute bottom-2 left-3 font-display text-[11px] font-semibold tracking-widest text-silver/40 uppercase">
+      <span className="absolute bottom-2 left-3 font-display text-xs font-semibold tracking-wide text-silver/55 uppercase">
         {frameNumber}
       </span>
 
