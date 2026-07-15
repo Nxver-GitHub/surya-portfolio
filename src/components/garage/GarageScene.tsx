@@ -15,6 +15,7 @@ import {
 } from "three";
 import { liveries } from "../../../content/liveries";
 import { cars, type Car } from "../../../content/cars";
+import { runOnIdle } from "../../lib/runOnIdle";
 import { useReducedMotion } from "./useReducedMotion";
 
 /** Normalized car length in scene units — every model fits the same stage. */
@@ -222,17 +223,17 @@ export function GarageScene({ car }: { car: Car }) {
   const accent = livery.bars[1] ?? "#f4f2ef";
   const reducedMotion = useReducedMotion();
 
-  // warm the other hero models after the first one is on screen, so
-  // switching cars doesn't show the loading state. Note: clearing the
-  // timeout only guards the un-started case — a preload already fired
-  // is not abortable (drei caches by URL), which is acceptable waste.
+  // Warm the remaining hero models only once the browser is truly idle (or
+  // after an 8s ceiling on browsers without requestIdleCallback), so the
+  // active car's own load never competes with the rest of the garage. List
+  // hovers/focuses (see CarBrowser's preloadCarModel calls) usually win this
+  // race for whichever car the visitor is about to pick.
   useEffect(() => {
-    const t = setTimeout(() => {
+    return runOnIdle(() => {
       for (const c of cars) {
         if (c.modelPath && c.id !== car.id) useGLTF.preload(c.modelPath);
       }
-    }, 2000);
-    return () => clearTimeout(t);
+    }, 8000);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- warm once on mount
   }, []);
 

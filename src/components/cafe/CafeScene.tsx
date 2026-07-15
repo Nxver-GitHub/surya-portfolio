@@ -20,6 +20,7 @@ import { Vector3 } from "three";
 import type { Group, Object3D } from "three";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
 import { exhibits, exhibitById, type Exhibit } from "../../../content/cafe-exhibits";
+import { runOnIdle } from "../../lib/runOnIdle";
 import { useReducedMotion } from "../garage/useReducedMotion";
 import { ExhibitPiece } from "./ExhibitPiece";
 import { CrtScreenFeed } from "./terminal/CrtScreenFeed";
@@ -601,6 +602,15 @@ export function CafeScene({
 
   const activeExhibitId = focus.kind === "exhibit" ? focus.exhibitId : null;
 
+  // Exhibit glbs are set dressing, not the room itself — defer mounting any
+  // of them (and therefore their useGLTF fetches) until the browser is idle,
+  // so the café's initial network burst is just the room model + CRT. Focus
+  // can only land on an exhibit via its "On display" button, which itself
+  // only renders once a piece has loaded, so nothing here can be requested
+  // before this flips.
+  const [exhibitsReady, setExhibitsReady] = useState(false);
+  useEffect(() => runOnIdle(() => setExhibitsReady(true), 4000), []);
+
   return (
     <Canvas
       aria-hidden="true"
@@ -673,17 +683,19 @@ export function CafeScene({
         />
       ))}
 
-      {pieces.map((exhibit) => (
-        <ExhibitPiece
-          key={exhibit.id}
-          exhibit={exhibit}
-          isActive={exhibit.id === activeExhibitId}
-          hovered={exhibit.id === hoveredExhibitId}
-          onSelect={onSelectExhibit}
-          onHoverChange={onExhibitHover}
-          onAvailability={onExhibitAvailability}
-        />
-      ))}
+      {exhibitsReady
+        ? pieces.map((exhibit) => (
+            <ExhibitPiece
+              key={exhibit.id}
+              exhibit={exhibit}
+              isActive={exhibit.id === activeExhibitId}
+              hovered={exhibit.id === hoveredExhibitId}
+              onSelect={onSelectExhibit}
+              onHoverChange={onExhibitHover}
+              onAvailability={onExhibitAvailability}
+            />
+          ))
+        : null}
 
       <CameraRig
         focus={focus}

@@ -7,6 +7,7 @@ import { liveries } from "../../../content/liveries";
 import { LiveryStripe } from "../livery/LiveryStripe";
 import { SceneErrorBoundary } from "../cafe/SceneErrorBoundary";
 import { GarageSceneFallback } from "./GarageSceneFallback";
+import { preloadCarModel } from "./preloadCarModel";
 import { SpecSheet } from "./SpecSheet";
 
 const GarageScene = dynamic(
@@ -33,10 +34,15 @@ function CarListButton({
   onSelect: (car: Car) => void;
 }) {
   const locked = car.status === "locked";
+  const warm = () => {
+    if (car.status === "hero" && car.modelPath) preloadCarModel(car.modelPath);
+  };
   return (
     <button
       type="button"
       onClick={() => onSelect(car)}
+      onMouseEnter={warm}
+      onFocus={warm}
       aria-current={isActive ? "true" : undefined}
       className={`${
         isActive ? "plate-hot" : "plate"
