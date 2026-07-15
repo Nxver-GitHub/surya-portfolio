@@ -145,10 +145,8 @@ function InputLine({ chat, inputId, autoFocus, reducedMotion }: InputLineProps) 
       : "help · projects · contact · ask anything";
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="relative z-20 flex items-center gap-2 border-t border-[#12351f] px-3 py-2"
-    >
+    <div className="relative z-20 border-t border-[#12351f]">
+      <form onSubmit={onSubmit} className="flex items-center gap-2 px-3 py-2">
       <span
         aria-hidden="true"
         style={{ color: PHOSPHOR, fontFamily: MONO, fontSize: 16 }}
@@ -186,7 +184,16 @@ function InputLine({ chat, inputId, autoFocus, reducedMotion }: InputLineProps) 
           █
         </span>
       ) : null}
-    </form>
+      </form>
+      {/* Quiet privacy notice — questions are logged anonymously (see
+       * lib/events.ts). Silver, 12px, no popup. */}
+      <p
+        className="px-3 pb-1.5"
+        style={{ color: "#9aa6a0", fontFamily: MONO, fontSize: 12 }}
+      >
+        Questions may be logged anonymously.
+      </p>
+    </div>
   );
 }
 

@@ -23,6 +23,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
 import { buildSystemPrompt } from "@/lib/terminal-prompt";
+import { recordChatQuestion } from "@/lib/events";
 
 /** Node runtime: Upstash + AI SDK stream cleanly here, and it keeps the route
  * off the Edge (where our keyless-build assumptions differ). */
@@ -134,13 +135,15 @@ export const IP_FALLBACK = "unknown";
 export function extractClientIp(
   getHeader: (name: string) => string | null,
 ): string {
+  // x-real-ip first: on Vercel it is platform-set and never client-appended,
+  // so it stays trustworthy even if XFF handling ever changes upstream.
+  const real = getHeader("x-real-ip");
+  if (real && real.trim()) return real.trim();
   const xff = getHeader("x-forwarded-for");
   if (xff) {
     const first = xff.split(",")[0]?.trim();
     if (first) return first;
   }
-  const real = getHeader("x-real-ip");
-  if (real && real.trim()) return real.trim();
   return IP_FALLBACK;
 }
 
@@ -281,6 +284,12 @@ export async function POST(request: Request): Promise<Response> {
     console.error("[cafe-terminal] rate-limit backend error", error);
     return json({ error: "SYSTEM_BUSY" }, 503);
   }
+
+  // 3.5) Anonymized telemetry: log the visitor's latest question (fire-and-
+  //       forget, capped + truncated server-side; NO IP/response stored). Never
+  //       blocks or fails the chat — see lib/events.ts.
+  const lastUser = [...parsed.messages].reverse().find((m) => m.role === "user");
+  if (lastUser) void recordChatQuestion(lastUser.content);
 
   // 4) Call Groq and stream the UI-message response.
   try {
