@@ -3,6 +3,7 @@ import type { LicenseTest } from "../../../content/licenses";
 import { carById } from "../../../content/cars";
 import { missionById } from "../../../content/missions";
 import { findEvent } from "../../../content/career";
+import { Glyph } from "../gt/Glyph";
 
 const PLATE =
   "plate ts-hard px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright";
@@ -24,13 +25,19 @@ export function EvidenceLinks({ test }: { test: LicenseTest }) {
   return (
     <div className="mt-3 flex flex-wrap gap-2">
       {car ? (
-        <Link href={`/garage?car=${car.id}`} className={PLATE}>
-          🏎 {car.name}
+        <Link
+          href={`/garage?car=${car.id}`}
+          className={`${PLATE} inline-flex items-center gap-1.5`}
+        >
+          <Glyph kind="car" /> {car.name}
         </Link>
       ) : null}
       {mission ? (
-        <Link href="/missions" className={PLATE}>
-          🏁 {mission.name}
+        <Link
+          href="/missions"
+          className={`${PLATE} inline-flex items-center gap-1.5`}
+        >
+          <Glyph kind="flag" /> {mission.name}
         </Link>
       ) : null}
       {careerEvent ? (
