@@ -21,6 +21,22 @@ export interface Pavilion {
 }
 
 export const pavilions: readonly Pavilion[] = [
+  // GT Café leads: the mobile list ranks by visitor intent (the start-here
+  // plate above it points cold visitors at the Café's guided menus), while
+  // the desktop map places nodes purely by coordinates.
+  {
+    id: "cafe",
+    slug: "cafe",
+    name: "GT Café",
+    caption: "Curated reading paths for founders & VCs",
+    status: "open",
+    // deepest bottom-road node: its two-line caption hangs the stack below
+    // the map box and into the HUD strip, so the label flips above the badge
+    map: { x: 33, y: 89 },
+    labelSide: "top",
+    livery: "warsteiner",
+    glyph: "GT",
+  },
   {
     id: "career",
     slug: "career",
@@ -75,19 +91,6 @@ export const pavilions: readonly Pavilion[] = [
     labelSide: "bottom",
     livery: "leyton",
     glyph: "SC",
-  },
-  {
-    id: "cafe",
-    slug: "cafe",
-    name: "GT Café",
-    caption: "Curated reading paths for founders & VCs",
-    status: "open",
-    // deepest bottom-road node: its two-line caption hangs the stack below
-    // the map box and into the HUD strip, so the label flips above the badge
-    map: { x: 33, y: 89 },
-    labelSide: "top",
-    livery: "warsteiner",
-    glyph: "GT",
   },
   {
     id: "lobby",
