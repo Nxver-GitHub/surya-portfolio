@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
-import { CareerBoard } from "@/components/career/CareerBoard";
+import { GtCrumb, LozengeLink } from "@/components/gt/GtChrome";
+import { CareerPavilion } from "@/components/career/CareerPavilion";
 
 export const metadata: Metadata = {
   title: "Career — Surya Pugazhenthi",
@@ -20,16 +20,7 @@ export default function CareerPage() {
       </header>
 
       <main className="flex flex-1 flex-col pb-10">
-        <div className="mt-10 md:mt-12">
-          <GtTitle kicker="Story mode">Career</GtTitle>
-          <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
-            Three seasons so far: community college, university, and the
-            venture-and-agents era. Pick a season, open an event, read the
-            race report.
-          </p>
-        </div>
-
-        <CareerBoard />
+        <CareerPavilion />
       </main>
     </div>
   );

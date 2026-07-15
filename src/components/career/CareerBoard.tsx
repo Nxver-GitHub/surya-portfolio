@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { seasonRefs, seasons, type Season } from "../../../content/career";
 import { CarChip } from "./CarChip";
 import { MissionChip } from "./MissionChip";
 import { EventCard } from "./EventCard";
 import { OrgLogo } from "./OrgLogo";
+import { CAREER_WARMTH_VARIANT, seasonTint } from "./warmth";
 
-export function CareerBoard() {
-  const [selected, setSelected] = useState<Season>(
-    seasons[seasons.length - 1],
-  );
+interface CareerBoardProps {
+  selected: Season;
+  onSelect: (season: Season) => void;
+}
+
+export function CareerBoard({ selected, onSelect }: CareerBoardProps) {
   const refs = seasonRefs(selected);
+  // Variant B — "plate wash": the selected season card + the Season Briefing
+  // rail take the season's warm field as their fill (content zone stays asphalt).
+  const variantB = CAREER_WARMTH_VARIANT === "B";
+  const tint = seasonTint(selected.id);
 
   return (
     <div className="mt-8 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_260px]">
@@ -19,14 +25,23 @@ export function CareerBoard() {
       <nav aria-label="Seasons" className="flex gap-2 lg:flex-col">
         {seasons.map((s) => {
           const isActive = s.id === selected.id;
+          const bWash = variantB && isActive;
+          const cardTint = seasonTint(s.id);
           return (
             <button
               key={s.id}
               type="button"
-              onClick={() => setSelected(s)}
+              onClick={() => onSelect(s)}
               aria-current={isActive ? "true" : undefined}
+              style={
+                bWash ? { backgroundColor: cardTint.field } : undefined
+              }
               className={`${
-                isActive ? "plate-hot" : "plate"
+                bWash
+                  ? "border border-asphalt/40 shadow-[1px_2px_0_rgba(0,0,0,0.8)]"
+                  : isActive
+                    ? "plate-hot"
+                    : "plate"
               } flex-1 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-chrome lg:flex-none`}
             >
               <span
@@ -67,15 +82,32 @@ export function CareerBoard() {
 
       {/* Season context panel */}
       <aside className="hidden lg:block">
-        <div className="border border-steel bg-panel p-4 shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
-          <h2 className="ts-hard font-display text-sm font-bold tracking-[0.2em] text-gt-bright uppercase">
+        <div
+          style={variantB ? { backgroundColor: tint.field } : undefined}
+          className={`p-4 shadow-[2px_3px_0_rgba(0,0,0,0.7)] ${
+            variantB ? "border border-asphalt/40" : "border border-steel bg-panel"
+          }`}
+        >
+          <h2
+            className={`font-display text-sm font-bold tracking-[0.2em] uppercase ${
+              variantB ? "text-asphalt" : "ts-hard text-gt-bright"
+            }`}
+          >
             Season briefing
           </h2>
-          <p className="mt-2 text-sm text-ink leading-snug">{selected.summary}</p>
+          <p
+            className={`mt-2 text-sm leading-snug ${variantB ? "text-asphalt/90" : "text-ink"}`}
+          >
+            {selected.summary}
+          </p>
 
           {refs.cars.length > 0 ? (
             <div className="mt-4">
-              <h3 className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
+              <h3
+                className={`font-display text-xs font-bold tracking-[0.18em] uppercase ${
+                  variantB ? "text-asphalt" : "text-gt-bright"
+                }`}
+              >
                 Cars unlocked
               </h3>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -88,7 +120,11 @@ export function CareerBoard() {
 
           {refs.missions.length > 0 ? (
             <div className="mt-4">
-              <h3 className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
+              <h3
+                className={`font-display text-xs font-bold tracking-[0.18em] uppercase ${
+                  variantB ? "text-asphalt" : "text-gt-bright"
+                }`}
+              >
                 Missions cleared
               </h3>
               <div className="mt-1.5 flex flex-wrap gap-1.5">

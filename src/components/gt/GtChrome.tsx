@@ -15,18 +15,32 @@ export function GtCrumb({ label }: { label: string }) {
 export function GtTitle({
   children,
   kicker,
+  dark = false,
 }: {
   children: React.ReactNode;
   kicker?: string;
+  /** Dark ink (asphalt) for the kicker + title — used when the header sits on
+   *  a warm color field (R4-warmth exploration). Default keeps chrome/silver. */
+  dark?: boolean;
 }) {
   return (
     <div className="max-w-fit">
       {kicker ? (
-        <p className="ts-hard font-display text-sm font-semibold tracking-[0.25em] text-silver uppercase">
+        <p
+          className={`ts-hard font-display text-sm font-semibold tracking-[0.25em] uppercase ${
+            dark ? "text-asphalt/75" : "text-silver"
+          }`}
+        >
           {kicker}
         </p>
       ) : null}
-      <h1 className="gt-title text-5xl text-chrome md:text-6xl">{children}</h1>
+      <h1
+        className={`gt-title text-5xl md:text-6xl ${
+          dark ? "text-asphalt" : "text-chrome"
+        }`}
+      >
+        {children}
+      </h1>
       <div className="gt-rule mt-2 mr-3" />
     </div>
   );
