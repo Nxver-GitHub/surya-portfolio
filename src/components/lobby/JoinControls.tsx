@@ -14,9 +14,11 @@ const VERB_BY_CHANNEL: Record<JoinControl["channel"], string> = {
 };
 
 /**
- * Join-the-lobby control row: plate-hot buttons for each channel, styled
- * like the stamped hot-plate CTAs used elsewhere. Email is a plain mailto
- * link; external channels open in a new tab with safe rel attributes.
+ * Join-the-lobby control row: Email is the single solid hot-plate primary
+ * CTA; GitHub/LinkedIn/X are stamped black plate buttons with the standard
+ * orange keyline, matching how every other pavilion reserves solid orange
+ * for the one active/selected item. Email is a plain mailto link; external
+ * channels open in a new tab with safe rel attributes.
  */
 export function JoinControls({ controls }: JoinControlsProps) {
   return (
@@ -31,6 +33,7 @@ export function JoinControls({ controls }: JoinControlsProps) {
       <ul className="mt-4 flex flex-wrap gap-3">
         {controls.map((control) => {
           const isExternal = control.channel !== "email";
+          const isPrimary = control.channel === "email";
           return (
             <li key={control.channel}>
               <a
@@ -38,7 +41,11 @@ export function JoinControls({ controls }: JoinControlsProps) {
                 {...(isExternal
                   ? { target: "_blank", rel: "noopener noreferrer" }
                   : {})}
-                className="plate-hot inline-flex items-center gap-2 px-5 py-2.5 font-display text-sm font-bold tracking-widest text-asphalt uppercase outline-none transition-[filter] duration-(--duration-snap) ease-(--ease-mech) hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+                className={
+                  isPrimary
+                    ? "plate-hot inline-flex items-center gap-2 px-5 py-2.5 font-display text-sm font-bold tracking-widest text-asphalt uppercase outline-none transition-[filter] duration-(--duration-snap) ease-(--ease-mech) hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+                    : "plate ts-hard inline-flex items-center gap-2 px-5 py-2.5 font-display text-sm font-bold tracking-widest text-gt-bright uppercase outline-none transition-colors duration-(--duration-snap) ease-(--ease-mech) hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
+                }
               >
                 <span>
                   {[VERB_BY_CHANNEL[control.channel], control.label]

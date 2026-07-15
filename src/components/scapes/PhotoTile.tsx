@@ -2,13 +2,41 @@ import Image from "next/image";
 import type { Photo } from "../../../content/photos";
 import { crossLinksForPhoto } from "./crossLinks";
 import { LinkChip } from "./LinkChip";
+import { ViewfinderFrame } from "./ViewfinderFrame";
+
+interface PhotoTileProps {
+  photo: Photo;
+  /**
+   * Position of this tile among the placeholders shown in its category
+   * section (0-based). Only set for `photo.placeholder` tiles — drives the
+   * roll/frame-number captions so a capped section doesn't repeat "Roll 01"
+   * twice. Ignored for real photos.
+   */
+  rollIndex?: number;
+}
 
 /**
- * One gallery tile: the image plus a GT photo-mode info-plate that slides up
- * on hover OR keyboard focus (never hover-only). The tile is focusable and any
- * cross-link chips inside are reachable by tab.
+ * One gallery tile. Real photos render as the GT photo-mode figure: an
+ * image plus an info-plate that slides up on hover OR keyboard focus, with
+ * the tile itself focusable and any cross-link chips reachable by tab.
+ * Placeholder ("not yet developed") slots render a purely decorative,
+ * non-interactive viewfinder frame instead — there is nothing to focus
+ * into yet, so they are `aria-hidden` and out of the tab order.
  */
-export function PhotoTile({ photo }: { photo: Photo }) {
+export function PhotoTile({ photo, rollIndex }: PhotoTileProps) {
+  if (photo.placeholder) {
+    const ordinal = String((rollIndex ?? 0) + 1).padStart(2, "0");
+    return (
+      <div className="mb-4 block break-inside-avoid">
+        <ViewfinderFrame
+          aspectRatio={`${photo.width} / ${photo.height}`}
+          rollLabel={`Roll ${ordinal}`}
+          frameNumber={`${ordinal}A`}
+        />
+      </div>
+    );
+  }
+
   const links = crossLinksForPhoto(photo);
   const metaLine = [photo.location, photo.date].filter(Boolean).join(" · ");
 
@@ -18,12 +46,6 @@ export function PhotoTile({ photo }: { photo: Photo }) {
       aria-label={photo.title}
       className="group relative mb-4 block break-inside-avoid overflow-hidden border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)] outline-none focus-visible:ring-2 focus-visible:ring-gt-bright"
     >
-      {photo.placeholder ? (
-        <span className="ts-hard absolute top-2 left-2 z-10 border border-steel bg-asphalt/80 px-1.5 py-0.5 font-display text-xs font-black tracking-widest text-silver uppercase">
-          Placeholder
-        </span>
-      ) : null}
-
       <Image
         src={photo.src}
         alt={photo.title}

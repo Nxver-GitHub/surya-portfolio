@@ -10,8 +10,9 @@ interface RoomStatusPanelProps {
 
 /**
  * GT online-lobby room-info block: room name/region on a stamped plate,
- * status chips rendered as lozenges — the "what's this player up to" strip
- * a multiplayer lobby shows before you join.
+ * status chips rendered as non-interactive black keyline chips (same
+ * vocabulary as the drivetrain/tech chips elsewhere) — the "what's this
+ * player up to" strip a multiplayer lobby shows before you join.
  */
 export function RoomStatusPanel({ room, chips, livery }: RoomStatusPanelProps) {
   return (
@@ -40,7 +41,7 @@ export function RoomStatusPanel({ room, chips, livery }: RoomStatusPanelProps) {
         <ul className="flex flex-wrap gap-2" aria-label="Current status">
           {chips.map((chip) => (
             <li key={chip.label}>
-              <span className="lozenge inline-block px-3 py-1.5 font-display text-xs font-bold tracking-widest text-asphalt uppercase">
+              <span className="ts-hard inline-block border border-gt/60 bg-asphalt px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase">
                 {chip.label}
               </span>
             </li>

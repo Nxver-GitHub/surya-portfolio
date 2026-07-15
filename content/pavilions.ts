@@ -70,7 +70,7 @@ export const pavilions: readonly Pavilion[] = [
     slug: "scapes",
     name: "Scapes",
     caption: "Photography & interests",
-    status: "open",
+    status: "locked",
     map: { x: 61.2, y: 85.7 },
     labelSide: "bottom",
     livery: "leyton",
