@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import {
   openCount,
   pavilions,
@@ -23,7 +22,6 @@ const CIRCUIT_PATH =
   "Q 175 290 205 261 Q 236 231 206 196 L 178 166 Q 150 152 150 130 Z";
 
 export function CircuitMap() {
-  const [active, setActive] = useState<Pavilion | null>(null);
   const { noticedId, notify } = useLockedNotice();
 
   return (
@@ -96,6 +94,13 @@ export function CircuitMap() {
               >
                 {p.name}
               </span>
+              <span
+                className={`mt-0.5 line-clamp-2 max-w-[16ch] text-center font-display text-xs leading-tight font-medium text-balance ${
+                  open ? "text-silver" : "text-silver/70"
+                }`}
+              >
+                {p.caption}
+              </span>
             </>
           );
 
@@ -108,10 +113,6 @@ export function CircuitMap() {
               {open ? (
                 <Link
                   href={`/${p.slug}`}
-                  onMouseEnter={() => setActive(p)}
-                  onMouseLeave={() => setActive(null)}
-                  onFocus={() => setActive(p)}
-                  onBlur={() => setActive(null)}
                   className={`group absolute flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-gt-bright ${LABEL_SIDE_CLASSES[p.labelSide]}`}
                 >
                   {inner}
@@ -121,10 +122,6 @@ export function CircuitMap() {
                   type="button"
                   aria-disabled="true"
                   aria-label={`${p.name} — locked, unlocks soon`}
-                  onMouseEnter={() => setActive(p)}
-                  onMouseLeave={() => setActive(null)}
-                  onFocus={() => setActive(p)}
-                  onBlur={() => setActive(null)}
                   onClick={() => notify(p.id)}
                   className={`group absolute flex cursor-not-allowed flex-col outline-none focus-visible:ring-2 focus-visible:ring-gt-bright ${LABEL_SIDE_CLASSES[p.labelSide]} ${
                     noticedId === p.id ? "locked-shake" : ""
@@ -146,18 +143,8 @@ export function CircuitMap() {
         })}
       </div>
 
-      {/* GT2 bottom status bar */}
-      <div className="mx-auto mt-6 flex w-full max-w-5xl items-center justify-between border-t border-steel pt-3">
-        <p className="ts-hard font-display text-base font-bold tracking-wider uppercase">
-          {active ? (
-            <>
-              <span className="text-gt-bright">{active.name}</span>
-              <span className="text-silver"> · {active.caption}</span>
-            </>
-          ) : (
-            <span className="text-silver">Select a pavilion</span>
-          )}
-        </p>
+      {/* GT2 bottom status bar: open-pavilion count, matches mobile PavilionList footer */}
+      <div className="mx-auto mt-6 flex w-full max-w-5xl items-center justify-end border-t border-steel pt-3">
         <p className="lozenge px-4 py-1 font-display text-sm font-bold tracking-widest text-asphalt uppercase">
           {openCount}/{pavilions.length} open
         </p>
