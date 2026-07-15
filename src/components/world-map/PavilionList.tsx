@@ -16,6 +16,7 @@ export function PavilionList() {
           <Link
             key={p.id}
             href={`/${p.slug}`}
+            data-sfx="confirm"
             className="plate group flex items-center gap-4 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gt-bright"
           >
             <LicenseBadge glyph={p.glyph} livery={p.livery} size={48} />
