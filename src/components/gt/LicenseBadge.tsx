@@ -30,7 +30,7 @@ export function LicenseBadge({
     >
       <span className="badge-face flex h-full w-full items-center justify-center">
         <span
-          className="font-display leading-none font-black italic"
+          className="font-display leading-none font-black tracking-wide not-italic"
           style={{
             fontSize: size * 0.34,
             color: rim,

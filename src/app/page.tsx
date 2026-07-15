@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BootSequence } from "@/components/boot/BootSequence";
 import { GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { CircuitMap } from "@/components/world-map/CircuitMap";
@@ -18,9 +19,15 @@ export default function Home() {
       <main className="flex flex-1 flex-col">
         <div className="mt-10 md:mt-12">
           <GtTitle>World Map</GtTitle>
-          <p className="mt-3 mb-8 text-base text-silver md:mb-10">
+          <p className="mt-3 text-base text-silver">
             Pick a pavilion to explore work, skills, and projects.
           </p>
+          <Link
+            href="/cafe"
+            className="plate ts-hard mt-4 mb-8 inline-block px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright md:mb-10"
+          >
+            New here? → Start with the GT Café menus
+          </Link>
         </div>
 
         {/* Desktop: circuit map. Mobile: plate-button menu. */}
