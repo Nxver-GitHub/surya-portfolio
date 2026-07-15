@@ -51,9 +51,10 @@ export interface EventsRedis {
 
 /* ────────────────────────────── pure helpers ───────────────────────────── */
 
-/** Trim then truncate a question to {@link QUESTION_MAX} chars. Pure. */
+/** Trim then truncate a question to {@link QUESTION_MAX} code points — code
+ * points, not UTF-16 units, so a cut never strands half a surrogate pair. */
 export function truncateQuestion(raw: string, max: number = QUESTION_MAX): string {
-  return raw.trim().slice(0, max);
+  return Array.from(raw.trim()).slice(0, max).join("");
 }
 
 /** yyyymmdd stamp (UTC) for the given date. Pure. */

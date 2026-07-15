@@ -135,13 +135,15 @@ export const IP_FALLBACK = "unknown";
 export function extractClientIp(
   getHeader: (name: string) => string | null,
 ): string {
+  // x-real-ip first: on Vercel it is platform-set and never client-appended,
+  // so it stays trustworthy even if XFF handling ever changes upstream.
+  const real = getHeader("x-real-ip");
+  if (real && real.trim()) return real.trim();
   const xff = getHeader("x-forwarded-for");
   if (xff) {
     const first = xff.split(",")[0]?.trim();
     if (first) return first;
   }
-  const real = getHeader("x-real-ip");
-  if (real && real.trim()) return real.trim();
   return IP_FALLBACK;
 }
 

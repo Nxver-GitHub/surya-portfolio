@@ -39,8 +39,13 @@ export const MAX_PASSPHRASE_CHARS = 256;
 /** Per-IP login attempts allowed per hour. Stricter than guest chat by design —
  * the owner logs in rarely; brute force gets ~5 tries an hour, then 429. */
 export const LOGIN_LIMIT_PER_HOUR = 5;
+/** Global floor across ALL IPs — defense-in-depth if per-IP keying is ever
+ * weakened (proxy misconfig, self-hosting). The owner can't hit this alone;
+ * a distributed guesser can't get past it. */
+export const LOGIN_LIMIT_GLOBAL_PER_HOUR = 100;
 /** Redis key prefix for the login limiter — namespaced away from cafeterm:. */
 export const LOGIN_KEY_PREFIX = "adminlogin:ip:hour";
+export const LOGIN_GLOBAL_KEY_PREFIX = "adminlogin:global:hour";
 
 export const loginRequestSchema = z
   .object({
@@ -80,15 +85,26 @@ export function loginConfigured(env: LoginEnv): boolean {
   );
 }
 
-let cachedLimiter: Ratelimit | null = null;
-function getLoginLimiter(url: string, token: string): Ratelimit {
-  if (cachedLimiter) return cachedLimiter;
-  cachedLimiter = new Ratelimit({
-    redis: new Redis({ url, token }),
-    limiter: Ratelimit.slidingWindow(LOGIN_LIMIT_PER_HOUR, "1 h"),
-    prefix: LOGIN_KEY_PREFIX,
-  });
-  return cachedLimiter;
+let cachedLimiters: { perIp: Ratelimit; global: Ratelimit } | null = null;
+function getLoginLimiters(
+  url: string,
+  token: string,
+): { perIp: Ratelimit; global: Ratelimit } {
+  if (cachedLimiters) return cachedLimiters;
+  const redis = new Redis({ url, token });
+  cachedLimiters = {
+    perIp: new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(LOGIN_LIMIT_PER_HOUR, "1 h"),
+      prefix: LOGIN_KEY_PREFIX,
+    }),
+    global: new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(LOGIN_LIMIT_GLOBAL_PER_HOUR, "1 h"),
+      prefix: LOGIN_GLOBAL_KEY_PREFIX,
+    }),
+  };
+  return cachedLimiters;
 }
 
 function json(body: unknown, status: number, headers?: HeadersInit): Response {
@@ -123,13 +139,17 @@ export async function POST(request: Request): Promise<Response> {
   // Rate limit BEFORE the expensive scrypt — fail CLOSED on any backend error.
   const ip = extractClientIp((name) => request.headers.get(name));
   try {
-    const limiter = getLoginLimiter(
+    const limiters = getLoginLimiters(
       env.UPSTASH_REDIS_REST_URL as string,
       env.UPSTASH_REDIS_REST_TOKEN as string,
     );
-    const res = await limiter.limit(ip);
-    if (!res.success) {
-      const retry = retryAfterSeconds(res.reset);
+    const [ipRes, globalRes] = await Promise.all([
+      limiters.perIp.limit(ip),
+      limiters.global.limit("all"),
+    ]);
+    if (!ipRes.success || !globalRes.success) {
+      const reset = Math.max(ipRes.reset, globalRes.reset);
+      const retry = retryAfterSeconds(reset);
       return json(
         { error: "RATE_LIMITED", retryAfterSeconds: retry },
         429,

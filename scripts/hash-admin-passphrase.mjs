@@ -12,8 +12,9 @@
  *   node scripts/hash-admin-passphrase.mjs
  *     → prompts for the passphrase (twice, to confirm), prints salt:hash
  *
- *   echo -n "my passphrase" | node scripts/hash-admin-passphrase.mjs --stdin
- *     → non-interactive (CI / password manager pipe); prints salt:hash
+ *   op read "op://vault/site-admin/password" | node scripts/hash-admin-passphrase.mjs --stdin
+ *     → non-interactive via a password-manager pipe; prints salt:hash.
+ *     Never echo the passphrase on the command line — it lands in shell history.
  *
  * You ALSO need an ADMIN_SESSION_SECRET (a random HMAC key). Generate one with:
  *   node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
