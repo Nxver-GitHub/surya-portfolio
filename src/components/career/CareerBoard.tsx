@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { seasonRefs, seasons, type Season } from "../../../content/career";
 import { CarChip } from "./CarChip";
 import { MissionChip } from "./MissionChip";
 import { EventCard } from "./EventCard";
 import { OrgLogo } from "./OrgLogo";
+import { seasonTint } from "./warmth";
 
-export function CareerBoard() {
-  const [selected, setSelected] = useState<Season>(
-    seasons[seasons.length - 1],
-  );
+interface CareerBoardProps {
+  selected: Season;
+  onSelect: (season: Season) => void;
+}
+
+export function CareerBoard({ selected, onSelect }: CareerBoardProps) {
   const refs = seasonRefs(selected);
 
   return (
@@ -23,8 +25,20 @@ export function CareerBoard() {
             <button
               key={s.id}
               type="button"
-              onClick={() => setSelected(s)}
+              onClick={() => onSelect(s)}
               aria-current={isActive ? "true" : undefined}
+              style={
+                // Slim season-identity accent on the selected card only —
+                // the active state itself stays the shared plate-hot orange
+                // vocabulary; this is a secondary, quieter signal underneath it.
+                isActive
+                  ? {
+                      borderBottomWidth: "4px",
+                      borderBottomStyle: "solid",
+                      borderBottomColor: seasonTint(s.id).field,
+                    }
+                  : undefined
+              }
               className={`${
                 isActive ? "plate-hot" : "plate"
               } flex-1 px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-chrome lg:flex-none`}
@@ -71,7 +85,9 @@ export function CareerBoard() {
           <h2 className="ts-hard font-display text-sm font-bold tracking-[0.2em] text-gt-bright uppercase">
             Season briefing
           </h2>
-          <p className="mt-2 text-sm text-ink leading-snug">{selected.summary}</p>
+          <p className="mt-2 text-sm text-ink leading-snug">
+            {selected.summary}
+          </p>
 
           {refs.cars.length > 0 ? (
             <div className="mt-4">
