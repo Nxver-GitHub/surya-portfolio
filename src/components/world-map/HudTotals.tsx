@@ -31,7 +31,7 @@ export function HudTotals() {
     <div className="mt-6 w-full border-t border-steel">
       <div
         aria-label="Portfolio totals"
-        className="mx-auto flex w-full max-w-5xl items-center gap-x-2.5 overflow-x-auto px-1 py-2 font-display text-xs font-bold tracking-[0.14em] whitespace-nowrap uppercase sm:gap-x-4"
+        className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-center gap-x-2.5 gap-y-1 px-1 py-2 font-display text-xs font-bold tracking-[0.14em] whitespace-nowrap uppercase sm:justify-start sm:gap-x-4"
       >
         {SEGMENTS.map((s, i) => (
           <span key={s.label} className="flex items-center gap-x-2.5 sm:gap-x-4">

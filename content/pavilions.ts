@@ -82,8 +82,10 @@ export const pavilions: readonly Pavilion[] = [
     name: "GT Café",
     caption: "Curated reading paths for founders & VCs",
     status: "open",
+    // deepest bottom-road node: its two-line caption hangs the stack below
+    // the map box and into the HUD strip, so the label flips above the badge
     map: { x: 33, y: 89 },
-    labelSide: "bottom",
+    labelSide: "top",
     livery: "warsteiner",
     glyph: "GT",
   },
