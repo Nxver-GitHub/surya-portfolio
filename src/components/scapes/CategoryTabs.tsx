@@ -72,6 +72,7 @@ export function CategoryTabs({
             aria-selected={isActive}
             aria-controls={`scapes-panel-${category.id}`}
             tabIndex={isActive ? 0 : -1}
+            data-sfx="move"
             onClick={() => onSelect(category.id)}
             onKeyDown={(event) => onKeyDown(event, index)}
             className={`${

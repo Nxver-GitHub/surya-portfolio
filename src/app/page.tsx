@@ -25,6 +25,7 @@ export default function Home() {
           </p>
           <Link
             href="/cafe"
+            data-sfx="confirm"
             className="plate ts-hard mt-4 mb-8 inline-block px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright md:mb-10"
           >
             New here? → Start with the GT Café menus

@@ -31,6 +31,7 @@ export function LicenseTierButton({
       aria-selected={isActive}
       aria-controls="license-detail-panel"
       tabIndex={tabIndex}
+      data-sfx="move"
       onClick={() => onSelect(license.id)}
       className={`${
         isActive ? "plate-hot" : "plate"

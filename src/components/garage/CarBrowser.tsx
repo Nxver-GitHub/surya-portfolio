@@ -40,6 +40,7 @@ function CarListButton({
   return (
     <button
       type="button"
+      data-sfx="move"
       onClick={() => onSelect(car)}
       onMouseEnter={warm}
       onFocus={warm}
