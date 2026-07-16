@@ -66,10 +66,10 @@ export const licenses: readonly License[] = [
         id: "b-react-web-app",
         name: "First laps in React",
         summary:
-          "Built and shipped AInfiniteTunes, a music-player web app with an AI recommendation UI, during the Project Bracket cycle at Diablo Valley College.",
+          "Built BenefitFinder's matching UI with Vite + React in 36 hours at CruzHacks — a React web app shipped under real time pressure.",
         grade: "silver",
-        carId: "ainfinitetunes",
-        careerEventId: "project-bracket",
+        carId: "benefitfinder",
+        careerEventId: "benefitfinder-cruzhacks",
       },
       {
         id: "b-react-native-mobile",
