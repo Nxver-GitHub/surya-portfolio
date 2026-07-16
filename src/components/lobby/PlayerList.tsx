@@ -18,7 +18,8 @@ export function PlayerList({ players, livery }: PlayerListProps) {
         Player List
       </h2>
       <p className="mt-1 max-w-2xl text-sm text-silver">
-        Communities and organizations Surya is actively part of.
+        The communities and organizations on Surya&apos;s journey — where he
+        is now, and where he came up.
       </p>
 
       <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
