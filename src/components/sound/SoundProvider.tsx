@@ -9,7 +9,6 @@ import {
   useSyncExternalStore,
 } from "react";
 import { sfx, type SfxKind } from "@/lib/sfx";
-import { SoundToggle } from "./SoundToggle";
 
 const STORAGE_KEY = "surya-sfx-enabled";
 
@@ -71,8 +70,9 @@ export function useSound(): SoundContextValue {
 }
 
 /**
- * Site-wide sound layer. Renders a persistent toggle on every route (it lives
- * in the root layout) and owns the muted-by-default, gesture-gated policy:
+ * Site-wide sound layer. The persistent toggle row lives in the Options menu
+ * (OptionsMenu consumes useSound). Owns the muted-by-default, gesture-gated
+ * policy:
  *
  * - Default off. Nothing plays until the user opts in via the toggle.
  * - While sound is off, zero AudioContext exists: enabling it first is always
@@ -158,9 +158,6 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <SoundContext.Provider value={value}>
-      {children}
-      <SoundToggle enabled={enabled} onToggle={toggle} />
-    </SoundContext.Provider>
+    <SoundContext.Provider value={value}>{children}</SoundContext.Provider>
   );
 }
