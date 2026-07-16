@@ -9,9 +9,10 @@ import { SITE_URL } from "@/lib/site";
 import { saira, satoshi, sourceSerif } from "./fonts";
 import "./globals.css";
 
-const TITLE = "Surya Pugazhenthi — Builder, CS @ UCSC, VC Scout";
+const TITLE =
+  "Surya Pugazhenthi — Builder, Venture Associate @ 16VC, CS Alum @ UCSC";
 const DESCRIPTION =
-  "Portfolio of Surya Pugazhenthi: computer science student, builder of AI and web projects, hackathon regular, and venture scout in the Bay Area.";
+  "Portfolio of Surya Pugazhenthi: UCSC computer science alum, builder of AI and web projects, hackathon regular, and venture associate at 16VC in the Bay Area.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -22,8 +22,8 @@ describe("lobby room", () => {
 });
 
 describe("lobby status chips", () => {
-  it("has exactly four chips, all with non-empty labels", () => {
-    expect(statusChips).toHaveLength(4);
+  it("has exactly three chips, all with non-empty labels", () => {
+    expect(statusChips).toHaveLength(3);
     for (const chip of statusChips) {
       expect(chip.label).toBeTruthy();
     }

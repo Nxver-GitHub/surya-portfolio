@@ -28,7 +28,11 @@ export function DriverCard() {
           Surya Pugazhenthi
         </span>
         <span className="ts-hard mt-1 font-display text-xs font-medium tracking-wide text-silver">
-          Builder · CS @ UCSC · VC Scout
+          {/* Segments stay whole — wraps land on the dividers, never inside
+              a role. */}
+          <span className="whitespace-nowrap">Builder</span> ·{" "}
+          <span className="whitespace-nowrap">Venture Associate @ 16VC</span> ·{" "}
+          <span className="whitespace-nowrap">CS Alum @ UCSC</span>
         </span>
       </span>
     </Link>

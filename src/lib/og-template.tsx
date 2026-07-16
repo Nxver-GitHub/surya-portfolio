@@ -126,10 +126,12 @@ export function OgCard({ title, tagline, liveryId }: OgCardProps) {
           style={{
             display: "flex",
             marginTop: 38,
-            fontSize: 40,
+            // Long taglines drop a size so they hold one line instead of
+            // orphaning the last word onto a second row.
+            fontSize: tagline.length > 42 ? 33 : 40,
             fontWeight: 400,
             color: INK,
-            maxWidth: 900,
+            maxWidth: 1000,
           }}
         >
           {tagline}
