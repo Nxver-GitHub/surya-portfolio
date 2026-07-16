@@ -158,11 +158,17 @@ function contactBlock(): string {
     .map((c) => `${c.label}: ${c.href}`)
     .join(" | ");
   const availability = statusChips.map((s) => oneLine(s.label)).join("; ");
+  const calendly = joinControls.find((c) => c.channel === "calendly");
   return [
     "CONTACT (only these real channels — never invent others):",
     `- Paddock: ${oneLine(lobbyRoom.name)} (${oneLine(lobbyRoom.region)})`,
     `- Availability: ${availability}`,
     `- Links: ${links}`,
+    ...(calendly
+      ? [
+          `- When a visitor asks to meet, talk, collaborate, or schedule time with him, offer the booking link: ${calendly.href}`,
+        ]
+      : []),
   ].join("\n");
 }
 

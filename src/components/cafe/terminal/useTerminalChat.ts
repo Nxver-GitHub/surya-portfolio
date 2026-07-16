@@ -58,6 +58,7 @@ import {
 } from "./adminCommands";
 import { isWhoIsSurya, makePortraitLine } from "./portrait";
 import { isCafeOriginQuestion, makeCafeOriginLines } from "./cafeOrigin";
+import { isMeetupRequest, makeMeetupLines } from "./meetup";
 import {
   appendSessionLines,
   clearSessionLines,
@@ -347,6 +348,8 @@ export function useTerminalChat({
           if (isWhoIsSurya(resolved.text)) echo.push(makePortraitLine());
           else if (isCafeOriginQuestion(resolved.text))
             echo.push(...makeCafeOriginLines());
+          else if (isMeetupRequest(resolved.text))
+            echo.push(...makeMeetupLines());
           appendSessionLines(echo);
           sendMessage({ text: resolved.text });
           return;

@@ -14,7 +14,7 @@ export interface StatusChip {
   label: string;
 }
 
-export type JoinChannel = "email" | "github" | "linkedin" | "x";
+export type JoinChannel = "email" | "calendly" | "github" | "linkedin" | "x";
 
 export interface JoinControl {
   channel: JoinChannel;
@@ -48,6 +48,11 @@ export const joinControls: readonly JoinControl[] = [
     channel: "email",
     label: "Email",
     href: "mailto:suryapugaz1629@gmail.com",
+  },
+  {
+    channel: "calendly",
+    label: "a call",
+    href: "https://calendly.com/suryaoncall/surya-s-vc-scout-office-hours",
   },
   {
     channel: "github",

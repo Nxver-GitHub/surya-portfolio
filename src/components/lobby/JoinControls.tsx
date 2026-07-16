@@ -8,17 +8,18 @@ interface JoinControlsProps {
 // Email") — every other channel prefixes its label with a verb.
 const VERB_BY_CHANNEL: Record<JoinControl["channel"], string> = {
   email: "",
+  calendly: "Book",
   github: "View on",
   linkedin: "Join via",
   x: "Ping on",
 };
 
 /**
- * Join-the-lobby control row: Email is the single solid hot-plate primary
- * CTA; GitHub/LinkedIn/X are stamped black plate buttons with the standard
- * orange keyline, matching how every other pavilion reserves solid orange
- * for the one active/selected item. Email is a plain mailto link; external
- * channels open in a new tab with safe rel attributes.
+ * Join-the-lobby control row: Email and Book-a-call are the solid hot-plate
+ * primary CTAs (the two highest-intent channels — owner call, 2026-07);
+ * GitHub/LinkedIn/X are stamped black plate buttons with the standard orange
+ * keyline. Email is a plain mailto link; external channels open in a new tab
+ * with safe rel attributes.
  */
 export function JoinControls({ controls }: JoinControlsProps) {
   return (
@@ -33,7 +34,8 @@ export function JoinControls({ controls }: JoinControlsProps) {
       <ul className="mt-4 flex flex-wrap gap-3">
         {controls.map((control) => {
           const isExternal = control.channel !== "email";
-          const isPrimary = control.channel === "email";
+          const isPrimary =
+            control.channel === "email" || control.channel === "calendly";
           return (
             <li key={control.channel}>
               <a
