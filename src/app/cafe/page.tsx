@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "GT Café — Surya Pugazhenthi",
   description:
     "Curated reading paths through Surya Pugazhenthi's portfolio: guided journeys for founders, VCs, and hiring managers, each linking to the projects, competitions, roles, and photography that matter most for them.",
+  alternates: { canonical: "/cafe" },
 };
 
 export default function CafePage() {
