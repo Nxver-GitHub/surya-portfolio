@@ -254,6 +254,30 @@ export const photos: readonly Photo[] = [
     caption:
       "The 1992 McLaren-Honda MP4/7A on display at the Rolex Monterey Motorsports Reunion.",
   },
+  {
+    id: "cars-11",
+    src: "/scapes/porsche-963-changi.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Porsche 963 — Penske",
+    location: "Changi Airport, Singapore",
+    date: "October 2025",
+    caption:
+      "A Porsche Penske Motorsport 963 parked inside the Singapore airport — one way to greet arrivals on GP week.",
+  },
+  {
+    id: "cars-12",
+    src: "/scapes/singapore-gp-night.jpg",
+    width: 1125,
+    height: 2000,
+    category: "cars",
+    title: "Night race",
+    location: "Marina Bay Street Circuit, Singapore",
+    date: "October 2025",
+    caption:
+      "Trackside under the lights at the Singapore Grand Prix, watching the timing screen through the catch fence.",
+  },
 
   /* ── Life / Travel ──────────────────────────────────────────────────── */
   {
