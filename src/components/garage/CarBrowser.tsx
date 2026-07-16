@@ -7,6 +7,7 @@ import { liveries } from "../../../content/liveries";
 import { LiveryStripe } from "../livery/LiveryStripe";
 import { SceneErrorBoundary } from "../cafe/SceneErrorBoundary";
 import { GarageSceneFallback } from "./GarageSceneFallback";
+import { NowLoading } from "../gt/NowLoading";
 import { preloadCarModel } from "./preloadCarModel";
 import { EmptyBay } from "./EmptyBay";
 import { SpecSheet } from "./SpecSheet";
@@ -15,13 +16,7 @@ const GarageScene = dynamic(
   () => import("./GarageScene").then((m) => m.GarageScene),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-full min-h-64 items-center justify-center">
-        <p className="ts-hard font-display text-sm font-bold tracking-widest text-silver uppercase">
-          Rolling out…
-        </p>
-      </div>
-    ),
+    loading: () => <NowLoading label="Rolling out" />,
   },
 );
 

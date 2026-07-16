@@ -14,6 +14,7 @@ export function PavilionList() {
       {pavilions.map((p) =>
         p.status === "open" ? (
           <Link
+            transitionTypes={["nav-forward"]}
             key={p.id}
             href={`/${p.slug}`}
             data-sfx="confirm"

@@ -108,6 +108,7 @@ export function CircuitMap() {
             >
               {open ? (
                 <Link
+                  transitionTypes={["nav-forward"]}
                   href={`/${p.slug}`}
                   data-sfx="confirm"
                   className={`group absolute flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-gt-bright ${LABEL_SIDE_CLASSES[p.labelSide]}`}

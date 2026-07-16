@@ -12,6 +12,14 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    version: "1.4",
+    date: "July 2026",
+    changes: [
+      "GT2 screen wipes between pavilions — forward slides left, back slides right",
+      "NOW LOADING screens with rotating tips on the 3D routes",
+    ],
+  },
+  {
     version: "1.3",
     date: "July 2026",
     changes: [

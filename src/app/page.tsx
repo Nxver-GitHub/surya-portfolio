@@ -27,6 +27,7 @@ export default function Home() {
             Pick a pavilion to explore work, skills, and projects.
           </p>
           <Link
+            transitionTypes={["nav-forward"]}
             href="/cafe"
             data-sfx="confirm"
             className="plate ts-hard mt-4 inline-block px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"

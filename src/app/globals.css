@@ -601,3 +601,74 @@ body {
     display: none;
   }
 }
+
+/* ── GT2 screen wipe (View Transitions; see PageWipe.tsx) ─────────────────
+   Hard 200ms straight-line slide with mechanical easing — the GT2 menu
+   screen change. Forward wipes left; back (lozenge) wipes right. */
+::view-transition-old(.gt-wipe-fwd) {
+  animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both gt-slide-out-left;
+}
+::view-transition-new(.gt-wipe-fwd) {
+  animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both gt-slide-in-right;
+}
+::view-transition-old(.gt-wipe-back) {
+  animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both gt-slide-out-right;
+}
+::view-transition-new(.gt-wipe-back) {
+  animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both gt-slide-in-left;
+}
+@keyframes gt-slide-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes gt-slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes gt-slide-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes gt-slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.gt-wipe-fwd),
+  ::view-transition-new(.gt-wipe-fwd),
+  ::view-transition-old(.gt-wipe-back),
+  ::view-transition-new(.gt-wipe-back) {
+    animation: none;
+  }
+}
+
+/* ── NOW LOADING checker strip (see NowLoading.tsx) ─────────────────────── */
+.gt-checker {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      var(--color-gt-bright, #ff9d1f) 0 10px,
+      transparent 10px 20px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 10px,
+      rgba(255, 255, 255, 0.14) 10px 20px
+    );
+  background-size: 40px 100%;
+  animation: gt-checker-run 700ms linear infinite;
+}
+@keyframes gt-checker-run {
+  to {
+    background-position: 40px 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gt-checker {
+    animation: none;
+  }
+}

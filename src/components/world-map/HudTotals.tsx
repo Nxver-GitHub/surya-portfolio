@@ -46,6 +46,7 @@ export function HudTotals() {
             <span key={s.label} className="flex items-center gap-x-2.5 sm:gap-x-4">
               {i > 0 ? <Divider /> : null}
               <Link
+                transitionTypes={["nav-forward"]}
                 href={s.href}
                 className="ts-hard group inline-flex items-baseline gap-1.5 text-silver outline-none hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
               >
