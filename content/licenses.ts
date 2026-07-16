@@ -140,15 +140,17 @@ export const licenses: readonly License[] = [
         id: "ib-r3f-scenes",
         name: "3D on the grid",
         summary:
-          "Building this portfolio's interactive garage in React Three Fiber — lazy-loaded 3D car scenes with hover, camera moves, and data-bound spec sheets.",
-        grade: "inprogress",
+          "Built this site's 3D in React Three Fiber: the GT Café museum room, the garage's inspectable hero cars, and the boot-intro montage — lazy-loaded scenes, camera rigs, and data-bound spec sheets, live in production.",
+        grade: "gold",
+        carId: "racing-portfolio",
       },
       {
         id: "ib-gltf-pipeline",
         name: "Blender to glTF",
         summary:
-          "Standing up the Blender → compressed glTF → gltfjsx pipeline (Draco/meshopt) that turns modeled cars into typed R3F components. Deepening as the 3D scenes ship.",
-        grade: "inprogress",
+          "Runs the Blender → meshopt-compressed glTF → gltfjsx pipeline behind the café and garage: lighting baked in Blender, exports validated, models landing as typed R3F components.",
+        grade: "silver",
+        carId: "racing-portfolio",
       },
     ],
   },
