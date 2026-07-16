@@ -15,7 +15,8 @@ export const changelog: readonly ChangelogEntry[] = [
     version: "1.1",
     date: "July 2026",
     changes: [
-      "Scapes: first real photo roll — twelve Cars frames, from SpeedVegas to Monterey Car Week to the Singapore GP",
+      "Scapes: first real photo roll — fourteen Cars frames, from SpeedVegas to Monterey Car Week to the Singapore GP",
+      "GT Café origin revealed: inspired by Motoring Coffee, SF — see the note on the café page, or ask the terminal",
       "New profile photo across the site, license-card style",
     ],
   },

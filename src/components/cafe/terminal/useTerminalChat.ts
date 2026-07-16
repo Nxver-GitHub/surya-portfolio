@@ -57,6 +57,7 @@ import {
   resolveAdminCommand,
 } from "./adminCommands";
 import { isWhoIsSurya, makePortraitLine } from "./portrait";
+import { isCafeOriginQuestion, makeCafeOriginLines } from "./cafeOrigin";
 import {
   appendSessionLines,
   clearSessionLines,
@@ -337,12 +338,15 @@ export function useTerminalChat({
           // Echo the user line into the scrollback NOW, so anything that
           // follows (streamed reply, themed error, a later command) renders
           // after it in true session order. When the visitor asks who Surya is,
-          // drop the portrait card right after the echo (the question still
-          // goes to the model for a real answer).
+          // drop the portrait card right after the echo; when they ask what
+          // the café is based on, drop the Motoring Coffee photos (the
+          // question still goes to the model for a real answer either way).
           const echo: TerminalLine[] = [
             makeLine("prompt", `${prompt}${resolved.text}`),
           ];
           if (isWhoIsSurya(resolved.text)) echo.push(makePortraitLine());
+          else if (isCafeOriginQuestion(resolved.text))
+            echo.push(...makeCafeOriginLines());
           appendSessionLines(echo);
           sendMessage({ text: resolved.text });
           return;

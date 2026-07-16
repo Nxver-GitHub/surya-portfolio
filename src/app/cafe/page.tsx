@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
 import { CafeBrowser } from "@/components/cafe/CafeBrowser";
+import { CafeOriginNote } from "@/components/cafe/CafeOriginNote";
 
 export const metadata: Metadata = {
   title: "GT Café — Surya Pugazhenthi",
@@ -29,6 +30,7 @@ export default function CafePage() {
             specific guest — founders, VCs, hiring managers — pointing you at
             the work worth seeing first.
           </p>
+          <CafeOriginNote />
         </div>
 
         <Suspense fallback={null}>

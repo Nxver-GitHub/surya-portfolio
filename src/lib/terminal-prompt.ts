@@ -139,6 +139,19 @@ function menuBooksBlock(): string {
   return lines.join("\n");
 }
 
+/**
+ * The café's own origin story — so the terminal answers "what is this café
+ * based on?" with the real fact instead of "not on file". Tiny and
+ * load-bearing; ordered first so no future cap can drop it.
+ */
+function cafeOriginBlock(): string {
+  return [
+    "THE CAFE ITSELF (origin):",
+    "- The GT Cafe pavilion was inspired by the owner's visit to Motoring Coffee, a car-culture coffee shop in San Francisco with a vintage green Lancia Fulvia parked inside.",
+    "- That visit is why this site's cafe exists (and why a Lancia sits in it). Photos from the visit hang in Scapes (Cars) and appear beside this answer.",
+  ].join("\n");
+}
+
 /** Contact channels and current availability — the real links from lobby.ts. */
 function contactBlock(): string {
   const links = joinControls
@@ -160,6 +173,7 @@ function contactBlock(): string {
  */
 export function buildFactsDigest(cap: number = DIGEST_CHAR_CAP): string {
   const blocks = [
+    cafeOriginBlock(), // tiny; first so it always survives the cap
     contactBlock(),
     careerBlock(), // who he is / current roles — must survive any future cap
     projectsBlock(),

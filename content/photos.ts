@@ -278,6 +278,28 @@ export const photos: readonly Photo[] = [
     caption:
       "Trackside under the lights at the Singapore Grand Prix, watching the timing screen through the catch fence.",
   },
+  {
+    id: "cars-13",
+    src: "/scapes/motoring-coffee-fulvia.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Motoring Coffee — the Fulvia",
+    location: "Motoring Coffee, San Francisco",
+    caption:
+      "Fun fact: this visit inspired the GT Café pavilion on this site. A coffee shop with a green Lancia Fulvia parked on the rug — of course it did.",
+  },
+  {
+    id: "cars-14",
+    src: "/scapes/motoring-coffee-bar.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Motoring Coffee — the bar",
+    location: "Motoring Coffee, San Francisco",
+    caption:
+      "Cibié lamps up front, espresso menu behind — the exact energy the GT Café chases.",
+  },
 
   /* ── Life / Travel ──────────────────────────────────────────────────── */
   {
