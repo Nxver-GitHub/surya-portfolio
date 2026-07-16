@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Scapes — Surya Pugazhenthi",
   description:
     "Photography and interests: nature, cars, and life on the road. A gallery of frames, some tied to the projects and events they sit alongside.",
+  alternates: { canonical: "/scapes" },
 };
 
 const scapesPavilion = pavilions.find((p) => p.slug === "scapes");

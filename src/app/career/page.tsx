@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Career — Surya Pugazhenthi",
   description:
     "Surya Pugazhenthi's education and work history: Diablo Valley College, UC Santa Cruz, product roles, hackathon wins, and venture scouting — season by season.",
+  alternates: { canonical: "/career" },
 };
 
 export default function CareerPage() {

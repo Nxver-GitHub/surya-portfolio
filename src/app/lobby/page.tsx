@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Online Lobby — Surya Pugazhenthi",
   description:
     "Contact Surya Pugazhenthi and see the communities and organizations he's active in — email, GitHub, LinkedIn, and X, plus the venture and builder circles he's part of.",
+  alternates: { canonical: "/lobby" },
 };
 
 const lobbyPavilion = pavilions.find((p) => p.slug === "lobby");

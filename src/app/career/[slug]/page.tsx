@@ -25,6 +25,7 @@ export async function generateMetadata({
   return {
     title: `${found.event.title} — Career — Surya Pugazhenthi`,
     description: `${found.event.role} at ${found.event.org} (${found.event.dates}): ${found.event.result}.`,
+    alternates: { canonical: `/career/${slug}` },
   };
 }
 

@@ -3,13 +3,28 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { SoundProvider } from "@/components/sound/SoundProvider";
 import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
+import { SITE_URL } from "@/lib/site";
 import { saira, satoshi, sourceSerif } from "./fonts";
 import "./globals.css";
 
+const TITLE = "Surya Pugazhenthi — Builder, CS @ UCSC, VC Scout";
+const DESCRIPTION =
+  "Portfolio of Surya Pugazhenthi: computer science student, builder of AI and web projects, hackathon regular, and venture scout in the Bay Area.";
+
 export const metadata: Metadata = {
-  title: "Surya Pugazhenthi — Builder, CS @ UCSC, VC Scout",
-  description:
-    "Portfolio of Surya Pugazhenthi: computer science student, builder of AI and web projects, hackathon regular, and venture scout in the Bay Area.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    siteName: "Surya Pugazhenthi",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({
