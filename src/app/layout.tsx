@@ -2,6 +2,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { SoundProvider } from "@/components/sound/SoundProvider";
+import { CrtLayer } from "@/components/crt/CrtLayer";
+import { OptionsMenu } from "@/components/options/OptionsMenu";
 import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
 import { SITE_URL } from "@/lib/site";
 import { saira, satoshi, sourceSerif } from "./fonts";
@@ -35,10 +37,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-crt="on"
       className={`${satoshi.variable} ${saira.variable} ${sourceSerif.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <SoundProvider>{children}</SoundProvider>
+        <SoundProvider>
+          {children}
+          <OptionsMenu />
+        </SoundProvider>
+        <CrtLayer />
         <PageViewBeacon />
         <Analytics />
         <SpeedInsights />
