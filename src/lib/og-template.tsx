@@ -28,9 +28,9 @@ const GRID_TILE = encodeURIComponent(
 const GRID_SVG_URL = `data:image/svg+xml,${GRID_TILE}`;
 
 function titleFontSize(title: string): number {
-  if (title.length <= 12) return 104;
-  if (title.length <= 18) return 82;
-  return 62;
+  if (title.length <= 12) return 138;
+  if (title.length <= 18) return 106;
+  return 80;
 }
 
 export interface OgCardProps {
@@ -82,7 +82,9 @@ export function OgCard({ title, tagline, liveryId }: OgCardProps) {
         style={{
           display: "flex",
           flexDirection: "column",
-          maxWidth: 980,
+          justifyContent: "center",
+          flexGrow: 1,
+          maxWidth: 1010,
         }}
       >
         <div
@@ -94,28 +96,28 @@ export function OgCard({ title, tagline, liveryId }: OgCardProps) {
             lineHeight: 1.05,
             letterSpacing: "-0.01em",
             color: CHROME,
-            textShadow: "3px 3px 0 rgba(0,0,0,0.95), 4px 5px 6px rgba(0,0,0,0.55)",
+            textShadow: "4px 4px 0 rgba(0,0,0,0.95), 5px 6px 8px rgba(0,0,0,0.55)",
           }}
         >
           {title}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "row", marginTop: 20 }}>
+        <div style={{ display: "flex", flexDirection: "row", marginTop: 26 }}>
           <div
             style={{
               display: "flex",
-              width: 132,
-              height: 6,
+              width: 190,
+              height: 8,
               background: ACCENT_RED,
             }}
           />
           <div
             style={{
               display: "flex",
-              width: 22,
-              height: 6,
+              width: 30,
+              height: 8,
               background: ACCENT_RED,
-              transform: "rotate(-38deg) translateX(4px)",
+              transform: "rotate(-38deg) translateX(6px)",
             }}
           />
         </div>
@@ -123,31 +125,15 @@ export function OgCard({ title, tagline, liveryId }: OgCardProps) {
         <div
           style={{
             display: "flex",
-            marginTop: 32,
-            fontSize: 32,
+            marginTop: 38,
+            fontSize: 40,
             fontWeight: 400,
             color: INK,
-            maxWidth: 820,
+            maxWidth: 900,
           }}
         >
           {tagline}
         </div>
-
-        {livery ? (
-          <div style={{ display: "flex", flexDirection: "row", marginTop: 36, gap: 10 }}>
-            {livery.bars.map((color, i) => (
-              <div
-                key={`${color}-${i}`}
-                style={{
-                  display: "flex",
-                  width: 56,
-                  height: 14,
-                  background: color,
-                }}
-              />
-            ))}
-          </div>
-        ) : null}
       </div>
 
       <div
@@ -156,12 +142,13 @@ export function OgCard({ title, tagline, liveryId }: OgCardProps) {
           flexDirection: "row",
           justifyContent: "flex-end",
           alignItems: "center",
+          marginBottom: 14,
         }}
       >
         <div
           style={{
             display: "flex",
-            fontSize: 22,
+            fontSize: 24,
             fontWeight: 400,
             letterSpacing: "0.14em",
             color: SILVER,
@@ -169,6 +156,39 @@ export function OgCard({ title, tagline, liveryId }: OgCardProps) {
         >
           {SITE_LABEL}
         </div>
+      </div>
+
+      {/* Full-width livery band anchoring the bottom edge — the site's
+          LiveryStripe language (skewed bars, 3:1 lead segment). The flagship
+          card carries the GT system band instead of a pavilion livery. */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 26,
+          display: "flex",
+          flexDirection: "row",
+          overflow: "hidden",
+        }}
+      >
+        {(livery?.bars ?? [GT_ORANGE_LIGHT, GT_ORANGE, GT_ORANGE_DARK]).map(
+          (color, i, bars) => (
+            <div
+              key={`${color}-${i}`}
+              style={{
+                display: "flex",
+                height: "100%",
+                flexGrow: i === 0 ? 3 : 1,
+                background: color,
+                transform: "skewX(-24deg) scaleX(1.2)",
+                marginLeft: i === 0 ? -30 : 0,
+                marginRight: i === bars.length - 1 ? -30 : 0,
+              }}
+            />
+          ),
+        )}
       </div>
     </div>
   );
