@@ -1,10 +1,12 @@
 /**
- * loginMachine — the boot login fiction (E11), as a pure step function.
+ * loginMachine — the boot login flow (E11), as a pure step function.
  *
  * Boot ends at `CAFE-OS login:`. `guest` (or an empty Enter) starts the guest
- * shell; `admin` moves to a password prompt whose every submission is denied
- * in character (there is NO real auth here — the admin console is a future,
- * properly-authenticated story). Pure: (state, input) → (next state, lines).
+ * shell; `admin` moves to a password prompt. The password SUBMISSION itself is
+ * NOT handled here — it is async (verified against /api/admin/login) and owned
+ * by adminLogin.ts + useTerminalChat. This step function stays pure and covers
+ * only the synchronous account-selection transitions:
+ * (state, input) → (next state, lines).
  */
 
 import { makeLine, type TerminalLine } from "./terminalLines";
@@ -30,18 +32,11 @@ export function handleLoginInput(
   current: LoginState,
   input: string,
 ): LoginStepResult {
-  if (current === "authed") return { next: "authed", lines: [] };
-
-  if (current === "password") {
-    // Every password is denied in character — there is no real admin auth here.
-    return {
-      next: "login",
-      lines: [
-        makeLine("prompt", "password: ••••••"),
-        makeLine("error", "ACCESS DENIED — admin console offline. guest services only."),
-        makeLine("system", LOGIN_PROMPT),
-      ],
-    };
+  // Authed guest shell and authed admin console are terminal steps here; the
+  // password submission is verified asynchronously elsewhere (adminLogin.ts),
+  // so this pure step never resolves it — it is a no-op passthrough.
+  if (current === "authed" || current === "admin" || current === "password") {
+    return { next: current, lines: [] };
   }
 
   // current === "login"

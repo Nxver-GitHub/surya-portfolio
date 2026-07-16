@@ -1,14 +1,11 @@
 import { describe, expect, it } from "vitest";
-import {
-  LOGIN_PROMPT,
-  handleLoginInput,
-} from "../src/components/cafe/terminal/loginMachine";
+import { handleLoginInput } from "../src/components/cafe/terminal/loginMachine";
 
 /**
- * SPEC (not the current stub) — see task brief. The stub logs every input
- * straight into "authed" with a single system line, so most cases below
- * fail against it today. Each failure must be an assertion mismatch, never
- * an import/type/runtime error.
+ * The pure account-selection step of the login flow. The password SUBMISSION
+ * is no longer resolved here — it is verified asynchronously against the real
+ * auth route (see adminLogin + tests/terminal-admin-login.test.ts), so this
+ * step function treats `password` (and both authed states) as no-op passthrough.
  */
 describe("loginMachine — spec", () => {
   describe("guest login", () => {
@@ -87,30 +84,25 @@ describe("loginMachine — spec", () => {
     });
   });
 
-  describe("password prompt -> always denied", () => {
-    it("'hunter2' -> back to login, masked echo, denial, re-prompt", () => {
+  describe("password submission is async elsewhere — pure step is a no-op", () => {
+    it("'hunter2' at the password step neither denies nor grants here", () => {
       const result = handleLoginInput("password", "hunter2");
-      expect(result.next).toBe("login");
-      expect(result.lines).toHaveLength(3);
-
-      expect(result.lines[0].tone).toBe("prompt");
-      expect(result.lines[0].text).toBe("password: ••••••");
-      expect(result.lines[0].text).not.toContain("hunter2");
-
-      expect(result.lines[1].tone).toBe("error");
-      expect(result.lines[1].text).toBe(
-        "ACCESS DENIED — admin console offline. guest services only.",
-      );
-
-      expect(result.lines[2].tone).toBe("system");
-      expect(result.lines[2].text).toBe(LOGIN_PROMPT);
+      // The real verify is async (adminLogin.requestAdminLogin); this pure step
+      // must NOT resolve it, and must never echo/leak the secret.
+      expect(result).toEqual({ next: "password", lines: [] });
+      expect(JSON.stringify(result)).not.toContain("hunter2");
     });
   });
 
   describe("authed passthrough", () => {
-    it("any input while authed is a no-op step", () => {
+    it("any input while authed (guest) is a no-op step", () => {
       const result = handleLoginInput("authed", "anything");
       expect(result).toEqual({ next: "authed", lines: [] });
+    });
+
+    it("any input while in the admin console is a no-op step", () => {
+      const result = handleLoginInput("admin", "logs");
+      expect(result).toEqual({ next: "admin", lines: [] });
     });
   });
 });

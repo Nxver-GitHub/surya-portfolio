@@ -18,6 +18,13 @@ export interface TerminalLine {
   /** Optional image card rendered with the line (e.g. the portrait). The
    * texture mirror (CrtScreenFeed) ignores media and paints `text` only. */
   media?: { readonly src: string; readonly alt: string };
+  /** When true, `text` is rendered VERBATIM — never linkified, never parsed as
+   * anything but literal characters. Set on any line whose text is attacker-
+   * controlled (e.g. anonymized guest questions in the admin `logs` view), so
+   * no substring can be turned into a link and no markup can ever be honoured.
+   * The renderer still escapes via React text children; this additionally
+   * bypasses the allowlist linkifier. */
+  verbatim?: boolean;
 }
 
 let lineSeq = 0;
@@ -35,6 +42,12 @@ export function makeLine(tone: LineTone, text: string): TerminalLine {
 /** Build several lines of the same tone at once (e.g. a command's output). */
 export function makeLines(tone: LineTone, texts: readonly string[]): TerminalLine[] {
   return texts.map((t) => makeLine(tone, t));
+}
+
+/** Build a VERBATIM line: `text` is rendered as literal characters only, with
+ * the linkifier bypassed. Use for attacker-controlled content (admin logs). */
+export function makeRawLine(tone: LineTone, text: string): TerminalLine {
+  return { id: nextLineId(), tone, text, verbatim: true };
 }
 
 /** Build a line carrying an image card (caption in `text`, may be empty). */
