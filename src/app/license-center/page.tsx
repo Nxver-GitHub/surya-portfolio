@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "License Center — Surya Pugazhenthi",
   description:
     "Surya Pugazhenthi's skills as license tiers, each backed by real work: front-end fundamentals, full-stack shipping, WebGL/Three.js, AI agents, and venture — with links to the projects, competitions, and roles that prove them.",
+  alternates: { canonical: "/license-center" },
 };
 
 export default function LicenseCenterPage() {

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Garage — Surya Pugazhenthi",
   description:
     "Surya Pugazhenthi's projects: Nodegent, TripWeaver, Credence, BenefitFinder, Calendarize, ClientSight, and more — each with tech stack, impact, and results.",
+  alternates: { canonical: "/garage" },
 };
 
 export default function GaragePage() {

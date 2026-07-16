@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   title: "Missions — Surya Pugazhenthi",
   description:
     "Hackathons and competitions: CruzHacks 2025, SlugAI Pitch Competition, Locus Agentic Payments, EF Marketing Agents — all podium finishes.",
+  alternates: { canonical: "/missions" },
 };
 
 const STAMP_STYLES: Record<Mission["stamp"], string> = {
