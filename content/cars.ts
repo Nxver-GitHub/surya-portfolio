@@ -275,6 +275,38 @@ export const cars: readonly Car[] = [
     careerEventSlug: "slugspace",
   },
   {
+    id: "racing-portfolio",
+    name: "Surya Racing Portfolio",
+    chassis: "GT2 menu system–inspired",
+    carClass: "Production Class",
+    status: "silhouette",
+    livery: "gulf",
+    tagline:
+      "This very site — a Gran Turismo–styled portfolio you can drive. You're sitting in it.",
+    performance: [
+      "Seven pavilions on a GT2-style world map, from a 3D garage to an AI café terminal",
+      "Baked-lighting café museum and inspectable hero cars in React Three Fiber",
+      "GT2 boot sequence, CRT screen effect, and a live sound engine",
+      "CSP-enforced, SEO-tuned, shipped to production",
+    ],
+    drivetrain: [
+      "Next.js",
+      "TypeScript",
+      "React Three Fiber",
+      "Tailwind v4",
+      "Blender",
+      "Vercel",
+    ],
+    lapRecord: "Live now — you're driving it",
+    raced: "2026 – Present",
+    links: [
+      {
+        label: "View code",
+        href: "https://github.com/Nxver-GitHub/surya-portfolio",
+      },
+    ],
+  },
+  {
     id: "stealth",
     name: "???",
     status: "locked",

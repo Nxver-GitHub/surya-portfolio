@@ -12,6 +12,15 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    version: "1.3",
+    date: "July 2026",
+    changes: [
+      "License Center rebuilt as a trophy wall — every medal is one line linking into the work that earned it",
+      "Garage spec sheets now wear their earned licenses",
+      "This site joins its own dealership: Class IB (WebGL / Three.js) earned, evidence — the car you're driving",
+    ],
+  },
+  {
     version: "1.2",
     date: "July 2026",
     changes: [
