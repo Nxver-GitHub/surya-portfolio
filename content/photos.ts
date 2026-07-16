@@ -4,10 +4,14 @@
  * ─────────────────────────────────────────────────────────────────────────
  * PLACEHOLDER STATUS
  * ─────────────────────────────────────────────────────────────────────────
- * Every entry below is a locally-generated GT-style "empty slot" placeholder
- * (see scripts/generate-scapes-placeholders.mjs). No real photography ships
- * yet. Titles/captions are deliberately placeholder-flavored ("Awaiting film
- * scan") and make NO factual claims about the owner's life or travels.
+ * The Cars category ships real photography. Nature and Life entries are
+ * still locally-generated GT-style "empty slot" placeholders (see
+ * scripts/generate-scapes-placeholders.mjs); those titles/captions are
+ * deliberately placeholder-flavored and make NO factual claims.
+ *
+ * Real photos must be re-encoded before landing in public/scapes/ — bake in
+ * EXIF orientation, resize (~2000px long edge), and STRIP metadata (phone
+ * JPEGs carry GPS; repo and site are public).
  *
  * ─────────────────────────────────────────────────────────────────────────
  * SWAP PROCEDURE — replacing a placeholder with a real photo (content-only)
@@ -135,49 +139,166 @@ export const photos: readonly Photo[] = [
   /* ── Cars ───────────────────────────────────────────────────────────── */
   {
     id: "cars-01",
-    src: "/scapes/cars-01.svg",
-    width: 1600,
-    height: 1067,
+    src: "/scapes/gt3rs-speedvegas.jpg",
+    width: 1500,
+    height: 2000,
     category: "cars",
-    title: "Reserved frame — paddock",
+    title: "991 GT3 RS — SpeedVegas",
+    location: "SpeedVegas, Las Vegas",
+    date: "Summer 2025",
     caption:
-      "Placeholder slot. Linked to the machine it echoes over in the Garage.",
-    carId: "tripweaver",
-    placeholder: true,
+      "Fun fact: I tracked this 991 GT3 RS at SpeedVegas in summer 2025. Wings like that are even better from the driver's seat.",
   },
   {
     id: "cars-02",
-    src: "/scapes/cars-02.svg",
-    width: 1067,
-    height: 1600,
+    src: "/scapes/ferrari-f1-transporter.jpg",
+    width: 1500,
+    height: 2000,
     category: "cars",
-    title: "Reserved frame — grid walk",
+    title: "Ferrari F1, unloading",
+    location: "Monterey Car Week",
+    date: "August 2025",
     caption:
-      "Placeholder slot. Cross-linked to the mission and car it belongs to.",
-    carId: "benefitfinder",
-    missionId: "cruzhacks-2025",
-    placeholder: true,
+      "A 1990s Ferrari Formula 1 car coming off the transporter — Car Week logistics you don't see from the lawn.",
   },
   {
     id: "cars-03",
-    src: "/scapes/cars-03.svg",
-    width: 1600,
-    height: 900,
+    src: "/scapes/mclaren-f1-rm-sothebys.jpg",
+    width: 1500,
+    height: 2000,
     category: "cars",
-    title: "Reserved frame — front straight",
-    date: "Awaiting scan",
-    caption: "Placeholder slot for a wide track-side frame.",
-    placeholder: true,
+    title: "McLaren F1 — RM Sotheby's",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption: "Doors up at the RM Sotheby's auction preview.",
   },
   {
     id: "cars-04",
-    src: "/scapes/cars-04.svg",
-    width: 1200,
-    height: 1200,
+    src: "/scapes/porsche-959.jpg",
+    width: 1500,
+    height: 2000,
     category: "cars",
-    title: "Reserved frame — detail",
-    caption: "Placeholder slot. Square crop reserved for a livery detail.",
-    placeholder: true,
+    title: "Porsche 959",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption:
+      "A 959 casually parked outside the hotel. During Car Week this counts as street parking.",
+  },
+  {
+    id: "cars-05",
+    src: "/scapes/carweek-golden-hour.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Golden hour, wings up",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption: "McLarens on the coast at sunset to close out Car Week.",
+  },
+  {
+    id: "cars-06",
+    src: "/scapes/930-slantnose.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "930 Turbo Slantnose",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption:
+      "A slant-nose Porsche 930 Turbo on the show lawn — louvered fenders, red interior.",
+  },
+  {
+    id: "cars-07",
+    src: "/scapes/gt3-andial-50th.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "911 GT3 — ANDIAL's 50th",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption:
+      "Porsche's stand celebrating fifty years of ANDIAL with the latest 911 GT3 hardware.",
+  },
+  {
+    id: "cars-08",
+    src: "/scapes/amg-original-teile.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "AMG Mercedes, Original-Teile",
+    location: "WeatherTech Raceway Laguna Seca",
+    date: "August 2025",
+    caption:
+      "Nineties AMG Mercedes touring car in the Original-Teile livery, resting between sessions at the Reunion.",
+  },
+  {
+    id: "cars-09",
+    src: "/scapes/lancia-martini.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Lancia Martini",
+    location: "WeatherTech Raceway Laguna Seca",
+    date: "August 2025",
+    caption: "Martini stripes in the metal at the Monterey Motorsports Reunion.",
+  },
+  {
+    id: "cars-10",
+    src: "/scapes/mclaren-mp47a.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "McLaren MP4/7A",
+    location: "WeatherTech Raceway Laguna Seca",
+    date: "August 2025",
+    caption:
+      "The 1992 McLaren-Honda MP4/7A on display at the Rolex Monterey Motorsports Reunion.",
+  },
+  {
+    id: "cars-11",
+    src: "/scapes/porsche-963-changi.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Porsche 963 — Penske",
+    location: "Changi Airport, Singapore",
+    date: "October 2025",
+    caption:
+      "A Porsche Penske Motorsport 963 parked inside the Singapore airport — one way to greet arrivals on GP week.",
+  },
+  {
+    id: "cars-12",
+    src: "/scapes/singapore-gp-night.jpg",
+    width: 1125,
+    height: 2000,
+    category: "cars",
+    title: "Night race",
+    location: "Marina Bay Street Circuit, Singapore",
+    date: "October 2025",
+    caption:
+      "Trackside under the lights at the Singapore Grand Prix, watching the timing screen through the catch fence.",
+  },
+  {
+    id: "cars-13",
+    src: "/scapes/motoring-coffee-fulvia.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Motoring Coffee — the Fulvia",
+    location: "Motoring Coffee, San Francisco",
+    caption:
+      "Fun fact: this visit inspired the GT Café pavilion on this site. A coffee shop with a green Lancia Fulvia parked on the rug — of course it did.",
+  },
+  {
+    id: "cars-14",
+    src: "/scapes/motoring-coffee-bar.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Motoring Coffee — the bar",
+    location: "Motoring Coffee, San Francisco",
+    caption:
+      "Cibié lamps up front, espresso menu behind — the exact energy the GT Café chases.",
   },
 
   /* ── Life / Travel ──────────────────────────────────────────────────── */
@@ -211,7 +332,9 @@ export const photos: readonly Photo[] = [
     category: "life",
     title: "Reserved frame — square",
     date: "Awaiting scan",
-    caption: "Placeholder slot. Square crop reserved for a candid.",
+    caption:
+      "Placeholder slot. Square crop reserved for a hackathon candid, cross-linked to its mission.",
+    missionId: "cruzhacks-2025",
     placeholder: true,
   },
   {

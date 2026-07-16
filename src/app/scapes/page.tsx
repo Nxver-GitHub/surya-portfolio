@@ -34,8 +34,8 @@ export default function ScapesPage() {
             they sit alongside.
           </p>
           <p className="mt-2 max-w-2xl text-sm text-silver/70">
-            Gallery is under construction: every frame here is a reserved slot
-            awaiting the real scan.
+            The Cars roll is in — more frames land as they come off the
+            camera. Empty frames are reserved slots.
           </p>
         </div>
 
