@@ -39,7 +39,7 @@ export const lobbyRoom: LobbyRoom = {
 
 export const statusChips: readonly StatusChip[] = [
   { label: "Open for founder chats" },
-  { label: "Available for scout collabs" },
+  { label: "Open to founder intros" },
   { label: "Exploring roles" },
   { label: "Open to hackathon teammates" },
 ];
