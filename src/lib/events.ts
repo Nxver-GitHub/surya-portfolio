@@ -4,7 +4,8 @@
  *
  * PRIVACY POLICY (enforced here, not optional):
  *   - NO IP addresses, NO session ids, NO cookies, NO user agents are ever
- *     written. NO assistant/response text is stored — only the guest's question.
+ *     written. NO assistant/response text is stored — only the question and a
+ *     coarse server-derived source tag (guest visitor vs. authenticated owner).
  *   - Question text is trimmed and truncated to {@link QUESTION_MAX} chars.
  *   - The question ring buffer is hard-capped at {@link RING_CAP} entries
  *     (LPUSH + LTRIM), so storage is bounded no matter the traffic.
@@ -30,12 +31,19 @@ export const QUESTION_MAX = 280;
 /** TTL applied to daily counters: 90 days, in seconds. */
 export const COUNTER_TTL_SECONDS = 90 * 24 * 60 * 60;
 
-/** One stored question entry — timestamp + truncated text ONLY. */
+/** Who asked the question: an anonymous visitor, or the authenticated owner.
+ * Derived SERVER-SIDE from a valid signed admin session cookie — never trusted
+ * from the client. Absent on legacy entries, which read back as "guest". */
+export type ChatSource = "guest" | "admin";
+
+/** One stored question entry — timestamp + truncated text + source tag ONLY. */
 export interface QuestionEntry {
   /** Epoch milliseconds the question was recorded. */
   readonly t: number;
   /** Trimmed + truncated question text (≤ {@link QUESTION_MAX}). */
   readonly q: string;
+  /** Server-derived origin of the question (guest visitor vs. authed admin). */
+  readonly src: ChatSource;
 }
 
 /** The minimal Redis surface these helpers need — satisfied by @upstash/redis
@@ -81,9 +89,16 @@ export function viewsKey(route: string, day: string): string {
   return `views:${route}:${day}`;
 }
 
-/** Redis key for the chat counter on a given day. Pure. */
+/** Redis key for the visitor chat counter on a given day. Pure. Guest chats
+ * ONLY — keeps real visitor analytics free of the owner's own testing. */
 export function chatsKey(day: string): string {
   return `chats:${day}`;
+}
+
+/** Redis key for the ADMIN chat counter on a given day. Pure. Owner (authed)
+ * chats increment this instead of {@link chatsKey}, so the two never mix. */
+export function adminChatsKey(day: string): string {
+  return `adminchats:${day}`;
 }
 
 /* ───────────────────────────── low-level writes ─────────────────────────── */
@@ -96,15 +111,20 @@ export function chatsKey(day: string): string {
 export async function writeChatQuestion(
   client: EventsRedis,
   question: string,
+  source: ChatSource,
   now: Date = new Date(),
 ): Promise<void> {
   const entry: QuestionEntry = {
     t: now.getTime(),
     q: truncateQuestion(question),
+    src: source,
   };
   await client.lpush(RING_KEY, JSON.stringify(entry));
   await client.ltrim(RING_KEY, 0, RING_CAP - 1);
-  const key = chatsKey(dayStamp(now));
+  // Guest chats feed the public visitor counter; admin (owner) chats increment
+  // a SEPARATE counter so real visitor analytics stay clean.
+  const key =
+    source === "admin" ? adminChatsKey(dayStamp(now)) : chatsKey(dayStamp(now));
   await client.incr(key);
   await client.expire(key, COUNTER_TTL_SECONDS);
 }
@@ -138,11 +158,14 @@ export function getEventsRedis(): EventsRedis | null {
  * Fire-and-forget: record a guest question. Never throws, never rejects to the
  * caller — a telemetry failure must not affect the visitor's chat request.
  */
-export async function recordChatQuestion(question: string): Promise<void> {
+export async function recordChatQuestion(
+  question: string,
+  source: ChatSource,
+): Promise<void> {
   try {
     const client = getEventsRedis();
     if (!client) return;
-    await writeChatQuestion(client, question);
+    await writeChatQuestion(client, question, source);
   } catch (error) {
     console.error("[events] recordChatQuestion failed", error);
   }

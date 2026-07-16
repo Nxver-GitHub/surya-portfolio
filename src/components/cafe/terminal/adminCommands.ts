@@ -20,6 +20,7 @@ import {
   makeRawLine,
   type TerminalLine,
 } from "./terminalLines";
+import { localHelpLines } from "./localCommands";
 import type { AdminDataResponse } from "./adminData";
 
 /** The recognised admin command verbs (also surfaced by `help`). */
@@ -58,17 +59,21 @@ function isDataCommand(verb: string): verb is AdminDataCommand {
   return (DATA_COMMANDS as readonly string[]).includes(verb);
 }
 
-/** `help` output — the admin command list. Not attacker-controlled. */
+/** `help` output for the admin console. The admin account is a SUPERSET of the
+ * guest account, so this lists BOTH the admin-only commands AND the guest
+ * commands (which also work here), plus the note that free text chats. Not
+ * attacker-controlled. */
 export function adminHelpLines(): readonly TerminalLine[] {
   return makeLines("system", [
     "ADMIN COMMANDS",
-    "  logs      recent guest questions (newest first)",
-    "  stats     views by route + chats/day (7d)",
+    "  logs      recent questions, guest + admin (newest first)",
+    "  stats     views by route + chats/day, incl. admin chats (7d)",
     "  sysinfo   build sha, deploy time, runtime",
     "  uptime    time since last deploy",
-    "  help      show this list",
-    "  clear     wipe the screen",
     "  logout    end the admin session",
+    "",
+    // Guest commands work here too (admin is a superset), and free text chats.
+    ...localHelpLines(),
   ]);
 }
 
@@ -122,14 +127,17 @@ export function formatLogs(
   logs: AdminDataResponse["logs"],
   now: number,
 ): readonly TerminalLine[] {
-  const header = makeLine("system", "GUEST QUESTION LOG — newest first");
+  const header = makeLine("system", "QUESTION LOG — newest first");
   if (logs.length === 0) {
     return [header, makeLine("system", "  (no questions logged)")];
   }
   const rows = logs.map((entry) => {
     const stamp = `[${relativeTimestamp(entry.t, now).padStart(8)}]`;
-    // makeRawLine → verbatim: the question is never linkified or parsed.
-    return makeRawLine("user", `${stamp}  ${entry.q}`);
+    // The source tag is server-derived (a signed cookie), so it is safe, fixed
+    // text. The QUESTION remains attacker-controlled — makeRawLine keeps the
+    // whole row verbatim, so nothing in it is ever linkified or parsed as markup.
+    const tag = entry.src === "admin" ? "[ADMIN]" : "[GUEST]";
+    return makeRawLine("user", `${stamp} ${tag}  ${entry.q}`);
   });
   return [header, ...rows];
 }
@@ -157,16 +165,29 @@ export function formatStats(
   }
 
   lines.push("");
-  lines.push("CHATS PER DAY (7d)");
-  if (stats.chatsPerDay7d.length === 0) {
-    lines.push("  (no chats recorded)");
-  } else {
-    for (const { day, count } of stats.chatsPerDay7d) {
-      const bar = "#".repeat(Math.min(count, 40));
-      lines.push(`  ${padCol(day, 12)}${String(count).padStart(5)}  ${bar}`);
-    }
-  }
+  lines.push("CHATS PER DAY (7d) — visitors");
+  appendChatSeries(lines, stats.chatsPerDay7d);
+
+  lines.push("");
+  lines.push("ADMIN CHATS (7d) — owner");
+  appendChatSeries(lines, stats.adminChatsPerDay7d);
+
   return makeLines("system", lines);
+}
+
+/** Append a day/count series as aligned bar rows, or an empty-state line. */
+function appendChatSeries(
+  lines: string[],
+  series: AdminDataResponse["stats"]["chatsPerDay7d"],
+): void {
+  if (series.length === 0) {
+    lines.push("  (no chats recorded)");
+    return;
+  }
+  for (const { day, count } of series) {
+    const bar = "#".repeat(Math.min(count, 40));
+    lines.push(`  ${padCol(day, 12)}${String(count).padStart(5)}  ${bar}`);
+  }
 }
 
 /** Build sysinfo. Values are server-owned build metadata, not user input. */
