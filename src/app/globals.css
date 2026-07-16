@@ -646,6 +646,33 @@ body {
   }
 }
 
+/* ── Controller mode (see ControllerMode.tsx) ─────────────────────────────
+   D-pad navigation: cursor hides, and the focused element gets an amplified
+   GT2 selection ring so the "D-pad highlight" is unmistakable. */
+:root[data-controller="on"],
+:root[data-controller="on"] * {
+  cursor: none !important;
+}
+:root[data-controller="on"] :focus {
+  outline: 2px solid var(--color-gt-bright, #ff9d1f);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(239, 129, 0, 0.25);
+}
+.controller-hints {
+  animation: controller-hints-in 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes controller-hints-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .controller-hints {
+    animation: none;
+  }
+}
+
 /* ── NOW LOADING checker strip (see NowLoading.tsx) ─────────────────────── */
 .gt-checker {
   background:

@@ -15,6 +15,7 @@ export const changelog: readonly ChangelogEntry[] = [
     version: "1.4",
     date: "July 2026",
     changes: [
+      "Controller mode: tap an arrow key anywhere — D-pad selection, Enter to confirm, Backspace to go back",
       "GT2 screen wipes between pavilions — forward slides left, back slides right",
       "NOW LOADING screens with rotating tips on the 3D routes",
     ],
