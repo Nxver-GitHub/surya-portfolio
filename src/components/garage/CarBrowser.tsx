@@ -8,6 +8,7 @@ import { LiveryStripe } from "../livery/LiveryStripe";
 import { SceneErrorBoundary } from "../cafe/SceneErrorBoundary";
 import { GarageSceneFallback } from "./GarageSceneFallback";
 import { preloadCarModel } from "./preloadCarModel";
+import { EmptyBay } from "./EmptyBay";
 import { SpecSheet } from "./SpecSheet";
 
 const GarageScene = dynamic(
@@ -115,6 +116,7 @@ export function CarBrowser() {
             onSelect={select}
           />
         ))}
+        <EmptyBay />
       </nav>
 
       {/* Scene */}

@@ -12,6 +12,14 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    version: "1.2",
+    date: "July 2026",
+    changes: [
+      "Book a call: Calendly office hours in the Online Lobby, from the café terminal, and via the Garage's new open bay",
+      "Garage: an empty dealer slot invites collaborating on the next project",
+    ],
+  },
+  {
     version: "1.1",
     date: "July 2026",
     changes: [

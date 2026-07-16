@@ -9,6 +9,7 @@ import { findEvent } from "../content/career";
 
 const EXPECTED_JOIN_HREFS: Record<string, string> = {
   email: "mailto:suryapugaz1629@gmail.com",
+  calendly: "https://calendly.com/suryaoncall/surya-s-vc-scout-office-hours",
   github: "https://github.com/Nxver-GitHub",
   linkedin: "https://www.linkedin.com/in/surya-pugazhenthi",
   x: "https://x.com/suryamightbuild",
@@ -31,11 +32,11 @@ describe("lobby status chips", () => {
 });
 
 describe("lobby join controls", () => {
-  it("has exactly four join controls", () => {
-    expect(joinControls).toHaveLength(4);
+  it("has exactly five join controls", () => {
+    expect(joinControls).toHaveLength(5);
   });
 
-  it("pins the exact four join channels and hrefs (regression)", () => {
+  it("pins the exact five join channels and hrefs (regression)", () => {
     expect(joinControls.map((c) => c.channel).sort()).toEqual(
       Object.keys(EXPECTED_JOIN_HREFS).sort(),
     );
