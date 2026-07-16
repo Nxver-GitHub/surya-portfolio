@@ -22,7 +22,7 @@ export function DriverCard() {
       />
       <span className="flex flex-col">
         <span className="ts-hard font-display text-xs font-bold tracking-[0.3em] text-gt-bright uppercase">
-          Driver
+          Profile
         </span>
         <span className="ts-hard mt-0.5 font-display text-sm font-black tracking-wider text-chrome uppercase transition-colors duration-(--duration-snap) group-hover:text-gt-bright group-focus-visible:text-gt-bright">
           Surya Pugazhenthi
