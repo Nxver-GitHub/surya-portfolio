@@ -52,7 +52,8 @@ function markContextCreated(): void {
 interface SoundContextValue {
   /** Whether the user has opted into sound. Default off, persisted. */
   enabled: boolean;
-  /** Toggle sound on/off. The only place the AudioContext is armed/disarmed. */
+  /** Toggle sound on/off. Owns opt-in/opt-out; arming also happens on the
+   * first gesture of a session when the persisted preference is already on. */
   toggle: () => void;
   /** Play a menu tone. No-op while sound is off. */
   play: (kind: SfxKind) => void;
@@ -73,11 +74,14 @@ export function useSound(): SoundContextValue {
  * Site-wide sound layer. Renders a persistent toggle on every route (it lives
  * in the root layout) and owns the muted-by-default, gesture-gated policy:
  *
- * - Default off. Nothing plays until the user clicks the toggle.
- * - The AudioContext is created/resumed ONLY inside the toggle click, and torn
- *   down when sound is switched off — so while off, zero AudioContext exists.
- *   (Even a persisted-on preference does not create a context on load; it is
- *   re-armed by the user's next toggle click after a hard reload.)
+ * - Default off. Nothing plays until the user opts in via the toggle.
+ * - While sound is off, zero AudioContext exists: enabling it first is always
+ *   a toggle click, and switching off tears the context down.
+ * - A persisted-on preference is standing consent: after a reload the engine
+ *   re-arms on the session's FIRST user gesture (pointer/key, anywhere) —
+ *   autoplay policy requires a gesture, not specifically the toggle's. This
+ *   keeps a button that reads "Sound On" truthful; previously every return
+ *   visit was silent until the user cycled the toggle off and on.
  * - A single delegated click listener plays tones for elements tagged with a
  *   `data-sfx` attribute ("move" | "confirm" | "back"), keeping per-component
  *   wiring to a single attribute.
@@ -94,8 +98,8 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
   );
 
   const toggle = useCallback(() => {
-    // Persisted-on but the context was lost on a hard reload: this click (a
-    // real gesture) re-arms it. Still the only place a context is created.
+    // Persisted-on but the context was lost on a hard reload and no other
+    // gesture has re-armed it yet: this click re-arms without flipping state.
     if (enabled && !sfx.isAlive()) {
       void sfx.arm().then(markContextCreated);
       return;
@@ -115,6 +119,22 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     (window as unknown as { __sfxProbe?: () => boolean }).__sfxProbe = () =>
       sfx.isAlive();
   }, []);
+
+  // Persisted-on after a reload: re-arm on the session's first gesture so
+  // "Sound On" is true from the first data-sfx click (e.g. the PRESS START
+  // gate). arm() is idempotent, and this never runs while sound is off.
+  useEffect(() => {
+    if (!enabled || sfx.isAlive()) return;
+    const rearm = () => {
+      void sfx.arm().then(markContextCreated);
+    };
+    window.addEventListener("pointerdown", rearm, { once: true });
+    window.addEventListener("keydown", rearm, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", rearm);
+      window.removeEventListener("keydown", rearm);
+    };
+  }, [enabled]);
 
   // One delegated listener drives all menu tones. Keyboard activation of a
   // button/link also fires a click, so Enter/Space are covered too.

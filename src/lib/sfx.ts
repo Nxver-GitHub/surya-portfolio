@@ -2,8 +2,9 @@
  * Opt-in synthesized menu tones — the era's tiny UI feedback blips.
  *
  * Hard policy (see the SoundProvider + the PR): the site is silent by default,
- * forever. Nothing here ever autoplays and no AudioContext is created until the
- * user explicitly enables sound via the toggle. Tones are synthesized only
+ * forever. Nothing here ever autoplays; no AudioContext exists until the user
+ * has opted in via the toggle (a persisted opt-in re-arms on the next
+ * session's first gesture, inside that gesture). Tones are synthesized only
  * (OscillatorNode + GainNode) — no audio files, no samples, no melodies. Every
  * tone is tiny (30–80ms) and quiet (peak gain ≤ 0.15).
  *
@@ -76,7 +77,8 @@ export class SfxEngine {
 
   /**
    * Create (or resume) the AudioContext. MUST be called from within a user
-   * gesture — the sound toggle's click handler is the only caller in the app.
+   * gesture — callers are the sound toggle's click handler and the
+   * SoundProvider's first-gesture re-arm listener (persisted opt-in only).
    */
   async arm(): Promise<void> {
     if (!this.context) {
