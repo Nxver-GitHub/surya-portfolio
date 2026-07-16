@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Car } from "../../../content/cars";
 import { MissionChip } from "../career/MissionChip";
 import { LiveryStripe } from "../livery/LiveryStripe";
+import { LicensesEarned } from "./LicensesEarned";
 import { VideoLightbox } from "./VideoLightbox";
 
 function SpecLabel({ children }: { children: React.ReactNode }) {
@@ -93,6 +94,8 @@ export function SpecSheet({ car }: { car: Car }) {
             <p className="ts-hard mt-1 text-sm text-chrome">{car.lapRecord}</p>
           </div>
         ) : null}
+
+        <LicensesEarned carId={car.id} />
 
         {car.team ? (
           <div>

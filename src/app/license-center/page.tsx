@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
-import { LicenseBoard } from "@/components/license/LicenseBoard";
+import { TrophyWall } from "@/components/license/TrophyWall";
 
 export const metadata: Metadata = {
   title: "License Center — Surya Pugazhenthi",
@@ -23,17 +22,14 @@ export default function LicenseCenterPage() {
 
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
-          <GtTitle kicker="License tests">License Center</GtTitle>
+          <GtTitle kicker="Trophy wall">License Center</GtTitle>
           <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
-            Skills as license classes, B through S. Pick a class to see its
-            tests — each one graded and linked to the project, competition, or
-            role that earned it.
+            Every medal here was earned by shipped work. Tap one to inspect
+            the machine, race, or role behind it.
           </p>
         </div>
 
-        <Suspense fallback={null}>
-          <LicenseBoard />
-        </Suspense>
+        <TrophyWall />
       </main>
     </div>
   );
