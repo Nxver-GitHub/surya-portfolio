@@ -18,14 +18,18 @@ import type { AdminDataResponse } from "../src/app/api/admin/data/route";
 
 const SAMPLE: AdminDataResponse = {
   logs: [
-    { t: 1_000, q: "what stack is the site built on?" },
-    { t: 500, q: "how do I reach Surya?" },
+    { t: 1_000, q: "what stack is the site built on?", src: "admin" },
+    { t: 500, q: "how do I reach Surya?", src: "guest" },
   ],
   stats: {
     viewsByRoute7d: { "/garage": 42, "/cafe": 7 },
     chatsPerDay7d: [
       { day: "2026-07-14", count: 3 },
       { day: "2026-07-15", count: 5 },
+    ],
+    adminChatsPerDay7d: [
+      { day: "2026-07-14", count: 1 },
+      { day: "2026-07-15", count: 2 },
     ],
   },
   sysinfo: {
@@ -66,9 +70,19 @@ describe("resolveAdminCommand", () => {
 
   it("help lists every admin command verb", () => {
     const body = texts(adminHelpLines()).join("\n");
-    for (const verb of ["logs", "stats", "sysinfo", "uptime", "clear", "logout"]) {
+    for (const verb of ["logs", "stats", "sysinfo", "uptime", "logout"]) {
       expect(body).toContain(verb);
     }
+  });
+
+  it("help is a SUPERSET — it also lists the guest commands and the chat note", () => {
+    const body = texts(adminHelpLines()).join("\n");
+    // Guest commands work in admin too, so admin help must surface them.
+    for (const verb of ["about", "projects", "contact", "exit"]) {
+      expect(body).toContain(verb);
+    }
+    // And the note that free text just chats.
+    expect(body.toLowerCase()).toContain("type a question");
   });
 });
 
@@ -99,10 +113,13 @@ describe("formatLogs", () => {
   it("renders a header, newest-first rows, each verbatim", () => {
     const now = 2_000;
     const lines = formatLogs(SAMPLE.logs, now);
-    expect(lines[0].text).toContain("GUEST QUESTION LOG");
+    expect(lines[0].text).toContain("QUESTION LOG");
     // Two rows, order preserved (route already returns newest first).
     expect(lines[1].text).toContain("what stack is the site built on?");
     expect(lines[2].text).toContain("how do I reach Surya?");
+    // Each row carries its server-derived source tag.
+    expect(lines[1].text).toContain("[ADMIN]");
+    expect(lines[2].text).toContain("[GUEST]");
     // Every question row is verbatim (attacker-controlled → never linkified).
     expect(lines[1].verbatim).toBe(true);
     expect(lines[2].verbatim).toBe(true);
@@ -122,6 +139,8 @@ describe("formatStats / formatSysinfo / formatUptime", () => {
     expect(body).toContain("42");
     expect(body).toContain("CHATS PER DAY");
     expect(body).toContain("2026-07-15");
+    // Admin chats appear as their OWN clearly-separated section.
+    expect(body).toContain("ADMIN CHATS");
   });
 
   it("sysinfo shortens the sha and names the framework", () => {

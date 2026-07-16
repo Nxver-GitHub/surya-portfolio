@@ -3,13 +3,16 @@ import {
   IP_FALLBACK,
   LIMITS,
   KEY_PREFIX,
+  detectSource,
   envReady,
   extractClientIp,
+  limitPlan,
   mapMessagesToModel,
   parseChatBody,
   retryAfterSeconds,
   type ChatMessage,
 } from "../src/app/api/cafe-terminal/route";
+import { ADMIN_SESSION_COOKIE, mintSessionToken } from "../src/lib/adminSession";
 
 /** Build a header getter from a plain map, case-insensitive like real headers. */
 function headers(map: Record<string, string>): (name: string) => string | null {
@@ -256,11 +259,72 @@ describe("cafe-terminal route — rate-limit config", () => {
     expect(LIMITS.ipPerMinute).toBe(8);
     expect(LIMITS.ipPerDay).toBe(60);
     expect(LIMITS.globalPerDay).toBe(400);
+    // Admin burst is generous but bounded (never unlimited).
+    expect(LIMITS.adminPerMinute).toBe(60);
   });
 
   it("namespaces every redis key under cafeterm:", () => {
     for (const prefix of Object.values(KEY_PREFIX)) {
       expect(prefix.startsWith("cafeterm:")).toBe(true);
     }
+  });
+});
+
+describe("cafe-terminal route — limit plan (guest vs admin posture)", () => {
+  it("guest: guest per-minute limiter + visitor per-day cap", () => {
+    expect(limitPlan("guest")).toEqual({ minute: "guest", enforceIpDay: true });
+  });
+
+  it("admin: admin per-minute limiter, exempt from the visitor per-day cap", () => {
+    // Admin still shares the global/day quota (always applied), so a stolen
+    // session can't farm the whole allowance — it is just not per-day capped.
+    expect(limitPlan("admin")).toEqual({ minute: "admin", enforceIpDay: false });
+  });
+});
+
+describe("cafe-terminal route — server-derived source (never trust the client)", () => {
+  const SECRET = "test-session-secret";
+  const headers = (map: Record<string, string>) => (name: string) =>
+    map[name.toLowerCase()] ?? null;
+
+  it("tags admin ONLY with a valid, signed session cookie", () => {
+    const token = mintSessionToken(SECRET);
+    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
+    expect(detectSource(getHeader, SECRET)).toBe("admin");
+  });
+
+  it("is guest when the cookie is missing", () => {
+    expect(detectSource(headers({}), SECRET)).toBe("guest");
+  });
+
+  it("is guest when the cookie signature is forged/tampered", () => {
+    const token = `${mintSessionToken(SECRET)}tamper`;
+    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
+    expect(detectSource(getHeader, SECRET)).toBe("guest");
+  });
+
+  it("is guest when the token was signed with a different secret", () => {
+    const token = mintSessionToken("some-other-secret");
+    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
+    expect(detectSource(getHeader, SECRET)).toBe("guest");
+  });
+
+  it("is guest when the session has expired", () => {
+    const past = Date.now() - 48 * 60 * 60 * 1000; // minted 48h ago (TTL 24h)
+    const token = mintSessionToken(SECRET, past);
+    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
+    expect(detectSource(getHeader, SECRET)).toBe("guest");
+  });
+
+  it("is guest when no secret is configured, even with a cookie present", () => {
+    const token = mintSessionToken(SECRET);
+    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
+    expect(detectSource(getHeader, undefined)).toBe("guest");
+  });
+
+  it("ignores any client-supplied 'admin' signal that is not the signed cookie", () => {
+    // A forged header / body flag can never earn [ADMIN]; only the cookie can.
+    const getHeader = headers({ "x-admin": "true", "x-source": "admin" });
+    expect(detectSource(getHeader, SECRET)).toBe("guest");
   });
 });

@@ -92,10 +92,24 @@ describe("routes — normalization", () => {
 
 describe("admin data — parsing helpers", () => {
   it("parses ring entries from both string and object forms", () => {
-    const obj = parseQuestionEntry({ t: 5, q: "hi" });
-    expect(obj).toEqual({ t: 5, q: "hi" });
-    const str = parseQuestionEntry('{"t":6,"q":"yo"}');
-    expect(str).toEqual({ t: 6, q: "yo" });
+    const obj = parseQuestionEntry({ t: 5, q: "hi", src: "admin" });
+    expect(obj).toEqual({ t: 5, q: "hi", src: "admin" });
+    const str = parseQuestionEntry('{"t":6,"q":"yo","src":"guest"}');
+    expect(str).toEqual({ t: 6, q: "yo", src: "guest" });
+  });
+
+  it("back-compat: legacy entries without src read as guest", () => {
+    expect(parseQuestionEntry({ t: 5, q: "hi" })).toEqual({
+      t: 5,
+      q: "hi",
+      src: "guest",
+    });
+    // A malformed src value also falls back to guest (never spoofed to admin).
+    expect(parseQuestionEntry({ t: 5, q: "hi", src: "root" })).toEqual({
+      t: 5,
+      q: "hi",
+      src: "guest",
+    });
   });
 
   it("drops malformed ring entries", () => {

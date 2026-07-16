@@ -15,6 +15,7 @@ import {
   RING_KEY,
   RING_CAP,
   chatsKey,
+  adminChatsKey,
   viewsKey,
   recentDayStamps,
   getEventsRedis,
@@ -33,16 +34,24 @@ const DEPLOYED_AT = new Date().toISOString();
 
 /* ────────────────────────────── response shape ─────────────────────────── */
 
+const dayCountSchema = z.object({ day: z.string(), count: z.number() });
+
 export const questionEntrySchema = z.object({
   t: z.number(),
   q: z.string(),
+  // Back-compat: entries written before source tagging — and any malformed
+  // value — read as a guest question. So old logs never break, and the tag can
+  // never be spoofed into "admin" by a corrupt entry.
+  src: z.enum(["guest", "admin"]).default("guest").catch("guest"),
 });
 
 export const adminDataResponseSchema = z.object({
   logs: z.array(questionEntrySchema),
   stats: z.object({
     viewsByRoute7d: z.record(z.string(), z.number()),
-    chatsPerDay7d: z.array(z.object({ day: z.string(), count: z.number() })),
+    chatsPerDay7d: z.array(dayCountSchema),
+    /** Owner (authed) chats per day — kept separate from visitor chats. */
+    adminChatsPerDay7d: z.array(dayCountSchema),
   }),
   sysinfo: z.object({
     sha: z.string(),
@@ -107,7 +116,7 @@ export async function GET(request: Request): Promise<Response> {
     // Authenticated, but no telemetry backend — return an empty, valid payload.
     const empty: AdminDataResponse = {
       logs: [],
-      stats: { viewsByRoute7d: {}, chatsPerDay7d: [] },
+      stats: { viewsByRoute7d: {}, chatsPerDay7d: [], adminChatsPerDay7d: [] },
       sysinfo,
     };
     return json(empty, 200);
@@ -142,9 +151,18 @@ export async function GET(request: Request): Promise<Response> {
       .map((day, i) => ({ day, count: toCount(chatVals[i]) }))
       .reverse();
 
+    // Admin (owner) chats: same shape, separate counter series.
+    const adminChatKeys = days.map(adminChatsKey);
+    const adminChatVals = adminChatKeys.length
+      ? await client.mget(...adminChatKeys)
+      : [];
+    const adminChatsPerDay7d = days
+      .map((day, i) => ({ day, count: toCount(adminChatVals[i]) }))
+      .reverse();
+
     const payload: AdminDataResponse = {
       logs,
-      stats: { viewsByRoute7d, chatsPerDay7d },
+      stats: { viewsByRoute7d, chatsPerDay7d, adminChatsPerDay7d },
       sysinfo,
     };
     return json(payload, 200);

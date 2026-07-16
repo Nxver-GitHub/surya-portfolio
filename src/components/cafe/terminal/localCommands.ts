@@ -38,8 +38,9 @@ function isLocalCommand(word: string): word is LocalCommand {
   return (LOCAL_COMMANDS as readonly string[]).includes(word);
 }
 
-/** `help` output — the command list plus a nudge that free text just chats. */
-function helpLines(): readonly string[] {
+/** `help` output — the command list plus a nudge that free text just chats.
+ * Exported so the admin console can merge it into its own (superset) help. */
+export function localHelpLines(): readonly string[] {
   return [
     "AVAILABLE COMMANDS",
     "  help      show this list",
@@ -124,7 +125,7 @@ export function resolveLocalCommand(input: string): LocalCommandResult {
 
   switch (verb) {
     case "help":
-      return { kind: "print", lines: helpLines() };
+      return { kind: "print", lines: localHelpLines() };
     case "about":
       return { kind: "print", lines: aboutLines() };
     case "projects":

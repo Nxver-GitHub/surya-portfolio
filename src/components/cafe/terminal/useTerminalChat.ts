@@ -18,10 +18,13 @@
  *     on reopen, print a single "session restored." line. Both are idempotent
  *     against the store's `booted` flag.
  *   - Route each submission:
- *       login !== "authed" → the login fiction (handleLoginInput); never a
- *         command, never the API.
- *       authed → local command (help/about/…/clear/exit) handled here, or a
- *         chat message routed to the model via `sendMessage`.
+ *       login === "login"/"password" → the login fiction (handleLoginInput /
+ *         async passphrase verify); never a command, never the chat API.
+ *       authed (guest) → local command (help/about/…/clear/exit) handled here,
+ *         or a chat message routed to the model via `sendMessage`.
+ *       admin → a SUPERSET of the guest shell: admin command → guest local
+ *         command → chat. Admin chats hit the same `sendMessage` path; the
+ *         server tags them [ADMIN] from the signed session cookie.
  *   - Keep ONE ordered scrollback in the store: user echoes are appended at
  *     submit time, finished replies folded in via `onFinish`, and the in-flight
  *     reply renders as a transient tail (derived here, never committed) — so
@@ -36,7 +39,8 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { resolveLocalCommand } from "./localCommands";
+import { resolveLocalCommand, type LocalCommandResult } from "./localCommands";
+import { routeAdminInput } from "./adminSuperset";
 import { themedErrorLine } from "./errorMapping";
 import { handleLoginInput, LOGIN_PROMPT } from "./loginMachine";
 import {
@@ -284,6 +288,70 @@ export function useTerminalChat({
     }
   }, []);
 
+  // The guest shell: local command (help/about/…/clear/exit) or chat. Shared by
+  // the authed GUEST path and the admin SUPERSET fallthrough — the only
+  // difference is the echoed prompt prefix (`> ` vs `admin> `). The resolved
+  // command is passed in (already computed by the caller) so we never resolve
+  // twice. Chat goes through the SAME `sendMessage` path either way; the source
+  // tag is derived server-side from the session cookie, never from here.
+  const runLocalShell = useCallback(
+    (input: string, prompt: string, resolved: LocalCommandResult) => {
+      switch (resolved.kind) {
+        case "print":
+          // Echo the command, then its output (echo only for non-empty input).
+          // Command output is plain strings; the one marker line localCommands
+          // can't express (its result type is string-only) becomes the real
+          // portrait media card here — the seam is the "[portrait:" prefix.
+          if (input.trim().length > 0) {
+            pushSessionHistory(input);
+            appendSessionLines([
+              makeLine("prompt", `${prompt}${input.trim()}`),
+              ...resolved.lines.map((text) =>
+                text.startsWith("[portrait:")
+                  ? makePortraitLine()
+                  : makeLine("system", text),
+              ),
+            ]);
+          }
+          return;
+        case "clear":
+          pushSessionHistory(input);
+          appendSessionLines([makeLine("prompt", `${prompt}clear`)]);
+          clearSessionLines();
+          return;
+        case "exit":
+          pushSessionHistory(input);
+          onExit();
+          return;
+        case "chat": {
+          if (busy) return; // ignore submits while a reply is streaming
+          pushSessionHistory(resolved.text);
+          if (atSessionLimit) {
+            appendSessionLines([
+              makeLine("prompt", `${prompt}${resolved.text}`),
+              makeLine("system", SESSION_LIMIT_LINE),
+            ]);
+            return;
+          }
+          patchTerminalSession({ userTurns: userTurns + 1 });
+          // Echo the user line into the scrollback NOW, so anything that
+          // follows (streamed reply, themed error, a later command) renders
+          // after it in true session order. When the visitor asks who Surya is,
+          // drop the portrait card right after the echo (the question still
+          // goes to the model for a real answer).
+          const echo: TerminalLine[] = [
+            makeLine("prompt", `${prompt}${resolved.text}`),
+          ];
+          if (isWhoIsSurya(resolved.text)) echo.push(makePortraitLine());
+          appendSessionLines(echo);
+          sendMessage({ text: resolved.text });
+          return;
+        }
+      }
+    },
+    [atSessionLimit, busy, onExit, sendMessage, userTurns],
+  );
+
   const submit = useCallback(
     (input: string) => {
       // --- Admin password step: verify against the REAL, rate-limited auth
@@ -305,9 +373,19 @@ export function useTerminalChat({
         return;
       }
 
-      // --- Admin console: authenticated command shell. ---
+      // --- Admin console: a SUPERSET of the guest shell. Precedence is
+      // admin command → guest local command → chat. Admin verbs (and the
+      // shared help/clear) run as admin; anything else falls through to the
+      // same guest shell, tagged with the `admin> ` prompt. Chat questions
+      // reach the model via the same path a guest uses; the server tags them
+      // [ADMIN] from the signed session cookie, so the client can't spoof it. ---
       if (login === "admin") {
-        handleAdminSubmit(input);
+        const route = routeAdminInput(input);
+        if (route.kind === "admin") {
+          handleAdminSubmit(input);
+          return;
+        }
+        runLocalShell(input, "admin> ", route.result);
         return;
       }
 
@@ -322,60 +400,9 @@ export function useTerminalChat({
       }
 
       // --- Authed guest shell: local command or chat. ---
-      const resolved = resolveLocalCommand(input);
-
-      switch (resolved.kind) {
-        case "print":
-          // Echo the command, then its output (echo only for non-empty input).
-          // Command output is plain strings; the one marker line localCommands
-          // can't express (its result type is string-only) becomes the real
-          // portrait media card here — the seam is the "[portrait:" prefix.
-          if (input.trim().length > 0) {
-            pushSessionHistory(input);
-            appendSessionLines([
-              makeLine("prompt", `> ${input.trim()}`),
-              ...resolved.lines.map((text) =>
-                text.startsWith("[portrait:")
-                  ? makePortraitLine()
-                  : makeLine("system", text),
-              ),
-            ]);
-          }
-          return;
-        case "clear":
-          pushSessionHistory(input);
-          appendSessionLines([makeLine("prompt", "> clear")]);
-          clearSessionLines();
-          return;
-        case "exit":
-          pushSessionHistory(input);
-          onExit();
-          return;
-        case "chat": {
-          if (busy) return; // ignore submits while a reply is streaming
-          pushSessionHistory(resolved.text);
-          if (atSessionLimit) {
-            appendSessionLines([
-              makeLine("prompt", `> ${resolved.text}`),
-              makeLine("system", SESSION_LIMIT_LINE),
-            ]);
-            return;
-          }
-          patchTerminalSession({ userTurns: userTurns + 1 });
-          // Echo the user line into the scrollback NOW, so anything that
-          // follows (streamed reply, themed error, a later command) renders
-          // after it in true session order. When the visitor asks who Surya is,
-          // drop the portrait card right after the echo (the question still
-          // goes to the model for a real answer).
-          const echo: TerminalLine[] = [makeLine("prompt", `> ${resolved.text}`)];
-          if (isWhoIsSurya(resolved.text)) echo.push(makePortraitLine());
-          appendSessionLines(echo);
-          sendMessage({ text: resolved.text });
-          return;
-        }
-      }
+      runLocalShell(input, "> ", resolveLocalCommand(input));
     },
-    [atSessionLimit, busy, handleAdminSubmit, login, onExit, sendMessage, userTurns],
+    [handleAdminSubmit, login, runLocalShell],
   );
 
   // The scrollback IS the store's committed lines, in append order (boot,

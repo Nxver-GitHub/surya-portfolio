@@ -23,7 +23,12 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
 import { buildSystemPrompt } from "@/lib/terminal-prompt";
-import { recordChatQuestion } from "@/lib/events";
+import { recordChatQuestion, type ChatSource } from "@/lib/events";
+import {
+  ADMIN_SESSION_COOKIE,
+  readCookie,
+  verifySessionToken,
+} from "@/lib/adminSession";
 
 /** Node runtime: Upstash + AI SDK stream cleanly here, and it keeps the route
  * off the Edge (where our keyless-build assumptions differ). */
@@ -147,6 +152,26 @@ export function extractClientIp(
   return IP_FALLBACK;
 }
 
+/* ─────────────────────────── server-derived source ─────────────────────── */
+
+/**
+ * Determine the request's source SERVER-SIDE. The client can never set this:
+ * "admin" is granted ONLY when the httpOnly `admin_session` cookie carries a
+ * valid, unexpired, correctly-signed token (mirrors requireAdmin's check). A
+ * missing/invalid/expired cookie — or no configured secret — is simply "guest"
+ * (NOT a 401 here; this route serves guests too). Pure given its header getter
+ * and secret, so it is unit-tested without a real Request.
+ */
+export function detectSource(
+  getHeader: (name: string) => string | null,
+  secret: string | undefined,
+  now: number = Date.now(),
+): ChatSource {
+  if (!secret) return "guest";
+  const token = readCookie(getHeader("cookie"), ADMIN_SESSION_COOKIE);
+  return verifySessionToken(token, secret, now) ? "admin" : "guest";
+}
+
 /* ─────────────────────────────── env / limits ──────────────────────────── */
 
 /** The server-only env vars this route needs. Never NEXT_PUBLIC. */
@@ -174,15 +199,35 @@ export const KEY_PREFIX = {
   ipMinute: "cafeterm:ip:min",
   ipDay: "cafeterm:ip:day",
   globalDay: "cafeterm:global:day",
+  adminMinute: "cafeterm:admin:min",
 } as const;
 
 /** Limit thresholds (decided with the site owner; protects the ~1k/day Groq
- * free quota). Per-IP 8/min AND 60/day; global 400/day. */
+ * free quota). Guest: per-IP 8/min AND 60/day. Admin: a generous 60/min burst
+ * and NO per-day cap — but STILL bounded by the shared global 400/day, so a
+ * stolen 24h session can never farm the whole Groq quota. */
 export const LIMITS = {
   ipPerMinute: 8,
   ipPerDay: 60,
   globalPerDay: 400,
+  adminPerMinute: 60,
 } as const;
+
+/** Which limiters apply to a request, by source. Every request always hits the
+ * shared global/day limiter; the per-minute limiter and the per-day cap differ.
+ * Pure — unit-tested to lock the guest-vs-admin posture. */
+export interface LimitPlan {
+  /** Which per-minute limiter to apply (guest 8/min vs. admin 60/min). */
+  readonly minute: "guest" | "admin";
+  /** Whether the visitor per-day (60/day) cap is enforced (guest only). */
+  readonly enforceIpDay: boolean;
+}
+
+export function limitPlan(source: ChatSource): LimitPlan {
+  return source === "admin"
+    ? { minute: "admin", enforceIpDay: false }
+    : { minute: "guest", enforceIpDay: true };
+}
 
 /** Lazily-built limiters, cached per module instance (warm serverless reuse).
  * Built only after {@link envReady}, so no top-level construction throws. */
@@ -190,6 +235,7 @@ interface Limiters {
   ipMinute: Ratelimit;
   ipDay: Ratelimit;
   globalDay: Ratelimit;
+  adminMinute: Ratelimit;
 }
 let cachedLimiters: Limiters | null = null;
 
@@ -214,6 +260,11 @@ function getLimiters(env: Required<TerminalEnv>): Limiters {
       redis,
       limiter: Ratelimit.fixedWindow(LIMITS.globalPerDay, "1 d"),
       prefix: KEY_PREFIX.globalDay,
+    }),
+    adminMinute: new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(LIMITS.adminPerMinute, "60 s"),
+      prefix: KEY_PREFIX.adminMinute,
     }),
   };
   return cachedLimiters;
@@ -258,17 +309,30 @@ export async function POST(request: Request): Promise<Response> {
     return json({ error: "BAD_REQUEST" }, 400);
   }
 
+  // 2.5) Server-derived source. NEVER trust the client: "admin" requires a
+  //      valid signed session cookie. This drives both the higher rate limit
+  //      and the analytics tag below — a forged flag can't earn either.
+  const source = detectSource(
+    (name) => request.headers.get(name),
+    process.env.ADMIN_SESSION_SECRET,
+  );
+
   // 3) Rate limit BEFORE touching Groq. Global first (cheapest signal to shed
-  //    load), then per-IP minute + day. Any failure → 429 with Retry-After.
+  //    load), then the per-minute limiter for this source (+ the visitor
+  //    per-day cap for guests). Any failure → 429 with Retry-After.
   const ip = extractClientIp((name) => request.headers.get(name));
   const limiters = getLimiters(env as Required<TerminalEnv>);
+  const plan = limitPlan(source);
   try {
-    const [globalRes, ipMinRes, ipDayRes] = await Promise.all([
+    const checks = [
       limiters.globalDay.limit("all"),
-      limiters.ipMinute.limit(ip),
-      limiters.ipDay.limit(ip),
-    ]);
-    const blocked = [globalRes, ipMinRes, ipDayRes].find((r) => !r.success);
+      plan.minute === "admin"
+        ? limiters.adminMinute.limit(ip)
+        : limiters.ipMinute.limit(ip),
+    ];
+    if (plan.enforceIpDay) checks.push(limiters.ipDay.limit(ip));
+    const results = await Promise.all(checks);
+    const blocked = results.find((r) => !r.success);
     if (blocked) {
       const retryAfterSecondsValue = retryAfterSeconds(blocked.reset);
       return json(
@@ -289,7 +353,7 @@ export async function POST(request: Request): Promise<Response> {
   //       forget, capped + truncated server-side; NO IP/response stored). Never
   //       blocks or fails the chat — see lib/events.ts.
   const lastUser = [...parsed.messages].reverse().find((m) => m.role === "user");
-  if (lastUser) void recordChatQuestion(lastUser.content);
+  if (lastUser) void recordChatQuestion(lastUser.content, source);
 
   // 4) Call Groq and stream the UI-message response.
   try {
