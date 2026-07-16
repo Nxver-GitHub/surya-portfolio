@@ -4,8 +4,6 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { Glyph } from "@/components/gt/Glyph";
 
 const MODE_KEY = "sr-crt-mode"; // "on" | "off"
-const LEVEL_KEY = "sr-crt-level"; // "1" | "2" | "3"
-const DEFAULT_LEVEL = "2";
 
 // ── Persisted preference store (mirrors the SoundProvider pattern) ──────────
 const listeners = new Set<() => void>();
@@ -18,18 +16,9 @@ function readMode(): boolean {
   }
 }
 
-function readLevel(): string {
+function writeMode(on: boolean): void {
   try {
-    const raw = window.localStorage.getItem(LEVEL_KEY);
-    return raw === "1" || raw === "2" || raw === "3" ? raw : DEFAULT_LEVEL;
-  } catch {
-    return DEFAULT_LEVEL;
-  }
-}
-
-function write(key: string, value: string): void {
-  try {
-    window.localStorage.setItem(key, value);
+    window.localStorage.setItem(MODE_KEY, on ? "on" : "off");
   } catch {
     // best-effort (private mode etc.)
   }
@@ -66,49 +55,21 @@ function CrtToggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 /**
  * Site-wide CRT glass: renders the fixed effect overlay (see `.crt-fx` in
  * globals.css) and the persistent CRT toggle, and mirrors the persisted
- * preference onto <html data-crt / data-crt-level> so the effect is pure CSS.
- * On by default; the rolling band dies under prefers-reduced-motion.
- *
- * PROTOTYPE ONLY (strip before finalizing): keys 1/2/3 switch intensity and 0
- * toggles the effect, with a small readout chip bottom-left, so the owner can
- * judge intensities live on the preview. Keystrokes inside inputs/textareas
- * (e.g. the café terminal) are ignored.
+ * preference onto <html data-crt> so the effect itself is pure CSS. On by
+ * default at the owner-locked subtle intensity; the toggle is the readability/
+ * accessibility escape hatch, and the rolling band dies under
+ * prefers-reduced-motion.
  */
 export function CrtLayer() {
   const on = useSyncExternalStore(subscribe, readMode, () => true);
-  const level = useSyncExternalStore(subscribe, readLevel, () => DEFAULT_LEVEL);
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.crt = on ? "on" : "off";
-    root.dataset.crtLevel = level;
-  }, [on, level]);
-
-  const toggle = useCallback(() => {
-    write(MODE_KEY, on ? "off" : "on");
+    document.documentElement.dataset.crt = on ? "on" : "off";
   }, [on]);
 
-  // PROTOTYPE ONLY: live intensity switcher for the preview review.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
-      if (event.key === "0") write(MODE_KEY, readMode() ? "off" : "on");
-      else if (event.key === "1" || event.key === "2" || event.key === "3") {
-        write(LEVEL_KEY, event.key);
-        write(MODE_KEY, "on");
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  const toggle = useCallback(() => {
+    writeMode(!on);
+  }, [on]);
 
   return (
     <>
@@ -118,13 +79,6 @@ export function CrtLayer() {
         <div className="crt-fx-band" />
       </div>
       <CrtToggle on={on} onToggle={toggle} />
-      {/* PROTOTYPE ONLY: intensity readout for the preview review. */}
-      <div
-        aria-hidden="true"
-        className="plate ts-hard fixed bottom-3 left-3 z-50 px-2.5 py-1 font-display text-xs font-bold tracking-widest text-gt-bright uppercase"
-      >
-        CRT {on ? `L${level}` : "off"} · keys 1/2/3/0
-      </div>
     </>
   );
 }

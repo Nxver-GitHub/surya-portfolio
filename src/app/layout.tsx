@@ -37,7 +37,6 @@ export default function RootLayout({
     <html
       lang="en"
       data-crt="on"
-      data-crt-level="2"
       className={`${satoshi.variable} ${saira.variable} ${sourceSerif.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
