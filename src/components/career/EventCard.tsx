@@ -49,6 +49,7 @@ export function EventCard({ event }: { event: CareerEvent }) {
   if (event.locked) return <LockedEventCard event={event} />;
   return (
     <Link
+      transitionTypes={["nav-forward"]}
       href={`/career/${event.slug}`}
       className="group block border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)] outline-none transition-colors duration-(--duration-snap) hover:border-gt focus-visible:ring-2 focus-visible:ring-gt-bright"
     >

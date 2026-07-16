@@ -54,6 +54,7 @@ function MedalRow({ test }: { test: LicenseTest }) {
     <li title={test.summary}>
       {target ? (
         <Link
+          transitionTypes={["nav-forward"]}
           href={target.href}
           className="flex border border-transparent px-2 py-1.5 outline-none transition-colors duration-(--duration-snap) ease-(--ease-mech) hover:border-steel hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-gt-bright"
         >

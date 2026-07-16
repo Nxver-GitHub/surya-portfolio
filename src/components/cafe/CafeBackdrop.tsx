@@ -1,4 +1,5 @@
 import { LiveryStripe } from "../livery/LiveryStripe";
+import { NowLoading } from "../gt/NowLoading";
 
 /**
  * Styled 2D GT-café backdrop, shown whenever the 3D scene is unavailable —
@@ -43,11 +44,13 @@ export function CafeBackdrop({ reason }: { reason: "loading" | "error" }) {
         <span className="ts-hard font-display text-lg font-black tracking-[0.2em] text-chrome uppercase">
           GT Café
         </span>
-        <span className="ts-hard font-display text-xs font-semibold tracking-widest text-silver uppercase">
-          {reason === "loading"
-            ? "Brewing the scene…"
-            : "Café view unavailable — the menu is still open"}
-        </span>
+        {reason === "loading" ? (
+          <NowLoading label="Brewing the scene" compact />
+        ) : (
+          <span className="ts-hard font-display text-xs font-semibold tracking-widest text-silver uppercase">
+            Café view unavailable — the menu is still open
+          </span>
+        )}
       </div>
     </div>
   );

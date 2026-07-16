@@ -19,6 +19,7 @@ import { CafeBackdrop } from "./CafeBackdrop";
 import { ExhibitList } from "./ExhibitList";
 import { ExhibitPlate } from "./ExhibitPlate";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
+import { LoadingHold } from "../gt/LoadingHold";
 import { Terminal } from "./terminal/Terminal";
 import { useTerminalChat } from "./terminal/useTerminalChat";
 import { useReducedMotion } from "../garage/useReducedMotion";
@@ -365,6 +366,10 @@ export function CafeBrowser() {
           onBlur={disengageScene}
         >
           <SceneErrorBoundary fallback={<CafeBackdrop reason="error" />}>
+            {/* LoadingHold keeps the NOW LOADING tip readable while the glb
+                streams invisibly behind the backdrop for the minimum
+                showtime. */}
+            <LoadingHold overlay={<CafeBackdrop reason="loading" />}>
             <Suspense fallback={<CafeBackdrop reason="loading" />}>
               <CafeScene
                 selectedId={selected.id}
@@ -382,6 +387,7 @@ export function CafeBrowser() {
                 engaged={engaged}
               />
             </Suspense>
+            </LoadingHold>
           </SceneErrorBoundary>
 
           {/* In-monitor terminal — a flat 2D overlay aligned to the docked CRT

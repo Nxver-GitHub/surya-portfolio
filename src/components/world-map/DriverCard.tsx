@@ -9,6 +9,7 @@ import Link from "next/link";
 export function DriverCard() {
   return (
     <Link
+      transitionTypes={["nav-forward"]}
       href="/career"
       data-sfx="confirm"
       className="plate group flex w-fit shrink-0 items-center gap-3.5 px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gt-bright"

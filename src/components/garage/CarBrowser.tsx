@@ -7,6 +7,8 @@ import { liveries } from "../../../content/liveries";
 import { LiveryStripe } from "../livery/LiveryStripe";
 import { SceneErrorBoundary } from "../cafe/SceneErrorBoundary";
 import { GarageSceneFallback } from "./GarageSceneFallback";
+import { LoadingHold } from "../gt/LoadingHold";
+import { NowLoading } from "../gt/NowLoading";
 import { preloadCarModel } from "./preloadCarModel";
 import { EmptyBay } from "./EmptyBay";
 import { SpecSheet } from "./SpecSheet";
@@ -15,13 +17,7 @@ const GarageScene = dynamic(
   () => import("./GarageScene").then((m) => m.GarageScene),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-full min-h-64 items-center justify-center">
-        <p className="ts-hard font-display text-sm font-bold tracking-widest text-silver uppercase">
-          Rolling out…
-        </p>
-      </div>
-    ),
+    loading: () => <NowLoading label="Rolling out" />,
   },
 );
 
@@ -126,13 +122,17 @@ export function CarBrowser() {
       >
         {selected.status === "hero" ? (
           <>
-            {/* stable Canvas: scene reacts to car prop, no WebGL teardown */}
+            {/* stable Canvas: scene reacts to car prop, no WebGL teardown.
+                LoadingHold keeps the NOW LOADING tip readable — the scene
+                streams invisibly behind it for the minimum showtime. */}
             <div aria-hidden="true" className="h-full">
-              <SceneErrorBoundary
-                fallback={<GarageSceneFallback car={selected} />}
-              >
-                <GarageScene car={selected} />
-              </SceneErrorBoundary>
+              <LoadingHold overlay={<NowLoading label="Rolling out" />}>
+                <SceneErrorBoundary
+                  fallback={<GarageSceneFallback car={selected} />}
+                >
+                  <GarageScene car={selected} />
+                </SceneErrorBoundary>
+              </LoadingHold>
             </div>
             {!selected.modelPath ? (
               <p className="ts-hard pointer-events-none absolute right-3 bottom-2 font-display text-xs font-semibold tracking-widest text-silver uppercase">
