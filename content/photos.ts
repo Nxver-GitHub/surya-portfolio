@@ -4,10 +4,14 @@
  * ─────────────────────────────────────────────────────────────────────────
  * PLACEHOLDER STATUS
  * ─────────────────────────────────────────────────────────────────────────
- * Every entry below is a locally-generated GT-style "empty slot" placeholder
- * (see scripts/generate-scapes-placeholders.mjs). No real photography ships
- * yet. Titles/captions are deliberately placeholder-flavored ("Awaiting film
- * scan") and make NO factual claims about the owner's life or travels.
+ * The Cars category ships real photography. Nature and Life entries are
+ * still locally-generated GT-style "empty slot" placeholders (see
+ * scripts/generate-scapes-placeholders.mjs); those titles/captions are
+ * deliberately placeholder-flavored and make NO factual claims.
+ *
+ * Real photos must be re-encoded before landing in public/scapes/ — bake in
+ * EXIF orientation, resize (~2000px long edge), and STRIP metadata (phone
+ * JPEGs carry GPS; repo and site are public).
  *
  * ─────────────────────────────────────────────────────────────────────────
  * SWAP PROCEDURE — replacing a placeholder with a real photo (content-only)
@@ -135,49 +139,61 @@ export const photos: readonly Photo[] = [
   /* ── Cars ───────────────────────────────────────────────────────────── */
   {
     id: "cars-01",
-    src: "/scapes/cars-01.svg",
-    width: 1600,
-    height: 1067,
+    src: "/scapes/gt3rs-speedvegas.jpg",
+    width: 1500,
+    height: 2000,
     category: "cars",
-    title: "Reserved frame — paddock",
+    title: "991 GT3 RS — SpeedVegas",
+    location: "SpeedVegas, Las Vegas",
+    date: "Summer 2025",
     caption:
-      "Placeholder slot. Linked to the machine it echoes over in the Garage.",
-    carId: "tripweaver",
-    placeholder: true,
+      "Fun fact: I tracked this 991 GT3 RS at SpeedVegas in summer 2025. Wings like that are even better from the driver's seat.",
   },
   {
     id: "cars-02",
-    src: "/scapes/cars-02.svg",
-    width: 1067,
-    height: 1600,
+    src: "/scapes/ferrari-f1-transporter.jpg",
+    width: 1500,
+    height: 2000,
     category: "cars",
-    title: "Reserved frame — grid walk",
+    title: "Ferrari F1, unloading",
+    location: "Monterey Car Week",
+    date: "August 2025",
     caption:
-      "Placeholder slot. Cross-linked to the mission and car it belongs to.",
-    carId: "benefitfinder",
-    missionId: "cruzhacks-2025",
-    placeholder: true,
+      "A 1990s Ferrari Formula 1 car coming off the transporter — Car Week logistics you don't see from the lawn.",
   },
   {
     id: "cars-03",
-    src: "/scapes/cars-03.svg",
-    width: 1600,
-    height: 900,
+    src: "/scapes/mclaren-f1-rm-sothebys.jpg",
+    width: 1500,
+    height: 2000,
     category: "cars",
-    title: "Reserved frame — front straight",
-    date: "Awaiting scan",
-    caption: "Placeholder slot for a wide track-side frame.",
-    placeholder: true,
+    title: "McLaren F1 — RM Sotheby's",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption: "Doors up at the RM Sotheby's auction preview.",
   },
   {
     id: "cars-04",
-    src: "/scapes/cars-04.svg",
-    width: 1200,
-    height: 1200,
+    src: "/scapes/porsche-959.jpg",
+    width: 1500,
+    height: 2000,
     category: "cars",
-    title: "Reserved frame — detail",
-    caption: "Placeholder slot. Square crop reserved for a livery detail.",
-    placeholder: true,
+    title: "Porsche 959",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption:
+      "A 959 casually parked outside the hotel. During Car Week this counts as street parking.",
+  },
+  {
+    id: "cars-05",
+    src: "/scapes/carweek-golden-hour.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Golden hour, wings up",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption: "McLarens on the coast at sunset to close out Car Week.",
   },
 
   /* ── Life / Travel ──────────────────────────────────────────────────── */
@@ -211,7 +227,9 @@ export const photos: readonly Photo[] = [
     category: "life",
     title: "Reserved frame — square",
     date: "Awaiting scan",
-    caption: "Placeholder slot. Square crop reserved for a candid.",
+    caption:
+      "Placeholder slot. Square crop reserved for a hackathon candid, cross-linked to its mission.",
+    missionId: "cruzhacks-2025",
     placeholder: true,
   },
   {
