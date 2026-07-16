@@ -12,6 +12,14 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    version: "1.1",
+    date: "July 2026",
+    changes: [
+      "Scapes: first real photo roll — twelve Cars frames, from SpeedVegas to Monterey Car Week to the Singapore GP",
+      "New profile photo across the site, license-card style",
+    ],
+  },
+  {
     version: "1.0",
     date: "July 2026",
     changes: [
