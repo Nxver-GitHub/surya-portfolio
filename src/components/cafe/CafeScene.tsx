@@ -21,7 +21,6 @@ import type { Group, Object3D } from "three";
 import { warmCafeMaterials } from "./warmCafe";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
 import { exhibits, exhibitById, type Exhibit } from "../../../content/cafe-exhibits";
-import { runOnIdle } from "../../lib/runOnIdle";
 import { useReducedMotion } from "../garage/useReducedMotion";
 import { ExhibitPiece } from "./ExhibitPiece";
 import { CrtScreenFeed } from "./terminal/CrtScreenFeed";
@@ -314,6 +313,9 @@ function CameraRig({
       raw = book ? tableFrontPose(book.anchor) : OVERVIEW_POSE;
     } else if (focus.kind === "exhibit") {
       const exhibit = exhibitById.get(focus.exhibitId);
+      // In-place pieces (the rug show car) present their plate without a
+      // flight — no destination, the camera stays where the visitor left it.
+      if (exhibit?.inPlaceFocus) return null;
       raw = exhibit ? exhibitFramePose(exhibit) : OVERVIEW_POSE;
     } else raw = OVERVIEW_POSE;
     return { position: clampToRoom(raw.position), target: raw.target };
@@ -608,14 +610,9 @@ export function CafeScene({
 
   const activeExhibitId = focus.kind === "exhibit" ? focus.exhibitId : null;
 
-  // Exhibit glbs are set dressing, not the room itself — defer mounting any
-  // of them (and therefore their useGLTF fetches) until the browser is idle,
-  // so the café's initial network burst is just the room model + CRT. Focus
-  // can only land on an exhibit via its "On display" button, which itself
-  // only renders once a piece has loaded, so nothing here can be requested
-  // before this flips.
-  const [exhibitsReady, setExhibitsReady] = useState(false);
-  useEffect(() => runOnIdle(() => setExhibitsReady(true), 4000), []);
+  // Exhibits mount with the room and suspend into the same boundary, so the
+  // café reveals as one furnished scene — no pieces popping in seconds later.
+  // Their glbs are preloaded at module scope alongside the room model.
 
   return (
     <Canvas
@@ -689,19 +686,17 @@ export function CafeScene({
         />
       ))}
 
-      {exhibitsReady
-        ? pieces.map((exhibit) => (
-            <ExhibitPiece
-              key={exhibit.id}
-              exhibit={exhibit}
-              isActive={exhibit.id === activeExhibitId}
-              hovered={exhibit.id === hoveredExhibitId}
-              onSelect={onSelectExhibit}
-              onHoverChange={onExhibitHover}
-              onAvailability={onExhibitAvailability}
-            />
-          ))
-        : null}
+      {pieces.map((exhibit) => (
+        <ExhibitPiece
+          key={exhibit.id}
+          exhibit={exhibit}
+          isActive={exhibit.id === activeExhibitId}
+          hovered={exhibit.id === hoveredExhibitId}
+          onSelect={onSelectExhibit}
+          onHoverChange={onExhibitHover}
+          onAvailability={onExhibitAvailability}
+        />
+      ))}
 
       <CameraRig
         focus={focus}
@@ -716,5 +711,10 @@ export function CafeScene({
   );
 }
 
-// Warm the café model after mount so navigating back doesn't reload it.
+// Warm the café model after mount so navigating back doesn't reload it, and
+// start every exhibit glb fetching in parallel with the room so the furnished
+// scene is ready in one reveal.
 useGLTF.preload(CAFE_MODEL_PATH);
+for (const exhibit of exhibits) {
+  useGLTF.preload(exhibit.modelPath);
+}

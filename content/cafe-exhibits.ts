@@ -131,6 +131,12 @@ export interface Exhibit {
   readonly frameDistance?: number;
   /** Fully-authored camera pose; when set, overrides the derived framing. */
   readonly cameraOverride?: ExhibitCameraOverride;
+  /**
+   * When true, focusing this exhibit shows its plate WITHOUT a camera flight —
+   * the camera stays where it is. For centerpiece pieces (the rug show car)
+   * where zooming in fills the frame and obscures the room around it.
+   */
+  readonly inPlaceFocus?: boolean;
   /** CC attribution — required for every shipped piece. */
   readonly credit: ExhibitCredit;
 }
@@ -179,6 +185,9 @@ export const exhibits: readonly Exhibit[] = [
       position: MOUNTS.rugStage.position,
       rotationY: 0.26,
     },
+    // Centerpiece on the rug: zooming in fills the frame with bodywork and
+    // hides the room, so focusing shows the plate with no camera flight.
+    inPlaceFocus: true,
     frameDistance: 3.4,
     credit: {
       title: "Lancia Stratos HF - Rally - Alitalia Livery",
