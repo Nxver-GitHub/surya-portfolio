@@ -504,3 +504,112 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── CRT screen effect (site-wide "late-90s tube" glass) ─────────────────────
+   A fixed, pointer-transparent overlay ABOVE all UI (z-70 > boot's z-60): the
+   viewer looks at the site through a consumer-Trinitron tube. Three layers:
+   texture (scanlines + RGB aperture-grille), glass (vignette + static lamp
+   glare), and a slow rolling refresh band. Intensity is token-driven via
+   [data-crt-level] on <html>; [data-crt="off"] removes the glass entirely.
+   The band is compositor-only (transform) and dies under reduced motion. */
+:root[data-crt-level="1"] {
+  --crt-scan: 0.05;
+  --crt-rgb: 0.025;
+  --crt-vig: 0.22;
+  --crt-glare: 0.045;
+  --crt-band: 0.035;
+}
+:root[data-crt-level="2"] {
+  --crt-scan: 0.09;
+  --crt-rgb: 0.045;
+  --crt-vig: 0.32;
+  --crt-glare: 0.07;
+  --crt-band: 0.055;
+}
+:root[data-crt-level="3"] {
+  --crt-scan: 0.15;
+  --crt-rgb: 0.075;
+  --crt-vig: 0.45;
+  --crt-glare: 0.11;
+  --crt-band: 0.085;
+}
+
+@layer components {
+  .crt-fx {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  :root[data-crt="off"] .crt-fx {
+    display: none;
+  }
+  .crt-fx-tex {
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(
+        180deg,
+        rgba(0, 0, 0, var(--crt-scan)) 0px,
+        rgba(0, 0, 0, var(--crt-scan)) 1px,
+        transparent 1px,
+        transparent 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 70, 70, var(--crt-rgb)) 0px,
+        rgba(255, 70, 70, var(--crt-rgb)) 1px,
+        rgba(70, 255, 110, var(--crt-rgb)) 1px,
+        rgba(70, 255, 110, var(--crt-rgb)) 2px,
+        rgba(90, 110, 255, var(--crt-rgb)) 2px,
+        rgba(90, 110, 255, var(--crt-rgb)) 3px
+      );
+  }
+  .crt-fx-vig {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse 130% 105% at 50% 46%,
+        transparent 58%,
+        rgba(0, 0, 0, var(--crt-vig)) 100%
+      ),
+      linear-gradient(
+        115deg,
+        rgba(255, 255, 255, var(--crt-glare)) 0%,
+        transparent 24%
+      ),
+      radial-gradient(
+        ellipse 55% 20% at 30% 4%,
+        rgba(255, 255, 255, calc(var(--crt-glare) * 0.8)),
+        transparent 70%
+      );
+  }
+  .crt-fx-band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -160px;
+    height: 160px;
+    background: linear-gradient(
+      180deg,
+      transparent,
+      rgba(255, 255, 255, var(--crt-band)),
+      transparent
+    );
+    animation: crt-fx-sweep 9s linear infinite;
+    will-change: transform;
+  }
+  @keyframes crt-fx-sweep {
+    to {
+      transform: translateY(calc(100vh + 320px));
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-fx-band {
+    display: none;
+  }
+}
