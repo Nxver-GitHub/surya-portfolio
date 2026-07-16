@@ -8,7 +8,10 @@ import { PavilionList } from "@/components/world-map/PavilionList";
 
 export default function Home() {
   return (
-    <div className="relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8">
+    // Desktop is a console screen: exactly one viewport, never a scrollbar
+    // (h-dvh + overflow-hidden; the circuit map shrinks to the space left).
+    // Mobile keeps normal scrolling for the plate-button list.
+    <div className="relative flex flex-1 flex-col px-5 py-6 md:h-dvh md:max-h-dvh md:min-h-0 md:overflow-hidden md:px-10 md:py-8">
       <BootSequence />
       <GtCrumb label="World Map" />
 
@@ -18,7 +21,7 @@ export default function Home() {
         </p>
       </header>
 
-      <main className="flex flex-1 flex-col">
+      <main className="flex min-h-0 flex-1 flex-col">
         {/* Title block left; driver license card right (stacks below the
             start-here plate on mobile) */}
         <div className="mt-10 mb-8 flex flex-col gap-6 md:mt-12 md:mb-10 md:flex-row md:items-start md:justify-between md:gap-10"><div>
@@ -36,8 +39,10 @@ export default function Home() {
           </Link>
         </div><DriverCard /></div>
 
-        {/* Desktop: circuit map. Mobile: plate-button menu. */}
-        <div className="hidden flex-1 md:block">
+        {/* Desktop: circuit map. Mobile: plate-button menu. min-h-0 lets the
+            map zone shrink so the page always fits one viewport; md:flex (not
+            block) stretches the map to the zone's definite height. */}
+        <div className="hidden min-h-0 flex-1 md:flex">
           <CircuitMap />
         </div>
         <div className="md:hidden">

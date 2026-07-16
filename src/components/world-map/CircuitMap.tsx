@@ -21,10 +21,19 @@ export function CircuitMap() {
   const { noticedId, notify } = useLockedNotice();
 
   return (
-    <div className="flex h-full flex-col">
+    // container-type: size lets the map box measure this zone in cqw/cqh and
+    // fit BOTH axes — a width-only aspect box overflowed the viewport on
+    // wide-but-short desktop windows (the home page must never scroll on
+    // desktop).
+    <div className="flex w-full [container-type:size]">
       <div
-        className="relative mx-auto w-full max-w-5xl grow"
-        style={{ aspectRatio: "1000 / 560" }}
+        className="relative m-auto"
+        style={{
+          aspectRatio: "1000 / 560",
+          // Narrowest of: zone width, height-derived width (100cqh × 1000/560),
+          // and the old max-w-5xl cap.
+          width: "min(100cqw, 178.57cqh, 64rem)",
+        }}
       >
         {/* Night circuit ribbon — decorative */}
         <svg
