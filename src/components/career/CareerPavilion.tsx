@@ -22,9 +22,8 @@ export function CareerPavilion() {
       </div>
 
       <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
-        Three seasons so far: community college, university, and the
-        venture-and-agents era. Pick a season, open an event, read the race
-        report.
+        Three seasons so far: community college, university, and the post-grad
+        Bay Area era. Pick a season, open an event, read the race report.
       </p>
 
       <CareerBoard selected={selected} onSelect={setSelected} />

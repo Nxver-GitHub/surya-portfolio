@@ -29,6 +29,12 @@ export interface CareerEvent {
   carIds?: readonly string[];
   /** Future Missions (locked chips until Missions ships) */
   missionIds?: readonly string[];
+  /**
+   * Unrevealed teaser entry: renders as a non-clickable locked card, gets no
+   * detail page, and is excluded from findEvent/allEventSlugs (and therefore
+   * the sitemap). Its story fields are placeholders that never render.
+   */
+  locked?: boolean;
 }
 
 export interface Season {
@@ -77,23 +83,20 @@ export const seasons: readonly Season[] = [
       {
         slug: "project-bracket",
         logo: "/logos/project-bracket.png",
-        title: "Three stints at Project Bracket",
+        title: "ML Project Manager at Project Bracket",
         org: "Project Bracket, DVC",
-        role: "Team Member → ML Project Manager → Web Dev Project Manager",
+        role: "ML Project Manager",
         dates: "Sep 2022 – Dec 2023",
-        result: "Shipped an Android campus app, an ML stock predictor, and AInfiniteTunes across three project cycles",
+        result: "Led a team shipping an ML-driven stock market prediction model",
         story: {
           problem:
-            "Project Bracket ran semester-long team builds; each cycle demanded a bigger role — contributor, then PM of an ML team, then PM of a web team.",
+            "Project Bracket ran semester-long team builds — and leading an ML project meant teaching applied machine learning to the team while shipping it.",
           actions: [
-            "Built back-end features in Kotlin for a digital campus community Android app supporting coursework collaboration and academic assistance.",
             "Led a team building an ML-driven stock market prediction model on the Polygon.io Stocks API, teaching applied ML and investment analytics along the way.",
-            "Led development of AInfiniteTunes, a music player web app with a built-in AI recommendation system for discovering songs across similar artists and genres.",
           ],
           results:
-            "Three shipped team projects and the jump from contributor to project manager twice over — the season where leading teams became the default.",
+            "A shipped team ML project and the jump from contributor to project manager — the season where leading teams became the default.",
         },
-        carIds: ["ainfinitetunes"],
       },
       {
         slug: "code-for-your-future",
@@ -143,7 +146,7 @@ export const seasons: readonly Season[] = [
     name: "UC Santa Cruz",
     period: "2024 – 2026",
     summary:
-      "Promotion to the B.S. grid at UCSC: first hackathon win, first real product cycle with analytics, first mobile app with users to find.",
+      "Promotion to the B.S. grid at UCSC: first hackathon win, a full product cycle with analytics, the agentic-hackathon circuit, and first laps as a venture scout.",
     events: [
       {
         slug: "slugai-calendarize",
@@ -207,32 +210,62 @@ export const seasons: readonly Season[] = [
         },
         carIds: ["slugspace"],
       },
-    ],
-  },
-  {
-    id: "s3",
-    number: "Season 3",
-    name: "Venture & Agents",
-    period: "2025 – Present",
-    summary:
-      "The factory-team era: building agentic systems at hackathons while scouting founders for three venture firms.",
-    events: [
       {
-        slug: "16vc",
-        logo: "/logos/16vc.png",
-        title: "16VC",
-        org: "16VC",
-        role: "Venture Associate",
-        dates: "Jun 2026 – Present",
-        result: "Sourcing pre-seed and seed opportunities across the SF Bay Area ecosystem",
+        slug: "tripweaver-locus",
+        logo: "/logos/locus.png",
+        title: "TripWeaver at Locus Agentic Payments Hackathon",
+        org: "Locus (Y Combinator FW25)",
+        role: "Agent systems builder",
+        dates: "Nov 2025",
+        result: "2nd place overall + Stripe Prize Track",
         story: {
           problem:
-            "Early-stage funds live or die on seeing great founders before everyone else.",
+            "Business travel booking is a multi-step, multi-vendor workflow — a natural fit for an autonomous agent with real payment rails.",
           actions: [
-            "Source and evaluate pre-seed and seed-stage investment opportunities across the SF Bay Area through demo days, founder outreach, and the hackathon and builder community.",
+            "Built an autonomous business-travel agent handling end-to-end trip booking with cross-border micropayments via Stripe and x402-protocol stablecoins.",
+            "Composed the stack from the Claude Agent SDK, Stripe API, Vercel/Next.js, Kiwi Travel MCP, Coinbase, and Locus Crypto Wallet.",
           ],
           results:
-            "The current stint: a builder inside the venture machine, using the hackathon circuit as a sourcing edge.",
+            "Won 2nd place and the Stripe Prize Track — the race that pulled the venture world and agent engineering onto the same track.",
+        },
+        carIds: ["tripweaver"],
+        missionIds: ["locus-agentic-payments"],
+      },
+      {
+        slug: "venture-starters",
+        logo: "/logos/venture-starters.png",
+        title: "Venture Starters",
+        org: "Venture Starters",
+        role: "Venture Analyst Intern",
+        dates: "Jan 2026 – Present",
+        result: "Hands-on reps in live startup pitching and investor Q&A",
+        story: {
+          problem:
+            "Evaluating startups well requires reps — hearing real pitches and real investor questioning, repeatedly.",
+          actions: [
+            "Participating in Venture Starters' educational internship: live, virtual startup pitching sessions and investor Q&A.",
+          ],
+          results:
+            "A steady training ground running alongside active scout work at LvlUp and 16VC.",
+        },
+      },
+      {
+        slug: "lvlup-ventures",
+        logo: "/logos/lvlup.png",
+        title: "LvlUp Ventures",
+        org: "LvlUp Ventures (Shopline-backed seed fund)",
+        role: "Venture Scout",
+        dates: "Feb 2026 – Present",
+        result: "3 companies surfaced for potential investment from 20+ founder outreaches",
+        story: {
+          problem:
+            "Seed funds need scouts embedded where strong technical founders actually show up first.",
+          actions: [
+            "Sourced and evaluated pre-seed and seed founders at demo days including Afore Capital's Spring 2026 Showcase and PearX W26, focusing on B2B software and AI infrastructure.",
+            "Drafted personalized outreach to 20+ founders (Coverflow, Polarity, Hilt, Hexagon, Clayzo among them) and converted 10 conversations into founder calls.",
+          ],
+          results:
+            "Secured 3 companies for potential investment — outreach as a repeatable, instrumented pipeline.",
         },
       },
       {
@@ -256,63 +289,47 @@ export const seasons: readonly Season[] = [
         carIds: ["credence"],
         missionIds: ["ef-marketing-agents"],
       },
+    ],
+  },
+  {
+    id: "s3",
+    number: "Season 3",
+    name: "Bay Area",
+    period: "2026 – Present",
+    summary:
+      "The post-grad season: scouting pre-seed and seed founders full-time at 16VC — while something new takes shape under the car cover.",
+    events: [
       {
-        slug: "lvlup-ventures",
-        logo: "/logos/lvlup.png",
-        title: "LvlUp Ventures",
-        org: "LvlUp Ventures (Shopline-backed seed fund)",
-        role: "Venture Scout",
-        dates: "Feb 2026 – Present",
-        result: "3 companies surfaced for potential investment from 20+ founder outreaches",
+        slug: "16vc",
+        logo: "/logos/16vc.png",
+        title: "16VC",
+        org: "16VC",
+        role: "Venture Associate",
+        dates: "Jun 2026 – Present",
+        result: "Sourcing pre-seed and seed opportunities across the SF Bay Area ecosystem",
         story: {
           problem:
-            "Seed funds need scouts embedded where strong technical founders actually show up first.",
+            "Early-stage funds live or die on seeing great founders before everyone else.",
           actions: [
-            "Sourced and evaluated pre-seed and seed founders at demo days including Afore Capital's Spring 2026 Showcase and PearX W26, focusing on B2B software and AI infrastructure.",
-            "Drafted personalized outreach to 20+ founders (Coverflow, Polarity, Hilt, Hexagon, Clayzo among them) and converted 10 conversations into founder calls.",
+            "Source and evaluate pre-seed and seed-stage investment opportunities across the SF Bay Area through demo days, founder outreach, and the hackathon and builder community.",
           ],
           results:
-            "Secured 3 companies for potential investment — outreach as a repeatable, instrumented pipeline.",
+            "The current stint: a builder inside the venture machine, using the hackathon circuit as a sourcing edge.",
         },
       },
       {
-        slug: "venture-starters",
-        logo: "/logos/venture-starters.png",
-        title: "Venture Starters",
-        org: "Venture Starters",
-        role: "Venture Analyst Intern",
-        dates: "Jan 2026 – Present",
-        result: "Hands-on reps in live startup pitching and investor Q&A",
+        slug: "project-silhouette",
+        title: "Project Silhouette",
+        org: "Undisclosed",
+        role: "Builder",
+        dates: "2026 – ?",
+        result: "Something new is being built. Details soon.",
         story: {
-          problem:
-            "Evaluating startups well requires reps — hearing real pitches and real investor questioning, repeatedly.",
-          actions: [
-            "Participating in Venture Starters' educational internship: live, virtual startup pitching sessions and investor Q&A.",
-          ],
-          results:
-            "A steady training ground running alongside active scout work at LvlUp and 16VC.",
+          problem: "Under the car cover until it is ready.",
+          actions: ["In active development — nothing revealed yet."],
+          results: "To be announced.",
         },
-      },
-      {
-        slug: "tripweaver-locus",
-        logo: "/logos/locus.png",
-        title: "TripWeaver at Locus Agentic Payments Hackathon",
-        org: "Locus (Y Combinator FW25)",
-        role: "Agent systems builder",
-        dates: "Nov 2025",
-        result: "2nd place overall + Stripe Prize Track",
-        story: {
-          problem:
-            "Business travel booking is a multi-step, multi-vendor workflow — a natural fit for an autonomous agent with real payment rails.",
-          actions: [
-            "Built an autonomous business-travel agent handling end-to-end trip booking with cross-border micropayments via Stripe and x402-protocol stablecoins.",
-            "Composed the stack from the Claude Agent SDK, Stripe API, Vercel/Next.js, Kiwi Travel MCP, Coinbase, and Locus Crypto Wallet.",
-          ],
-          results:
-            "Won 2nd place and the Stripe Prize Track — the race that pulled the venture world and agent engineering onto the same track.",
-        },
-        carIds: ["tripweaver"],
-        missionIds: ["locus-agentic-payments"],
+        locked: true,
       },
     ],
   },
@@ -320,14 +337,14 @@ export const seasons: readonly Season[] = [
 
 export function findEvent(slug: string) {
   for (const season of seasons) {
-    const event = season.events.find((e) => e.slug === slug);
+    const event = season.events.find((e) => e.slug === slug && !e.locked);
     if (event) return { season, event };
   }
   return null;
 }
 
 export const allEventSlugs = seasons.flatMap((s) =>
-  s.events.map((e) => e.slug),
+  s.events.filter((e) => !e.locked).map((e) => e.slug),
 );
 
 /** Distinct Garage cars and Missions referenced across a season's events. */

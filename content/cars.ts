@@ -275,23 +275,6 @@ export const cars: readonly Car[] = [
     careerEventSlug: "slugspace",
   },
   {
-    id: "ainfinitetunes",
-    name: "AInfiniteTunes",
-    carClass: "Classic",
-    status: "silhouette",
-    livery: "camel",
-    tagline:
-      "Music player with an AI recommendation engine — the Project Bracket era build.",
-    performance: [
-      "AI recommendations across similar artists and genres",
-      "Led as Web Dev PM with a student team",
-    ],
-    drivetrain: ["Web app", "AI recommendations"],
-    lapRecord: "Shipped — Project Bracket, Fall 2023",
-    raced: "Aug – Dec 2023",
-    careerEventSlug: "project-bracket",
-  },
-  {
     id: "stealth",
     name: "???",
     status: "locked",
