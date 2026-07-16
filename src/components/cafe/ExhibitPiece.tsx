@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Component,
-  Suspense,
-  useEffect,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { Component, useEffect, useMemo, type ReactNode } from "react";
 import { Html, useGLTF } from "@react-three/drei";
 import type { Exhibit } from "../../../content/cafe-exhibits";
 
@@ -124,19 +118,19 @@ function ExhibitModel({
 }
 
 /**
- * A single museum exhibit in the café scene. Lazily loads its own glb inside its
- * OWN Suspense + error boundary, so a missing/broken piece never takes down the
- * café or its neighbours — it just doesn't render, and reports availability up
- * so the "On display" UI lists only live pieces. Clickable → drives exhibit
- * focus; hover/focus raises an HTML name label.
+ * A single museum exhibit in the café scene. Loads its glb inside its OWN error
+ * boundary, so a missing/broken piece never takes down the café or its
+ * neighbours — it just doesn't render, and reports availability up so the
+ * "On display" UI lists only live pieces. Loading deliberately suspends into
+ * the SAME boundary as the room (no per-piece Suspense): the café reveals as
+ * one furnished scene instead of pieces popping in after it. Clickable →
+ * drives exhibit focus; hover/focus raises an HTML name label.
  */
 export function ExhibitPiece(props: ExhibitPieceProps): ReactNode {
   const { exhibit, onAvailability } = props;
   return (
     <ExhibitErrorBoundary onError={() => onAvailability(exhibit, false)}>
-      <Suspense fallback={null}>
-        <ExhibitModel {...props} />
-      </Suspense>
+      <ExhibitModel {...props} />
     </ExhibitErrorBoundary>
   );
 }
