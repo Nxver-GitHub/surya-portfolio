@@ -89,12 +89,16 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
             <span className="flex items-start gap-2">
               <span
                 className={`shrink-0 font-display text-xs font-black tracking-widest uppercase ${
-                  isActive ? "text-asphalt/80" : "text-gt-bright"
+                  isActive ? "text-asphalt/90" : "text-gt-bright"
                 }`}
               >
                 {bookTypeLabel(book.type)}
               </span>
-              <span className="line-clamp-2 text-xs text-silver">
+              <span
+                className={`line-clamp-2 text-xs ${
+                  isActive ? "text-asphalt/90" : "text-silver"
+                }`}
+              >
                 {book.audience}
               </span>
             </span>
