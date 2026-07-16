@@ -195,6 +195,65 @@ export const photos: readonly Photo[] = [
     date: "August 2025",
     caption: "McLarens on the coast at sunset to close out Car Week.",
   },
+  {
+    id: "cars-06",
+    src: "/scapes/930-slantnose.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "930 Turbo Slantnose",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption:
+      "A slant-nose Porsche 930 Turbo on the show lawn — louvered fenders, red interior.",
+  },
+  {
+    id: "cars-07",
+    src: "/scapes/gt3-andial-50th.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "911 GT3 — ANDIAL's 50th",
+    location: "Monterey Car Week",
+    date: "August 2025",
+    caption:
+      "Porsche's stand celebrating fifty years of ANDIAL with the latest 911 GT3 hardware.",
+  },
+  {
+    id: "cars-08",
+    src: "/scapes/amg-original-teile.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "AMG Mercedes, Original-Teile",
+    location: "WeatherTech Raceway Laguna Seca",
+    date: "August 2025",
+    caption:
+      "Nineties AMG Mercedes touring car in the Original-Teile livery, resting between sessions at the Reunion.",
+  },
+  {
+    id: "cars-09",
+    src: "/scapes/lancia-martini.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "Lancia Martini",
+    location: "WeatherTech Raceway Laguna Seca",
+    date: "August 2025",
+    caption: "Martini stripes in the metal at the Monterey Motorsports Reunion.",
+  },
+  {
+    id: "cars-10",
+    src: "/scapes/mclaren-mp47a.jpg",
+    width: 1500,
+    height: 2000,
+    category: "cars",
+    title: "McLaren MP4/7A",
+    location: "WeatherTech Raceway Laguna Seca",
+    date: "August 2025",
+    caption:
+      "The 1992 McLaren-Honda MP4/7A on display at the Rolex Monterey Motorsports Reunion.",
+  },
 
   /* ── Life / Travel ──────────────────────────────────────────────────── */
   {
