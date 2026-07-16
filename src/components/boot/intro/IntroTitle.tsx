@@ -1,8 +1,8 @@
 /**
  * Beat 3 — the title screen. The GT2 title card: the game name over a rule with
- * a blinking "PRESS START". Here it auto-advances to the World Map (the prompt
- * is flavour — any key/click skips), so no visitor is stranded on a title
- * screen. Centred vertically to stay inside a 9:16 story-safe band.
+ * a blinking "PRESS START". The prompt is a real gate — BootSequence holds here
+ * until the visitor clicks or presses a key, like the original title screen.
+ * Centred vertically to stay inside a 9:16 story-safe band.
  */
 export function IntroTitle() {
   return (
