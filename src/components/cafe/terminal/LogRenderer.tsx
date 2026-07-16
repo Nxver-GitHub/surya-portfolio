@@ -157,7 +157,10 @@ export function LogRenderer({ lines }: LogRendererProps) {
               textIndent: isIndented ? -12 : 0,
             }}
           >
-            <LineText text={line.text} />
+            {/* Verbatim lines (attacker-controlled admin log text) bypass the
+             * linkifier entirely and render as a literal React text child —
+             * escaped by React, with no substring ever promoted to a link. */}
+            {line.verbatim ? line.text : <LineText text={line.text} />}
           </p>
         );
       })}

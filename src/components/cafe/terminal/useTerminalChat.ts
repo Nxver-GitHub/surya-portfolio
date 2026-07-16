@@ -39,6 +39,19 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import { resolveLocalCommand } from "./localCommands";
 import { themedErrorLine } from "./errorMapping";
 import { handleLoginInput, LOGIN_PROMPT } from "./loginMachine";
+import {
+  adminLoginTransition,
+  requestAdminLogin,
+  requestAdminLogout,
+} from "./adminLogin";
+import { fetchAdminData } from "./adminData";
+import {
+  formatLogs,
+  formatStats,
+  formatSysinfo,
+  formatUptime,
+  resolveAdminCommand,
+} from "./adminCommands";
 import { isWhoIsSurya, makePortraitLine } from "./portrait";
 import {
   appendSessionLines,
@@ -62,6 +75,13 @@ const API_PATH = "/api/cafe-terminal";
 /** Dim one-liner shown when the terminal is reopened mid-visit (boot already
  * played once, so we don't replay the whole cold-start sequence). */
 const SESSION_RESTORED_LINE = "session restored.";
+
+/** Fixed-width mask for a submitted passphrase echo. Never reveals length
+ * precisely and never contains the secret itself. */
+function maskedEcho(input: string): string {
+  const dots = "•".repeat(Math.min(Math.max(input.length, 6), 12));
+  return `password: ${dots}`;
+}
 
 /** Extract the concatenated text of a UIMessage's text parts. The model is
  * told plain-text-only but still leaks markdown bold markers occasionally;
@@ -189,14 +209,112 @@ export function useTerminalChat({
   const busy = status === "submitted" || status === "streaming";
   const atSessionLimit = userTurns >= MAX_USER_MESSAGES;
 
+  // Admin console command handling. Split out of `submit` for readability; all
+  // of its dependencies are module-level stable functions, so it has no reactive
+  // deps. Data commands fetch `/api/admin/data` (the httpOnly session cookie
+  // rides along on the same-origin request) and render the typed response; a 401
+  // mid-session means the 24h token expired, so we drop back to the login line.
+  const handleAdminSubmit = useCallback((input: string) => {
+    const resolved = resolveAdminCommand(input);
+    switch (resolved.kind) {
+      case "empty":
+        return;
+      case "print":
+        pushSessionHistory(input);
+        appendSessionLines([
+          makeLine("prompt", `admin> ${input.trim()}`),
+          ...resolved.lines,
+        ]);
+        return;
+      case "clear":
+        pushSessionHistory(input);
+        appendSessionLines([makeLine("prompt", "admin> clear")]);
+        clearSessionLines();
+        return;
+      case "unknown":
+        pushSessionHistory(input);
+        appendSessionLines([
+          makeLine("prompt", `admin> ${resolved.input}`),
+          makeLine("error", `unknown command '${resolved.input}' — type 'help'.`),
+        ]);
+        return;
+      case "logout":
+        pushSessionHistory(input);
+        appendSessionLines([makeLine("prompt", "admin> logout")]);
+        void requestAdminLogout().finally(() => {
+          patchTerminalSession({ login: "login" });
+          appendSessionLines([
+            makeLine("system", "admin session closed."),
+            makeLine("system", LOGIN_PROMPT),
+          ]);
+        });
+        return;
+      case "data": {
+        pushSessionHistory(input);
+        appendSessionLines([makeLine("prompt", `admin> ${resolved.command}`)]);
+        const command = resolved.command;
+        void fetchAdminData().then((res) => {
+          if (!res.ok) {
+            if (res.reason === "expired") {
+              patchTerminalSession({ login: "login" });
+              appendSessionLines([
+                makeLine("error", "session expired — please log in again."),
+                makeLine("system", LOGIN_PROMPT),
+              ]);
+            } else {
+              appendSessionLines([
+                makeLine("error", "DATA LINK DOWN — telemetry unavailable."),
+              ]);
+            }
+            return;
+          }
+          const now = Date.now();
+          const out =
+            command === "logs"
+              ? formatLogs(res.data.logs, now)
+              : command === "stats"
+                ? formatStats(res.data.stats)
+                : command === "sysinfo"
+                  ? formatSysinfo(res.data.sysinfo)
+                  : formatUptime(res.data.sysinfo, now);
+          appendSessionLines(out);
+        });
+        return;
+      }
+    }
+  }, []);
+
   const submit = useCallback(
     (input: string) => {
-      // --- Login fiction: everything before the guest shell. Never a command,
-      // never the API. Record history for every non-empty input EXCEPT while
-      // masking a password (don't stash typed passwords in ↑/↓ history). ---
-      if (login !== "authed") {
-        const wasPassword = login === "password";
-        if (!wasPassword) pushSessionHistory(input);
+      // --- Admin password step: verify against the REAL, rate-limited auth
+      // route. The passphrase is never stored, echoed, or pushed to history —
+      // only a fixed-width mask is shown. The verify is async; on success we
+      // enter the admin console, otherwise we surface an in-character result. ---
+      if (login === "password") {
+        appendSessionLines([
+          makeLine("prompt", maskedEcho(input)),
+          makeLine("system", "verifying credentials…"),
+        ]);
+        void requestAdminLogin(input).then((result) => {
+          const transition = adminLoginTransition(result);
+          appendSessionLines(transition.lines);
+          if (transition.next !== "password") {
+            patchTerminalSession({ login: transition.next });
+          }
+        });
+        return;
+      }
+
+      // --- Admin console: authenticated command shell. ---
+      if (login === "admin") {
+        handleAdminSubmit(input);
+        return;
+      }
+
+      // --- Login line: synchronous account selection (guest / admin / unknown).
+      // Record history for every non-empty account input. ---
+      if (login === "login") {
+        pushSessionHistory(input);
         const result = handleLoginInput(login, input);
         appendSessionLines(result.lines);
         if (result.next !== login) patchTerminalSession({ login: result.next });
@@ -257,7 +375,7 @@ export function useTerminalChat({
         }
       }
     },
-    [atSessionLimit, busy, login, onExit, sendMessage, userTurns],
+    [atSessionLimit, busy, handleAdminSubmit, login, onExit, sendMessage, userTurns],
   );
 
   // The scrollback IS the store's committed lines, in append order (boot,

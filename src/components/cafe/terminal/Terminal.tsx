@@ -110,7 +110,7 @@ function useTerminalInput(chat: TerminalChatApi) {
     [cursor, history, input, masked],
   );
 
-  return { input, masked, busy, onChange, onSubmit, onKeyDown };
+  return { input, masked, busy, login, onChange, onSubmit, onKeyDown };
 }
 
 /** Prompt caret glyph: "…" while working, "▸" idle. */
@@ -130,7 +130,7 @@ interface InputLineProps {
 /** The prompt line: caret glyph + labelled input (+ idle block caret). Shared
  * by the overlay/screen panels and the standalone bar. */
 function InputLine({ chat, inputId, autoFocus, reducedMotion }: InputLineProps) {
-  const { input, masked, busy, onChange, onSubmit, onKeyDown } =
+  const { input, masked, busy, login, onChange, onSubmit, onKeyDown } =
     useTerminalInput(chat);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -140,9 +140,11 @@ function InputLine({ chat, inputId, autoFocus, reducedMotion }: InputLineProps) 
 
   const placeholder = masked
     ? "password"
-    : busy
-      ? "working…"
-      : "help · projects · contact · ask anything";
+    : login === "admin"
+      ? "logs · stats · sysinfo · uptime · logout"
+      : busy
+        ? "working…"
+        : "help · projects · contact · ask anything";
 
   return (
     <div className="relative z-20 border-t border-[#12351f]">

@@ -17,9 +17,10 @@
 import { useSyncExternalStore } from "react";
 import type { TerminalLine } from "./terminalLines";
 
-/** Where the login fiction stands. `login` = awaiting account name,
- * `password` = admin password prompt (always denied), `authed` = guest shell. */
-export type LoginState = "login" | "password" | "authed";
+/** Where the login flow stands. `login` = awaiting account name,
+ * `password` = admin password prompt (verified against /api/admin/login),
+ * `authed` = guest shell, `admin` = authenticated admin console. */
+export type LoginState = "login" | "password" | "authed" | "admin";
 
 export interface TerminalSessionState {
   /** Full ordered scrollback (boot, login, echoes, replies, errors). */
