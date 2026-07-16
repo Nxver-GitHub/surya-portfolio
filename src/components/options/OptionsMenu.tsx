@@ -42,7 +42,9 @@ function OptionRow({
  * The corner OPTIONS plate — a miniature GT2 options screen. Replaces the
  * former pile of per-setting chips (Sound, CRT) with one trigger that drops a
  * panel of toggle rows, so site chrome never stacks over page content (the
- * home driver card sits right under this corner). Esc and click-away close;
+ * home driver card sits right under this corner). Anchored to the top of the
+ * page (absolute, not fixed) — the owner rejected a scroll-following plate
+ * because it collided with page content mid-scroll. Esc and click-away close;
  * the trigger reflects expansion for assistive tech.
  */
 export function OptionsMenu() {
@@ -78,7 +80,7 @@ export function OptionsMenu() {
   return (
     <div
       ref={rootRef}
-      className="fixed top-14 right-3 z-50 flex flex-col items-end gap-1.5 md:top-16 md:right-6"
+      className="absolute top-14 right-3 z-50 flex flex-col items-end gap-1.5 md:top-16 md:right-6"
     >
       <button
         ref={triggerRef}
