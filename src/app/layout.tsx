@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { SoundProvider } from "@/components/sound/SoundProvider";
 import { PageWipe } from "@/components/gt/PageWipe";
 import { ControllerMode } from "@/components/controller/ControllerMode";
+import { StewardsNotice } from "@/components/anticheat/StewardsNotice";
 import { CrtLayer } from "@/components/crt/CrtLayer";
 import { OptionsMenu } from "@/components/options/OptionsMenu";
 import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
@@ -48,6 +49,7 @@ export default function RootLayout({
           <PageWipe>{children}</PageWipe>
           <OptionsMenu />
           <ControllerMode />
+          <StewardsNotice />
         </SoundProvider>
         <CrtLayer />
         <PageViewBeacon />
