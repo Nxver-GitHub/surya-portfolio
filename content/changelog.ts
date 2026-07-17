@@ -12,6 +12,14 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    version: "1.5",
+    date: "July 2026",
+    changes: [
+      "Race stewards now monitor scrutineering — inspect the paddock at your own risk",
+      "Online Lobby: honest membership — 16VC active, the rest marked former",
+    ],
+  },
+  {
     version: "1.4",
     date: "July 2026",
     changes: [
