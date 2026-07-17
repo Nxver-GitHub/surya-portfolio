@@ -9,7 +9,7 @@ import { pavilions } from "../../../content/pavilions";
 export const metadata: Metadata = {
   title: "Online Lobby — Surya Pugazhenthi",
   description:
-    "Contact Surya Pugazhenthi and see the communities and organizations he's active in — email, GitHub, LinkedIn, and X, plus the venture and builder circles he's part of.",
+    "Contact Surya Pugazhenthi — email, book a call, GitHub, LinkedIn, and X — and see the communities on his journey, from 16VC today back through UCSC and DVC.",
   alternates: { canonical: "/lobby" },
 };
 
@@ -33,7 +33,7 @@ export default function LobbyPage() {
           <p className="mt-3 max-w-[52ch] text-base text-ink leading-snug">
             Contact and communities, framed as a lobby room. See what Surya is
             open to right now, join via a channel below, or browse the
-            communities and organizations he&rsquo;s part of.
+            communities and organizations on his journey.
           </p>
         </div>
 

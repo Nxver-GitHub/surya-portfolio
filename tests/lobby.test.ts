@@ -74,6 +74,30 @@ describe("lobby player list", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it("marks exactly one community as active — 16VC (owner call, 2026-07)", () => {
+    const active = playerList.filter((p) => p.membership === "active");
+    expect(active.map((p) => p.id)).toEqual(["16vc"]);
+  });
+
+  it("excludes communities that only hosted a competition/hackathon", () => {
+    // Removed 2026-07: hackathon hosts are not communities Surya belongs to.
+    const banished = ["cruzhacks", "entrepreneur-first", "locus"];
+    for (const id of banished) {
+      expect(playerList.some((p) => p.id === id), id).toBe(false);
+    }
+  });
+
+  it("writes every former community in the past tense (previously/earned)", () => {
+    for (const player of playerList) {
+      if (player.membership === "former") {
+        expect(
+          /previously|earned/i.test(player.description),
+          `${player.id}: "${player.description}"`,
+        ).toBe(true);
+      }
+    }
+  });
+
   it("gives every player a non-empty name and description", () => {
     for (const player of playerList) {
       expect(player.name, player.id).toBeTruthy();

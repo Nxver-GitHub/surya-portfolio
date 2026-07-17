@@ -27,6 +27,13 @@ export interface PlayerCard {
   name: string;
   /** One-line plain-English description of the org/community */
   description: string;
+  /**
+   * Whether Surya is currently part of this community. Exactly ONE card is
+   * "active" (16VC — owner call, 2026-07); everything else renders a FORMER
+   * chip and reads in the past tense. Communities that only hosted a
+   * hackathon/competition don't belong in this list at all.
+   */
+  membership: "active" | "former";
   link?: string;
   /** Cross-ref into Career Mode, rendered as /career/<slug> */
   careerEventSlug?: string;
@@ -73,66 +80,51 @@ export const joinControls: readonly JoinControl[] = [
 
 export const playerList: readonly PlayerCard[] = [
   {
-    id: "lvlup-ventures",
-    name: "LvlUp Ventures",
-    description:
-      "Shopline-backed seed fund where Surya scouts pre-seed and seed founders at demo days.",
-    careerEventSlug: "lvlup-ventures",
-  },
-  {
     id: "16vc",
     name: "16VC",
     description:
       "Venture firm where Surya sources pre-seed and seed opportunities across the SF Bay Area.",
+    membership: "active",
     careerEventSlug: "16vc",
+  },
+  {
+    id: "lvlup-ventures",
+    name: "LvlUp Ventures",
+    description:
+      "Shopline-backed seed fund where Surya previously scouted pre-seed and seed founders at demo days.",
+    membership: "former",
+    careerEventSlug: "lvlup-ventures",
   },
   {
     id: "venture-starters",
     name: "Venture Starters",
     description:
-      "Educational internship running live startup pitching sessions and investor Q&A.",
+      "Educational internship where Surya previously ran live startup pitching sessions and investor Q&A.",
+    membership: "former",
     careerEventSlug: "venture-starters",
   },
   {
     id: "ucsc",
     name: "UC Santa Cruz",
     description:
-      "Where Surya is completing a B.S. in Computer Science after transferring from community college.",
+      "Where Surya earned his B.S. in Computer Science after transferring from community college.",
+    membership: "former",
     careerEventSlug: "slugai-calendarize",
   },
   {
     id: "slugai",
     name: "SlugAI",
     description:
-      "UCSC's AI innovation club, where Surya shipped Calendarize as a product developer.",
+      "UCSC's AI innovation club, where Surya previously shipped Calendarize as a product developer.",
+    membership: "former",
     careerEventSlug: "slugai-calendarize",
-  },
-  {
-    id: "cruzhacks",
-    name: "CruzHacks",
-    description:
-      "UC Santa Cruz's hackathon, where BenefitFinder won Best Beginner Hack.",
-    careerEventSlug: "benefitfinder-cruzhacks",
-  },
-  {
-    id: "entrepreneur-first",
-    name: "Entrepreneur First",
-    description:
-      "Hosted the Marketing Agents Hackathon where Credence placed 3rd and won Best Use of Apify API.",
-    careerEventSlug: "credence-ef-hackathon",
-  },
-  {
-    id: "locus",
-    name: "Locus",
-    description:
-      "Y Combinator (FW25) company whose Agentic Payments Hackathon TripWeaver won 2nd place and the Stripe Prize Track.",
-    careerEventSlug: "tripweaver-locus",
   },
   {
     id: "dvc",
     name: "Diablo Valley College",
     description:
       "Where Surya earned an A.S. in Computer Science and founded the Product Development Club.",
+    membership: "former",
     careerEventSlug: "product-dev-club",
   },
 ] as const;
