@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@ai-sdk/groq": "3.0.50",
-    "@ai-sdk/react": "3.0.226",
+    "@ai-sdk/react": "4.0.34",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@upstash/ratelimit": "2.0.8",
