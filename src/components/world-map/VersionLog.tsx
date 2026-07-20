@@ -8,9 +8,15 @@ import { changelog, siteVersion } from "../../../content/changelog";
  * panel (upward, so it never leaves the viewport) listing what each release
  * added to the site. Content lives in content/changelog.ts. Esc and
  * click-away close, mirroring the OptionsMenu interaction contract.
+ *
+ * Releases are an accordion — one version expanded at a time (the latest,
+ * each time the panel opens), the rest collapsed to single header rows. The
+ * list is height-capped and scrolls internally under a pinned header, so the
+ * panel can never outgrow the viewport no matter how many versions ship.
  */
 export function VersionLog() {
   const [open, setOpen] = useState(false);
+  const [openVersion, setOpenVersion] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelId = useId();
@@ -18,6 +24,14 @@ export function VersionLog() {
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
     if (refocus) triggerRef.current?.focus();
+  }, []);
+
+  const togglePanel = useCallback(() => {
+    setOpen((o) => {
+      // Fresh open always leads with the latest release expanded.
+      if (!o) setOpenVersion(siteVersion);
+      return !o;
+    });
   }, []);
 
   // Click-away + Escape, active only while open.
@@ -45,7 +59,7 @@ export function VersionLog() {
         aria-expanded={open}
         aria-controls={panelId}
         data-sfx="move"
-        onClick={() => setOpen((o) => !o)}
+        onClick={togglePanel}
         className="ts-hard inline-flex items-baseline gap-1.5 font-display text-xs font-bold tracking-[0.14em] text-silver uppercase outline-none hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
       >
         Version
@@ -61,26 +75,44 @@ export function VersionLog() {
           <p className="border-b border-steel px-3 py-1.5 font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
             Update Log
           </p>
-          {changelog.map((entry) => (
-            <div key={entry.version} className="px-3 py-2">
-              <p className="ts-hard font-display text-xs font-bold tracking-[0.14em] text-chrome uppercase">
-                v{entry.version}
-                <span className="ml-2 font-medium text-silver normal-case tracking-normal">
-                  {entry.date}
-                </span>
-              </p>
-              <ul className="mt-1.5 flex flex-col gap-1">
-                {entry.changes.map((change) => (
-                  <li key={change} className="flex gap-1.5 text-xs text-ink leading-snug">
+          <div className="max-h-[min(50vh,20rem)] overflow-y-auto overscroll-contain">
+            {changelog.map((entry) => {
+              const expanded = entry.version === openVersion;
+              return (
+                <div key={entry.version} className="border-b border-steel/50 last:border-b-0">
+                  <button
+                    type="button"
+                    aria-expanded={expanded}
+                    data-sfx="move"
+                    onClick={() =>
+                      setOpenVersion(expanded ? null : entry.version)
+                    }
+                    className="ts-hard flex w-full items-baseline gap-1.5 px-3 py-2 text-left font-display text-xs font-bold tracking-[0.14em] text-chrome uppercase outline-none hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gt-bright"
+                  >
                     <span aria-hidden="true" className="text-gt-bright">
-                      +
+                      {expanded ? "▾" : "▸"}
                     </span>
-                    {change}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                    v{entry.version}
+                    <span className="ml-1 font-medium text-silver normal-case tracking-normal">
+                      {entry.date}
+                    </span>
+                  </button>
+                  {expanded ? (
+                    <ul className="flex flex-col gap-1 px-3 pb-2.5">
+                      {entry.changes.map((change) => (
+                        <li key={change} className="flex gap-1.5 text-xs text-ink leading-snug">
+                          <span aria-hidden="true" className="text-gt-bright">
+                            +
+                          </span>
+                          {change}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : null}
     </div>
