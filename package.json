@@ -11,15 +11,15 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@ai-sdk/groq": "3.0.50",
-    "@ai-sdk/react": "3.0.226",
+    "@ai-sdk/groq": "4.0.12",
+    "@ai-sdk/react": "4.0.34",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@upstash/ratelimit": "2.0.8",
     "@upstash/redis": "1.38.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
-    "ai": "6.0.224",
+    "ai": "7.0.31",
     "next": "16.2.10",
     "react": "19.2.7",
     "react-dom": "19.2.7",
