@@ -74,7 +74,7 @@ export const joinControls: readonly JoinControl[] = [
   {
     channel: "x",
     label: "X",
-    href: "https://x.com/suryamightbuild",
+    href: "https://x.com/surpugaz",
   },
 ] as const;
 
