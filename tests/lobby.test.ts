@@ -12,7 +12,7 @@ const EXPECTED_JOIN_HREFS: Record<string, string> = {
   calendly: "https://calendly.com/suryaoncall/surya-s-vc-scout-office-hours",
   github: "https://github.com/Nxver-GitHub",
   linkedin: "https://www.linkedin.com/in/surya-pugazhenthi",
-  x: "https://x.com/suryamightbuild",
+  x: "https://x.com/surpugaz",
 };
 
 describe("lobby room", () => {
