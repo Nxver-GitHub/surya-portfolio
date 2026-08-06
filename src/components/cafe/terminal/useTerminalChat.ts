@@ -29,6 +29,8 @@
  *     submit time, finished replies folded in via `onFinish`, and the in-flight
  *     reply renders as a transient tail (derived here, never committed) — so
  *     errors and later commands always appear in true session order.
+ *   - Intercept the Proximize teaser question BEFORE the model: it is answered
+ *     entirely client-side, spends no turn, and works with the API down.
  *   - Enforce a per-session user-message cap, then nudge to the contact links.
  *   - Map 429/503 errors to themed lines instead of raw errors.
  *
@@ -59,6 +61,7 @@ import {
 import { isWhoIsSurya, makePortraitLine } from "./portrait";
 import { isCafeOriginQuestion, makeCafeOriginLines } from "./cafeOrigin";
 import { isMeetupRequest, makeMeetupLines } from "./meetup";
+import { isProximizeQuestion, makeProximizeLines } from "./proximize";
 import {
   appendSessionLines,
   clearSessionLines,
@@ -328,6 +331,18 @@ export function useTerminalChat({
         case "chat": {
           if (busy) return; // ignore submits while a reply is streaming
           pushSessionHistory(resolved.text);
+          // "What's he working on next?" is answered ENTIRELY on the client —
+          // the teaser IS the answer, so it never reaches the model. Checked
+          // before the session cap on purpose: the one question this site most
+          // wants to answer must still answer at turn 16, and must survive the
+          // API being rate-limited or down. Costs no turn for the same reason.
+          if (isProximizeQuestion(resolved.text)) {
+            appendSessionLines([
+              makeLine("prompt", `${prompt}${resolved.text}`),
+              ...makeProximizeLines(),
+            ]);
+            return;
+          }
           if (atSessionLimit) {
             appendSessionLines([
               makeLine("prompt", `${prompt}${resolved.text}`),

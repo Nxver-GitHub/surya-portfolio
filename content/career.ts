@@ -323,7 +323,7 @@ export const seasons: readonly Season[] = [
         org: "Undisclosed",
         role: "Builder",
         dates: "2026 – ?",
-        result: "Something new is being built. Details soon.",
+        result: "Under the cover. Ask the café terminal what's coming next.",
         story: {
           problem: "Under the car cover until it is ready.",
           actions: ["In active development — nothing revealed yet."],

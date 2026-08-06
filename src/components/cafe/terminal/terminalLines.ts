@@ -16,8 +16,19 @@ export interface TerminalLine {
   tone: LineTone;
   text: string;
   /** Optional image card rendered with the line (e.g. the portrait). The
-   * texture mirror (CrtScreenFeed) ignores media and paints `text` only. */
-  media?: { readonly src: string; readonly alt: string };
+   * texture mirror (CrtScreenFeed) ignores media and paints `text` only.
+   *
+   * `width` (px) and `aspect` (a CSS `aspect-ratio` value) are optional
+   * overrides for cards whose source art isn't the default portrait crop —
+   * the Proximize teaser poster is 1085×1450 and would lose its lockup to
+   * `object-fit: cover` at the default 4/5. Omit both for the original
+   * portrait/café cards, which keep their existing size exactly. */
+  media?: {
+    readonly src: string;
+    readonly alt: string;
+    readonly width?: number;
+    readonly aspect?: string;
+  };
   /** When true, `text` is rendered VERBATIM — never linkified, never parsed as
    * anything but literal characters. Set on any line whose text is attacker-
    * controlled (e.g. anonymized guest questions in the admin `logs` view), so
@@ -52,7 +63,7 @@ export function makeRawLine(tone: LineTone, text: string): TerminalLine {
 
 /** Build a line carrying an image card (caption in `text`, may be empty). */
 export function makeMediaLine(
-  media: { readonly src: string; readonly alt: string },
+  media: NonNullable<TerminalLine["media"]>,
   caption = "",
 ): TerminalLine {
   return { id: nextLineId(), tone: "system", text: caption, media };

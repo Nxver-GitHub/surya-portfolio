@@ -89,6 +89,11 @@ function ScanlineOverlay() {
   );
 }
 
+/** Default card geometry — the portrait crop. `media.width` / `media.aspect`
+ * override it for art with a different shape (e.g. the teaser poster). */
+const CARD_WIDTH = 128;
+const CARD_ASPECT = "4 / 5";
+
 /** A single line's media card: bordered image + optional caption. */
 function MediaCard({ media, caption }: { media: NonNullable<TerminalLine["media"]>; caption: string }) {
   return (
@@ -96,8 +101,8 @@ function MediaCard({ media, caption }: { media: NonNullable<TerminalLine["media"
       <div
         style={{
           position: "relative",
-          width: 128,
-          aspectRatio: "4 / 5",
+          width: media.width ?? CARD_WIDTH,
+          aspectRatio: media.aspect ?? CARD_ASPECT,
           border: `1px solid ${PHOSPHOR_DIM}`,
           boxShadow: `0 0 6px ${PHOSPHOR_DIM}55`,
           overflow: "hidden",

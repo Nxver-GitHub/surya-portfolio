@@ -23,6 +23,7 @@ import { licenses } from "../../content/licenses";
 import { missionPacks } from "../../content/missions";
 import { menuBooks } from "../../content/menu-books";
 import { joinControls, lobbyRoom, statusChips } from "../../content/lobby";
+import { proximize } from "../../content/proximize";
 
 /** In-fiction name of the café's house terminal. GT-flavored, not a real OS. */
 export const SYSTEM_NAME = "CAFE-OS v2.2";
@@ -152,6 +153,31 @@ function cafeOriginBlock(): string {
   ].join("\n");
 }
 
+/**
+ * The one pre-launch venture the terminal may acknowledge, and the hard limit
+ * on what it may say about it.
+ *
+ * The teaser answer itself is built CLIENT-side (terminal/proximize.ts) and
+ * normally never reaches the model at all. This block exists for the turn
+ * AFTER that — "ok, so what does Proximize actually do?" — where without it
+ * the model would fall back on "I don't have that on file", which reads as a
+ * malfunction moments after the site ran an advert for it. The refusal has to
+ * sound like a choice, not a gap.
+ *
+ * Every fact here comes from content/proximize.ts, which is capped to exactly
+ * what is printed on the public poster. Ordered early so no future cap drops
+ * it. See the disclosure note in that file before adding anything.
+ */
+function upcomingBlock(): string {
+  return [
+    "UPCOMING (announced, pre-launch — this is ALL that is public):",
+    `- ${proximize.name} — "${proximize.tagline}". Positioning: ${proximize.positioning}.`,
+    `- Status: ${proximize.status}; not yet launched. Link: ${proximize.href}`,
+    `- NOTHING else about ${proximize.name} is public. If asked what it does in detail, its stack, funding, timing, team, customers, or metrics, say it is still under the cover and point to ${proximize.href}. Never speculate, infer, or connect it to his other work.`,
+    `- "Project Silhouette" on the career timeline is this same venture, still shown locked. Treat them as one thing; reveal nothing beyond the lines above.`,
+  ].join("\n");
+}
+
 /** Contact channels and current availability — the real links from lobby.ts. */
 function contactBlock(): string {
   const links = joinControls
@@ -180,6 +206,7 @@ function contactBlock(): string {
 export function buildFactsDigest(cap: number = DIGEST_CHAR_CAP): string {
   const blocks = [
     cafeOriginBlock(), // tiny; first so it always survives the cap
+    upcomingBlock(), // tiny; must survive the cap or Proximize answers regress
     contactBlock(),
     careerBlock(), // who he is / current roles — must survive any future cap
     projectsBlock(),
