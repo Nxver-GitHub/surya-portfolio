@@ -12,6 +12,13 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    version: "1.6",
+    date: "August 2026",
+    changes: [
+      "Ask the café terminal what's coming next",
+    ],
+  },
+  {
     version: "1.5",
     date: "July 2026",
     changes: [

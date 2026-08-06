@@ -6,6 +6,7 @@ import {
   buildFactsDigest,
   buildSystemPrompt,
 } from "../src/lib/terminal-prompt";
+import { proximize } from "../content/proximize";
 
 describe("terminal prompt — facts digest", () => {
   const digest = buildFactsDigest();
@@ -116,5 +117,40 @@ describe("terminal prompt — full system prompt", () => {
   it("never leaks undefined or [object", () => {
     expect(prompt).not.toContain("undefined");
     expect(prompt).not.toContain("[object");
+  });
+});
+
+describe("terminal prompt — Proximize disclosure boundary", () => {
+  const digest = buildFactsDigest();
+
+  it("tells the model the public facts", () => {
+    expect(digest).toContain(proximize.name);
+    expect(digest).toContain(proximize.tagline);
+    expect(digest).toContain(proximize.href);
+  });
+
+  it("survives an aggressively small cap", () => {
+    // Ordered early on purpose: if a future content addition pushes this block
+    // out of the digest, the terminal silently regresses to "not on file" one
+    // turn after running an advert for it.
+    expect(buildFactsDigest(1_500)).toContain(proximize.name);
+  });
+
+  it("instructs the model to refuse everything else in character", () => {
+    const lower = digest.toLowerCase();
+    expect(lower).toContain("nothing else about");
+    expect(lower).toContain("under the cover");
+    expect(lower).toContain("never speculate");
+  });
+
+  it("names the specific detail classes that stay sealed", () => {
+    const lower = digest.toLowerCase();
+    for (const sealed of ["stack", "funding", "timing", "team", "customers"]) {
+      expect(lower, sealed).toContain(sealed);
+    }
+  });
+
+  it("links Project Silhouette to it so the two never contradict", () => {
+    expect(digest).toContain("Project Silhouette");
   });
 });

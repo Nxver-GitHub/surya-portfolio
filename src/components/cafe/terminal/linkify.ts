@@ -3,12 +3,20 @@
  *
  * SECURITY CONTRACT: only a strict allowlist ever becomes a link — the site's
  * own internal paths (/garage, /license-center, /career, /missions, /scapes,
- * /cafe, /lobby and subpaths) and the exact contact URLs/mailto from
- * content/lobby.ts. Arbitrary model-emitted URLs stay plain text (prompt-
- * injection surface: a model reply must never mint a clickable external link).
+ * /cafe, /lobby and subpaths), the exact contact URLs/mailto from
+ * content/lobby.ts, and the owner's own proximize.net. Arbitrary model-emitted
+ * URLs stay plain text (prompt-injection surface: a model reply must never
+ * mint a clickable external link).
+ *
+ * The invariant that makes lookalikes safe: a match's `href` is always the
+ * MATCHED SUBSTRING, which by construction is an exact allowlist entry. Given
+ * "https://proximize.net.evil.com", only the allowlisted prefix is linked (to
+ * the allowlisted target) and ".evil.com" stays inert plain text — an attacker
+ * can never steer an href to a domain that isn't enumerated below.
  */
 
 import { joinControls } from "../../../../content/lobby";
+import { proximize } from "../../../../content/proximize";
 
 /** One rendered run of a line: plain text, or an allowlisted link. */
 export interface LinkSegment {
@@ -29,8 +37,24 @@ const INTERNAL_ROOTS = [
   "/lobby",
 ] as const;
 
-/** The exact contact hrefs (mailto + externals) sourced from content/lobby.ts. */
-const CONTACT_HREFS: readonly string[] = joinControls.map((c) => c.href);
+/**
+ * Every exact external href that may become a link: the contact channels from
+ * content/lobby.ts, plus the owner's own pre-launch Proximize URL.
+ *
+ * Proximize is listed here (rather than being added to `joinControls`) because
+ * it is NOT a contact channel — putting it in lobby content would also render
+ * it as a Lobby join control and inject it into the system prompt's CONTACT
+ * block. This stays an explicit, compile-time enumeration of exact strings:
+ * no patterns, no wildcards, nothing model-supplied.
+ *
+ * Consequence, deliberately accepted: the model can now emit a clickable
+ * proximize.net, since the terminal prompt tells it about the launch. That is
+ * the owner's own domain and the intended call-to-action.
+ */
+const ALLOWED_HREFS: readonly string[] = [
+  ...joinControls.map((c) => c.href),
+  proximize.href,
+];
 
 /**
  * Matches a standalone internal path token: one of the allowlisted roots,
@@ -50,10 +74,14 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Matches any of the exact allowlisted contact hrefs (mailto + https URLs). */
-function buildContactRe(): RegExp | null {
-  if (CONTACT_HREFS.length === 0) return null;
-  const alternatives = CONTACT_HREFS.map(escapeRegExp).join("|");
+/** Matches any of the exact allowlisted hrefs (mailto + https URLs). Longest
+ * first, so one allowlisted href that prefixes another can never shadow it. */
+function buildHrefRe(): RegExp | null {
+  if (ALLOWED_HREFS.length === 0) return null;
+  const alternatives = [...ALLOWED_HREFS]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp)
+    .join("|");
   return new RegExp(alternatives, "g");
 }
 
@@ -63,7 +91,7 @@ interface Match {
   readonly href: string;
 }
 
-/** Find all allowlisted matches (internal paths + exact contact hrefs), sorted
+/** Find all allowlisted matches (internal paths + exact external hrefs), sorted
  * by position, with overlaps resolved by preferring the earlier/longer match. */
 function findMatches(text: string): readonly Match[] {
   const raw: Match[] = [];
@@ -73,9 +101,9 @@ function findMatches(text: string): readonly Match[] {
     raw.push({ start: m.index, end: m.index + m[0].length, href: m[0] });
   }
 
-  const contactRe = buildContactRe();
-  if (contactRe) {
-    for (const m of text.matchAll(contactRe)) {
+  const hrefRe = buildHrefRe();
+  if (hrefRe) {
+    for (const m of text.matchAll(hrefRe)) {
       if (m.index === undefined) continue;
       raw.push({ start: m.index, end: m.index + m[0].length, href: m[0] });
     }

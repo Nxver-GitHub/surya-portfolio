@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { linkifySegments } from "../src/components/cafe/terminal/linkify";
 import { joinControls } from "../content/lobby";
+import { proximize } from "../content/proximize";
 
 function reassemble(segments: readonly { text: string }[]): string {
   return segments.map((s) => s.text).join("");
@@ -71,5 +72,58 @@ describe("linkify — spec (allowlist only)", () => {
     const text = "just a normal sentence with no paths or urls";
     const segments = linkifySegments(text);
     expect(segments).toEqual([{ type: "text", text }]);
+  });
+});
+
+describe("linkify — proximize.net (allowlist widening)", () => {
+  it("links the exact Proximize URL", () => {
+    const segments = linkifySegments(`Status: coming soon.  ${proximize.href}`);
+    const link = segments.find((s) => s.type === "link");
+    expect(link?.href).toBe(proximize.href);
+    expect(link?.text).toBe(proximize.href);
+  });
+
+  it("NEVER mints an href to a lookalike domain", () => {
+    // The security invariant: an href is always the matched substring, which
+    // is by construction an exact allowlist entry. A lookalike may share a
+    // prefix, but the target can never be steered off the allowlist.
+    const hostile = [
+      "https://proximize.net.evil.com/steal",
+      "https://proximize.net@evil.com",
+      "https://evil.com/?next=https://proximize.net",
+      "https://notproximize.net",
+      "https://proximize.net.co",
+    ];
+    for (const text of hostile) {
+      for (const seg of linkifySegments(text)) {
+        if (seg.type !== "link") continue;
+        expect(seg.href, text).toBe(proximize.href);
+        expect(seg.href, text).not.toContain("evil.com");
+      }
+    }
+  });
+
+  it("leaves a bare, scheme-less proximize.net as inert text", () => {
+    const segments = linkifySegments("visit proximize.net sometime");
+    expect(segments.some((s) => s.type === "link")).toBe(false);
+  });
+
+  it("keeps hostile input reassembling to the exact original", () => {
+    // Nothing may be dropped or duplicated while splitting a lookalike.
+    for (const text of [
+      "https://proximize.net.evil.com/steal",
+      `${proximize.href} and /garage`,
+    ]) {
+      expect(reassemble(linkifySegments(text))).toBe(text);
+    }
+  });
+
+  it("still links every contact channel after the widening", () => {
+    for (const control of joinControls) {
+      const link = linkifySegments(`reach: ${control.href}`).find(
+        (s) => s.type === "link",
+      );
+      expect(link?.href, control.href).toBe(control.href);
+    }
   });
 });
