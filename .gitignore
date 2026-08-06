@@ -4,6 +4,9 @@ Docs/
 # Agent worktrees
 .worktrees/
 
+# Local AI-tool config (per-developer MCP servers etc., not project config)
+.codex/
+
 # Dependencies
 node_modules/
 
