@@ -13,7 +13,12 @@
  * arm/disarm/play lifecycle can be tested with a fake AudioContext.
  */
 
-export type SfxKind = "move" | "confirm" | "back";
+export type SfxKind =
+  | "move"
+  | "confirm"
+  | "back"
+  | "teaserDrop"
+  | "teaserSlam";
 
 /** One oscillator step within a tone. */
 export interface ToneStep {
@@ -27,7 +32,21 @@ export interface ToneStep {
   readonly peak: number;
 }
 
-/** The three era menu-feedback tones. */
+/**
+ * The tone table: three era menu-feedback blips, plus two cinematic cues for
+ * the Proximize teaser takeover.
+ *
+ * The teaser cues are LONGER GESTURES BUILT FROM SHORT STEPS. The per-step
+ * 30–80ms window is policy (and asserted over this whole table in
+ * tests/sfx.test.ts), so a ~450ms descending collapse is expressed as six
+ * chained steps rather than one long note — the same trick `confirm` already
+ * uses for its two-step rise. They also drop the menu blips' square wave for
+ * sawtooth/triangle/sine: a square sub-bass buzzes, and these need to read as
+ * weight, not as UI.
+ *
+ * Both are still bound by the mute gate — no AudioContext exists unless the
+ * visitor has opted into sound, so the takeover is silent for most people.
+ */
 export const SFX_SPECS: Record<SfxKind, readonly ToneStep[]> = {
   // list / tab selection change — short square blip ~660Hz, ~35ms
   move: [{ freq: 660, type: "square", delayMs: 0, durationMs: 35, peak: 0.12 }],
@@ -38,6 +57,24 @@ export const SFX_SPECS: Record<SfxKind, readonly ToneStep[]> = {
   ],
   // lozenge back button — single lower blip ~330Hz, ~50ms
   back: [{ freq: 330, type: "square", delayMs: 0, durationMs: 50, peak: 0.11 }],
+
+  // Teaser beat 1 — the terminal's signal collapsing: a six-step fall from
+  // 392Hz to a 73Hz sub, thinning as it drops (~445ms, inside the 600ms beat).
+  teaserDrop: [
+    { freq: 392, type: "sawtooth", delayMs: 0, durationMs: 70, peak: 0.1 },
+    { freq: 294, type: "sawtooth", delayMs: 70, durationMs: 70, peak: 0.09 },
+    { freq: 220, type: "sawtooth", delayMs: 140, durationMs: 70, peak: 0.08 },
+    { freq: 165, type: "triangle", delayMs: 210, durationMs: 75, peak: 0.07 },
+    { freq: 110, type: "triangle", delayMs: 285, durationMs: 80, peak: 0.06 },
+    { freq: 73, type: "sine", delayMs: 365, durationMs: 80, peak: 0.05 },
+  ],
+  // Teaser beat 8 — the lockup landing: three overlapping low hits that decay
+  // into a sub, so the slam has body rather than a click (~170ms).
+  teaserSlam: [
+    { freq: 147, type: "triangle", delayMs: 0, durationMs: 60, peak: 0.14 },
+    { freq: 73, type: "sine", delayMs: 40, durationMs: 80, peak: 0.13 },
+    { freq: 49, type: "sine", delayMs: 90, durationMs: 80, peak: 0.1 },
+  ],
 };
 
 /** Peak gain ceiling enforced by policy. */

@@ -51,4 +51,23 @@ export const proximize = {
     src: "/terminal/proximize/poster.webp",
     alt: "Proximize teaser poster — a car under a silver cover beneath the Proximize wordmark, captioned 'coming soon'",
   },
+  /**
+   * Individual elements cut out of the poster for the takeover cinematic's
+   * beats. Both carry luminance-keyed alpha so they composite seamlessly on
+   * the cinematic's black — see scripts/build-proximize-frames.py. They are
+   * decorative within the sequence (the whole takeover is announced as one
+   * sentence to assistive tech), so their alt text is empty by design.
+   */
+  frames: {
+    car: {
+      src: "/terminal/proximize/car.webp",
+      width: 1070,
+      height: 316,
+    },
+    lockup: {
+      src: "/terminal/proximize/lockup.webp",
+      width: 666,
+      height: 184,
+    },
+  },
 } as const;

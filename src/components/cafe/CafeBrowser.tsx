@@ -381,6 +381,7 @@ export function CafeBrowser() {
                 onExhibitAvailability={onExhibitAvailability}
                 terminalActive={crtPresent && chat.lines.length > 0}
                 terminalLines={chat.lines}
+                teaserPlaying={chat.teaserPlaying}
                 onScreenSurface={setScreenSurface}
                 onScreenBounds={handleScreenBounds}
                 roamKeys={roamKeys}

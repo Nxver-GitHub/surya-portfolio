@@ -33,6 +33,17 @@ export interface TerminalSessionState {
   readonly history: readonly string[];
   /** Whether the cold boot has already played this visit. */
   readonly booted: boolean;
+  /**
+   * Whether the Proximize teaser takeover has already run this VISIT.
+   *
+   * Deliberately session state rather than localStorage: someone returning a
+   * week later should see the ad again, and a demo resets with a refresh
+   * instead of clearing site data in front of an audience. Once set, repeat
+   * questions short-circuit to the inline card — three 11-second takeovers in
+   * ninety seconds is what a visitor probing the matcher would otherwise get.
+   * The hidden `teaser` command ignores this flag and always replays.
+   */
+  readonly teaserPlayed: boolean;
 }
 
 const INITIAL_STATE: TerminalSessionState = {
@@ -41,6 +52,7 @@ const INITIAL_STATE: TerminalSessionState = {
   userTurns: 0,
   history: [],
   booted: false,
+  teaserPlayed: false,
 };
 
 let state: TerminalSessionState = INITIAL_STATE;
