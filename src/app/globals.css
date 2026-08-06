@@ -252,6 +252,20 @@ body {
   font-family: ui-monospace, monospace;
 }
 
+/* Café terminal media viewer (MediaZoom): a subtle fade as the full-size card
+   opens. No scale or slide — the viewer is a hard layer over the log, and the
+   motion rules allow fades but not zooms. Skipped entirely under reduced
+   motion (the component omits the animation rather than relying on the global
+   duration override, so no transform is ever composited). */
+@keyframes media-zoom-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Locked-pavilion refusal: short mechanical shake */
 @keyframes locked-shake {
   0%,
