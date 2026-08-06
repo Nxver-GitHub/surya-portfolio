@@ -20,7 +20,8 @@ export type LocalCommandResult =
   | { kind: "chat"; text: string }
   | { kind: "print"; lines: readonly string[] }
   | { kind: "clear" }
-  | { kind: "exit" };
+  | { kind: "exit" }
+  | { kind: "teaser" };
 
 /** The recognised local command verbs (also surfaced by `help`). */
 export const LOCAL_COMMANDS = [
@@ -31,6 +32,17 @@ export const LOCAL_COMMANDS = [
   "clear",
   "exit",
 ] as const;
+
+/**
+ * `teaser` — replay the Proximize takeover on demand, ignoring the
+ * once-per-session guard.
+ *
+ * Deliberately NOT in LOCAL_COMMANDS, so it never appears in `help`. Its
+ * purpose is to be dependable rather than discoverable: on stage you type one
+ * word and the ad plays, instead of typing a sentence and hoping the matcher
+ * catches that phrasing. Visitors reach the same thing by asking a question.
+ */
+export const HIDDEN_TEASER_COMMAND = "teaser";
 
 export type LocalCommand = (typeof LOCAL_COMMANDS)[number];
 
@@ -119,6 +131,8 @@ export function resolveLocalCommand(input: string): LocalCommandResult {
   }
 
   const verb = trimmed.split(/\s+/)[0].toLowerCase();
+  // Checked before the visible table so it works without being advertised.
+  if (verb === HIDDEN_TEASER_COMMAND) return { kind: "teaser" };
   if (!isLocalCommand(verb)) {
     return { kind: "chat", text: trimmed };
   }

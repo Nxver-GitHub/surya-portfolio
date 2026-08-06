@@ -38,7 +38,7 @@
  * history cycling all live in pure, separately-tested modules.
  */
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { resolveLocalCommand, type LocalCommandResult } from "./localCommands";
@@ -85,6 +85,9 @@ const API_PATH = "/api/cafe-terminal";
  * played once, so we don't replay the whole cold-start sequence). */
 const SESSION_RESTORED_LINE = "session restored.";
 
+/** Shown instead of replaying the takeover when it has already run. */
+const REPEAT_TEASER_LINE = "TRANSMISSION ALREADY RECEIVED —";
+
 /** Fixed-width mask for a submitted passphrase echo. Never reveals length
  * precisely and never contains the secret itself. */
 function maskedEcho(input: string): string {
@@ -121,6 +124,12 @@ export interface TerminalChatApi {
   login: LoginState;
   /** Submitted-input history (oldest → newest) for ↑/↓ cycling in the inputs. */
   history: readonly string[];
+  /** The Proximize advert is on screen. Terminal surfaces render the takeover
+   * over their screen area and DISABLE their input while true — a live text
+   * field behind a cinematic collects keystrokes nobody can see. */
+  teaserPlaying: boolean;
+  /** Called by the takeover when it finishes or is skipped. */
+  endTeaser: () => void;
 }
 
 interface UseTerminalChatOptions {
@@ -141,7 +150,29 @@ export function useTerminalChat({
   // is the single writer of chat/login lines; it never holds session state in
   // component-local useState.
   const session = useTerminalSession();
-  const { lines: sessionLines, login, userTurns, history, booted } = session;
+  const { lines: sessionLines, login, userTurns, history, booted, teaserPlayed } =
+    session;
+
+  // Whether the advert is on screen right now. Component state, not session
+  // state: the takeover is transient and must not survive a remount, unlike
+  // `teaserPlayed` which is the durable "already seen it this visit" record.
+  const [teaserPlaying, setTeaserPlaying] = useState(false);
+
+  /** Begin the takeover. Marks the session immediately, so an aborted play
+   * still counts as seen — otherwise closing the terminal mid-advert would
+   * arm it to fire again on the next question. */
+  const startTeaser = useCallback(() => {
+    patchTerminalSession({ teaserPlayed: true });
+    setTeaserPlaying(true);
+  }, []);
+
+  /** End it — finished, skipped, however. Purely lifts the layer: the residual
+   * card was already written when the question was asked, precisely so that
+   * HOW the advert ends never decides whether the answer exists. Skipping at
+   * beat one and watching to the end leave the same scrollback. */
+  const endTeaser = useCallback(() => {
+    setTeaserPlaying(false);
+  }, []);
 
   // Track the previous open state so each open EDGE (closed → open) runs the
   // boot-or-restore step exactly once — the hook stays mounted across
@@ -168,6 +199,10 @@ export function useTerminalChat({
       makeLine("system", LOGIN_PROMPT),
     ]);
   }, [open, booted]);
+
+  // (Aborting a half-played advert is handled by TeaserTakeover finalising on
+  // unmount — closing the terminal unmounts it, and `endTeaser` is idempotent
+  // in effect because the takeover only ever calls it once.)
 
   // One transport for the hook's lifetime. Flattens AI-SDK UI messages to the
   // route's strict {role, content} shape — only user/assistant text turns cross
@@ -328,6 +363,16 @@ export function useTerminalChat({
           pushSessionHistory(input);
           onExit();
           return;
+        case "teaser":
+          // The hidden command ALWAYS replays, ignoring `teaserPlayed` — that
+          // is its whole reason for existing.
+          pushSessionHistory(input);
+          appendSessionLines([
+            makeLine("prompt", `${prompt}${input.trim()}`),
+            ...makeProximizeLines(),
+          ]);
+          startTeaser();
+          return;
         case "chat": {
           if (busy) return; // ignore submits while a reply is streaming
           pushSessionHistory(resolved.text);
@@ -337,10 +382,18 @@ export function useTerminalChat({
           // wants to answer must still answer at turn 16, and must survive the
           // API being rate-limited or down. Costs no turn for the same reason.
           if (isProximizeQuestion(resolved.text)) {
+            // The card is written NOW, underneath, whether or not the advert
+            // plays over it — so a skip, an abort, or a close all leave the
+            // same coherent scrollback.
             appendSessionLines([
               makeLine("prompt", `${prompt}${resolved.text}`),
+              ...(teaserPlayed ? [makeLine("system", REPEAT_TEASER_LINE)] : []),
               ...makeProximizeLines(),
             ]);
+            // Only the FIRST ask this visit gets the takeover. Repeat plays
+            // punish exactly the curious visitor who probes the matcher with
+            // three rephrasings in a row.
+            if (!teaserPlayed) startTeaser();
             return;
           }
           if (atSessionLimit) {
@@ -371,7 +424,15 @@ export function useTerminalChat({
         }
       }
     },
-    [atSessionLimit, busy, onExit, sendMessage, userTurns],
+    [
+      atSessionLimit,
+      busy,
+      onExit,
+      sendMessage,
+      startTeaser,
+      teaserPlayed,
+      userTurns,
+    ],
   );
 
   const submit = useCallback(
@@ -441,5 +502,14 @@ export function useTerminalChat({
     return [...sessionLines, { id: "streaming-tail", tone: "reply", text: tail }];
   }, [busy, sessionLines, messages]);
 
-  return { lines, busy, submit, atSessionLimit, login, history };
+  return {
+    lines,
+    busy,
+    submit,
+    atSessionLimit,
+    login,
+    history,
+    teaserPlaying,
+    endTeaser,
+  };
 }

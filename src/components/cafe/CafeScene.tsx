@@ -494,6 +494,9 @@ interface CafeSceneProps {
   terminalActive?: boolean;
   /** The terminal scrollback to mirror onto the CRT screen (set dressing). */
   terminalLines?: readonly TerminalLine[];
+  /** The Proximize advert is playing on the DOM terminal — the in-scene tube
+   * drops its signal at the same instant instead of calmly mirroring text. */
+  teaserPlaying?: boolean;
   /** The live terminal DOM to render on the physical CRT face when docked. When
    *  present (and the CRT is focused and the screen mesh is found), the camera
    *  docks head-on and this renders on the tube via CrtScreenSurface. */
@@ -530,6 +533,7 @@ export function CafeScene({
   onExhibitAvailability,
   terminalActive = false,
   terminalLines = [],
+  teaserPlaying = false,
   screenContent = null,
   onScreenSurface,
   onScreenBounds,
@@ -660,6 +664,7 @@ export function CafeScene({
       <CrtScreenFeed
         active={terminalActive && !htmlDocked}
         lines={terminalLines}
+        deadSignal={teaserPlaying}
       />
 
       {/* Interactive terminal surface: locates + measures the screen mesh, and

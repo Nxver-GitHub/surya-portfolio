@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  HIDDEN_TEASER_COMMAND,
   LOCAL_COMMANDS,
+  localHelpLines,
   makePortraitCaptionLine,
   resolveLocalCommand,
 } from "../src/components/cafe/terminal/localCommands";
@@ -132,5 +134,29 @@ describe("terminal error mapping", () => {
     expect(themedErrorLine(new Error("boom"))).toBe(THEMED.genericError);
     expect(themedErrorLine("weird string")).toBe(THEMED.genericError);
     expect(themedErrorLine(undefined)).toBe(THEMED.genericError);
+  });
+});
+
+describe("hidden `teaser` command", () => {
+  it("resolves to its own result kind", () => {
+    expect(resolveLocalCommand("teaser")).toEqual({ kind: "teaser" });
+  });
+
+  it("is case-insensitive and tolerates surrounding space", () => {
+    expect(resolveLocalCommand("  TEASER  ")).toEqual({ kind: "teaser" });
+    expect(resolveLocalCommand("Teaser")).toEqual({ kind: "teaser" });
+  });
+
+  it("stays OUT of the advertised command table and out of `help`", () => {
+    // The point of the command is to be dependable on stage, not discoverable:
+    // visitors are meant to reach the advert by asking a question.
+    expect(LOCAL_COMMANDS).not.toContain(HIDDEN_TEASER_COMMAND);
+    const help = localHelpLines().join("\n");
+    expect(help).not.toContain(HIDDEN_TEASER_COMMAND);
+  });
+
+  it("does not swallow ordinary questions that merely contain the word", () => {
+    const result = resolveLocalCommand("was that a teaser for something?");
+    expect(result.kind).toBe("chat");
   });
 });

@@ -73,11 +73,31 @@ function findMeshByMaterialName(root: Object3D, name: string): Mesh | null {
 function paintFeed(
   canvas: HTMLCanvasElement,
   lines: readonly TerminalLine[],
+  deadSignal = false,
 ): void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.fillStyle = "#02160b";
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // While the Proximize advert owns the DOM terminal, the tube in the room
+  // loses signal at the same instant. Two screens dying together reads as
+  // something taking over the machine; the alternative — green text scrolling
+  // calmly eighteen inches from a playing advert — is the most fiction-
+  // breaking thing this scene could show, precisely because both surfaces are
+  // visible at once. Mirroring the cinematic here instead was never an option:
+  // this is a text painter on a 320x240 canvas at 4fps.
+  if (deadSignal) {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    ctx.fillStyle = "rgba(125,255,155,0.20)";
+    ctx.fillRect(0, CANVAS_H / 2 - 1, CANVAS_W, 2);
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    for (let sy = 0; sy < CANVAS_H; sy += 3) {
+      ctx.fillRect(0, sy, CANVAS_W, 1);
+    }
+    return;
+  }
 
   const shown = lines.slice(-FEED_LINES);
   ctx.font = "14px ui-monospace, monospace";
@@ -111,6 +131,9 @@ interface CrtScreenFeedProps {
   active: boolean;
   /** The current scrollback lines to mirror. */
   lines: readonly TerminalLine[];
+  /** The Proximize advert is playing on the DOM terminal — paint a dead-signal
+   * field instead of the scrollback so both screens drop together. */
+  deadSignal?: boolean;
 }
 
 /** Bundle the canvas + its texture, created once for the component's lifetime. */
@@ -141,7 +164,7 @@ interface FeedPlacement {
   readonly depth: number;
 }
 
-export function CrtScreenFeed({ active, lines }: CrtScreenFeedProps) {
+export function CrtScreenFeed({ active, lines, deadSignal = false }: CrtScreenFeedProps) {
   const scene = useThree((state) => state.scene);
 
   // Canvas + texture are mutable non-render objects — a lazily-initialized ref
@@ -230,9 +253,9 @@ export function CrtScreenFeed({ active, lines }: CrtScreenFeedProps) {
     const now = Date.now();
     if (now - lastUpdateRef.current < UPDATE_INTERVAL_MS) return;
     lastUpdateRef.current = now;
-    paintFeed(surface.canvas, lines);
+    paintFeed(surface.canvas, lines, deadSignal);
     surface.texture.needsUpdate = true;
-  }, [active, placement, lines]);
+  }, [active, placement, lines, deadSignal]);
 
   // Dispose the texture on unmount.
   useEffect(() => {

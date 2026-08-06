@@ -37,6 +37,7 @@ import {
 import { useReducedMotion } from "../../garage/useReducedMotion";
 import { LogRenderer, PHOSPHOR, PHOSPHOR_DIM, PHOSPHOR_USER } from "./LogRenderer";
 import { cycleHistory, HISTORY_CURSOR_HOME, type HistoryCursor } from "./history";
+import { TeaserTakeover } from "./teaser/TeaserTakeover";
 import type { TerminalChatApi } from "./useTerminalChat";
 
 /** Which surface we're rendering. See the module doc for each variant. */
@@ -172,6 +173,10 @@ function InputLine({ chat, inputId, autoFocus, reducedMotion }: InputLineProps) 
         spellCheck={false}
         maxLength={500}
         placeholder={placeholder}
+        // Dead while the Proximize advert owns the screen: the field is
+        // hidden behind an opaque takeover, so anything typed into it would
+        // be invisible keystrokes landing in a box the visitor can't see.
+        disabled={chat.teaserPlaying}
         className="flex-1 bg-transparent outline-none placeholder:opacity-40"
         style={{
           color: PHOSPHOR_USER,
@@ -309,6 +314,7 @@ export function Terminal({
       >
         <Scanlines />
         <ScrollbackLog chat={chat} reducedMotion={reducedMotion} />
+        {chat.teaserPlaying ? <TeaserTakeover onDone={chat.endTeaser} /> : null}
       </section>
     );
   }
@@ -352,6 +358,7 @@ export function Terminal({
           autoFocus
           reducedMotion={reducedMotion}
         />
+        {chat.teaserPlaying ? <TeaserTakeover onDone={chat.endTeaser} /> : null}
       </section>
     );
   }
@@ -407,6 +414,7 @@ export function Terminal({
         autoFocus
         reducedMotion={reducedMotion}
       />
+      {chat.teaserPlaying ? <TeaserTakeover onDone={chat.endTeaser} /> : null}
     </section>
   );
 }
