@@ -82,6 +82,22 @@ export const pavilions: readonly Pavilion[] = [
     glyph: "MS",
   },
   {
+    id: "rally",
+    slug: "special-stage",
+    name: "Special Stage",
+    caption: "GTM engineering case studies",
+    status: "open",
+    // The only infield node: rally leaves the shared circuit, so this badge
+    // sits off the ribbon. Label flips to the right because the corridor
+    // between the node and the right-hand ribbon is ~35% of the map wide,
+    // while the left one (~19%, shared with the Lobby label) crowds the
+    // chicane once the map box scales down below its 64rem cap.
+    map: { x: 40, y: 46 },
+    labelSide: "right",
+    livery: "subaru555",
+    glyph: "SS",
+  },
+  {
     id: "scapes",
     slug: "scapes",
     name: "Scapes",

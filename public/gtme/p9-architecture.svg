@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="840" viewBox="0 0 1300 840" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4B5563"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#D97706"/>
+    </marker>
+  </defs>
+
+  <rect width="1300" height="840" fill="#FFFFFF"/>
+
+  <text x="40" y="44" font-size="21" font-weight="700" fill="#111827">Clay to channel to reply-tracking</text>
+  <text x="40" y="68" font-size="13.5" fill="#6B7280">SEG1_NO_VISIBLE_PROCESSOR. 12 sends, one message per person, no follow-up, no tracking pixels.</text>
+
+  <rect x="36" y="94" width="366" height="612" rx="12" fill="#EEF2FF" stroke="#C7D2FE"/>
+  <rect x="438" y="94" width="366" height="612" rx="12" fill="#ECFDF5" stroke="#A7F3D0"/>
+  <rect x="840" y="94" width="366" height="612" rx="12" fill="#FFF7ED" stroke="#FED7AA"/>
+
+  <text x="60" y="122" font-size="11.5" font-weight="700" fill="#4F46E5" letter-spacing="1.2">CLAY — SYSTEM OF RECORD</text>
+  <text x="462" y="122" font-size="11.5" font-weight="700" fill="#059669" letter-spacing="1.2">CHANNEL</text>
+  <text x="864" y="122" font-size="11.5" font-weight="700" fill="#D97706" letter-spacing="1.2">REPLY TRACKING</text>
+
+  <!-- CLAY -->
+  <rect x="62" y="140" width="314" height="60" rx="8" fill="#FFFFFF" stroke="#6366F1" stroke-width="1.5"/>
+  <text x="78" y="164" font-size="14.5" font-weight="600" fill="#111827">yc-tam-pool-2932</text>
+  <text x="78" y="185" font-size="12" fill="#6B7280">2,932 YC companies · 909 scored</text>
+
+  <line x1="219" y1="200" x2="219" y2="224" stroke="#4B5563" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="62" y="228" width="314" height="60" rx="8" fill="#FFFFFF" stroke="#6366F1" stroke-width="1.5"/>
+  <text x="78" y="252" font-size="14.5" font-weight="600" fill="#111827">SEG1_NO_VISIBLE_PROCESSOR</text>
+  <text x="78" y="273" font-size="12" fill="#6B7280">199 accounts · tier A, 2021–2022 batches</text>
+
+  <line x1="219" y1="288" x2="219" y2="312" stroke="#4B5563" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="62" y="316" width="314" height="98" rx="8" fill="#FFFFFF" stroke="#6366F1" stroke-width="1.5"/>
+  <text x="78" y="340" font-size="14.5" font-weight="600" fill="#111827">seg1_gate</text>
+  <text x="78" y="360" font-size="12" fill="#374151">live evidence URL · numeric prices ·</text>
+  <text x="78" y="377" font-size="12" fill="#374151">self-serve path · not a payments company</text>
+  <text x="78" y="400" font-size="12.5" font-weight="700" fill="#4338CA">57 of 199 survive  (29%)</text>
+
+  <line x1="219" y1="414" x2="219" y2="438" stroke="#4B5563" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="62" y="442" width="314" height="116" rx="8" fill="#FFFFFF" stroke="#6366F1" stroke-width="2"/>
+  <text x="78" y="466" font-size="14.5" font-weight="600" fill="#111827">P9-send-seed</text>
+  <text x="78" y="486" font-size="12" fill="#6B7280">12 rows · one per person</text>
+  <text x="78" y="507" font-size="11.5" fill="#374151">builder_confidence · specific_finding</text>
+  <text x="78" y="524" font-size="11.5" fill="#374151">finding_source · Work Email (12/12)</text>
+  <text x="78" y="541" font-size="11.5" fill="#374151">sent_at · channel · outcome · correction_text</text>
+
+  <line x1="219" y1="558" x2="219" y2="582" stroke="#4B5563" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="62" y="586" width="314" height="104" rx="8" fill="#FEF2F2" stroke="#EF4444" stroke-width="2"/>
+  <text x="78" y="610" font-size="14.5" font-weight="600" fill="#991B1B">send_blocked  (guardrail)</text>
+  <text x="78" y="630" font-size="11.5" fill="#7F1D1D">BLOCK_OPTOUT · BLOCK_ALREADY_SENT</text>
+  <text x="78" y="647" font-size="11.5" fill="#7F1D1D">BLOCK_NO_PERSONALIZATION (&lt;40 chars)</text>
+  <text x="78" y="664" font-size="11.5" fill="#7F1D1D">BLOCK_JURISDICTION · BLOCK_NO_EMAIL</text>
+  <text x="78" y="682" font-size="11.5" font-weight="700" fill="#065F46">SEND_OK required · reports, does not lock</text>
+
+  <line x1="376" y1="500" x2="500" y2="500" stroke="#4B5563" stroke-width="1.8" marker-end="url(#a)"/>
+  <text x="386" y="491" font-size="11" fill="#065F46" font-weight="600">SEND_OK only</text>
+
+  <!-- CHANNEL -->
+  <rect x="464" y="150" width="314" height="102" rx="8" fill="#FFFFFF" stroke="#10B981" stroke-width="1.5"/>
+  <text x="480" y="174" font-size="14.5" font-weight="600" fill="#111827">Gmail · manual send</text>
+  <text x="480" y="195" font-size="12" fill="#6B7280">12 sent · personal address, real name</text>
+  <text x="480" y="216" font-size="11.5" fill="#374151">no open pixel · no click wrapping</text>
+  <text x="480" y="233" font-size="11.5" fill="#374151">no follow-up sequence</text>
+
+  <line x1="621" y1="252" x2="621" y2="276" stroke="#4B5563" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="464" y="280" width="314" height="98" rx="8" fill="#FFFFFF" stroke="#059669" stroke-width="2"/>
+  <text x="480" y="304" font-size="14.5" font-weight="600" fill="#111827">Thread labelled p9-sent</text>
+  <text x="480" y="325" font-size="12" fill="#6B7280">applied by hand at send time</text>
+  <text x="480" y="346" font-size="11.5" fill="#374151">the label is what puts a conversation</text>
+  <text x="480" y="363" font-size="11.5" fill="#374151">in scope for the loop</text>
+
+  <line x1="621" y1="378" x2="621" y2="402" stroke="#4B5563" stroke-width="1.6" marker-end="url(#a)"/>
+
+  <rect x="464" y="406" width="314" height="76" rx="8" fill="#FFFFFF" stroke="#10B981" stroke-width="1.5"/>
+  <text x="480" y="430" font-size="14.5" font-weight="600" fill="#111827">Recipient</text>
+  <text x="480" y="451" font-size="12" fill="#6B7280">10 of 12 are non-CEO engineers</text>
+  <text x="480" y="470" font-size="11.5" fill="#374151">2 with direct public billing-code evidence</text>
+
+  <rect x="464" y="510" width="314" height="112" rx="8" fill="#FFFFFF" stroke="#10B981" stroke-width="1.5"/>
+  <text x="480" y="534" font-size="14" font-weight="600" fill="#111827">Footer on every email</text>
+  <text x="480" y="555" font-size="11.5" fill="#374151">real name, address, LinkedIn</text>
+  <text x="480" y="572" font-size="11.5" fill="#374151">not affiliated with Stripe, they didn't send me</text>
+  <text x="480" y="589" font-size="11.5" fill="#374151">nothing to sell you</text>
+  <text x="480" y="606" font-size="11.5" fill="#374151">reply "no thanks" and I won't write again</text>
+
+  <line x1="778" y1="444" x2="902" y2="444" stroke="#D97706" stroke-width="1.8" marker-end="url(#ar)"/>
+  <text x="790" y="435" font-size="11" fill="#B45309" font-weight="600">reply</text>
+
+  <!-- REPLY -->
+  <rect x="866" y="150" width="314" height="102" rx="8" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="882" y="174" font-size="14.5" font-weight="600" fill="#111827">Gmail Apps Script</text>
+  <text x="882" y="195" font-size="12" fill="#6B7280">1-minute time trigger</text>
+  <text x="882" y="216" font-size="11.5" fill="#374151">finds label:p9-sent -label:p9-logged</text>
+  <text x="882" y="233" font-size="11.5" fill="#374151">strips quoted text, classifies, POSTs</text>
+
+  <line x1="1023" y1="252" x2="1023" y2="276" stroke="#D97706" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <rect x="866" y="280" width="314" height="98" rx="8" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="882" y="304" font-size="14.5" font-weight="600" fill="#111827">p9-replies</text>
+  <text x="882" y="325" font-size="12" fill="#6B7280">Clay table · webhook source</text>
+  <text x="882" y="346" font-size="11.5" fill="#374151">reply_email · subject · body</text>
+  <text x="882" y="363" font-size="11.5" fill="#374151">outcome_hint · processors_named</text>
+
+  <line x1="1023" y1="378" x2="1023" y2="402" stroke="#D97706" stroke-width="1.6" marker-end="url(#ar)"/>
+
+  <rect x="866" y="406" width="314" height="76" rx="8" fill="#FFFFFF" stroke="#D97706" stroke-width="2"/>
+  <text x="882" y="430" font-size="14.5" font-weight="600" fill="#111827">Lookup: Work Email = reply_email</text>
+  <text x="882" y="451" font-size="12" fill="#6B7280">pulls the reply onto the send row</text>
+  <text x="882" y="470" font-size="11.5" fill="#374151">manual refresh · capture is automatic</text>
+
+  <rect x="866" y="510" width="314" height="112" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="882" y="534" font-size="14" font-weight="600" fill="#92400E">outcome_hint, set by the script</text>
+  <text x="882" y="555" font-size="11.5" fill="#78350F">opt_out — checked first, always wins</text>
+  <text x="882" y="572" font-size="11.5" fill="#78350F">auto_reply · bounce</text>
+  <text x="882" y="589" font-size="11.5" fill="#78350F">correction — 40 billing vendors matched</text>
+  <text x="882" y="606" font-size="11.5" fill="#78350F">needs_review</text>
+
+  <path d="M1023 482 L1023 736 L219 736 L219 694" fill="none" stroke="#D97706" stroke-width="1.8" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+  <text x="620" y="758" font-size="12" fill="#B45309" font-weight="600" text-anchor="middle">a reply is in Clay within 60 seconds, on the row carrying the claim that produced it</text>
+
+  <text x="40" y="800" font-size="12" fill="#6B7280">Primary metric: corrections received. A reply naming their actual billing stack is a labelled correction to the P7 detection method.</text>
+  <text x="40" y="820" font-size="12" fill="#6B7280">Verified end to end on 2026-08-31: a labelled thread was found, parsed, classified and written to Clay with no human in the path.</text>
+</svg>

@@ -12,8 +12,8 @@ import { openCount, pavilions } from "../content/pavilions";
 const PUBLIC_DIR = join(__dirname, "..", "public");
 
 describe("pavilions", () => {
-  it("has all seven pavilions with unique slugs", () => {
-    expect(pavilions).toHaveLength(7);
+  it("has all eight pavilions with unique slugs", () => {
+    expect(pavilions).toHaveLength(8);
     const slugs = pavilions.map((p) => p.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
   });
