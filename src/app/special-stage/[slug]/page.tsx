@@ -14,8 +14,12 @@ import type { LiveryId } from "../../../../content/liveries";
 import { pavilions } from "../../../../content/pavilions";
 import { GtCrumb, LozengeLink } from "@/components/gt/GtChrome";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
+import { Chevron } from "@/components/rally/Chevron";
 import { HandCheckBoard } from "@/components/rally/HandCheckBoard";
 import { ProvenanceDot, ProvenanceLegend } from "@/components/rally/ProvenanceDot";
+import { SectionFigure } from "@/components/rally/SectionFigure";
+import { StageVideoPlate } from "@/components/rally/StageVideoPlate";
+import { TimingBoard } from "@/components/rally/TimingBoard";
 
 const RALLY_LIVERY: LiveryId =
   pavilions.find((p) => p.slug === "special-stage")?.livery ?? "subaru555";
@@ -109,9 +113,11 @@ function StoryBlock({ section }: { section: StageSection }) {
       {section.chrome ? <ChromeCaption>{section.chrome}</ChromeCaption> : null}
       <SectionHeading>{section.heading}</SectionHeading>
       <Prose body={section.body} />
+      <SectionFigure figure={section.figure} />
       {section.quotes?.map((quote) => (
         <PullQuote key={quote}>{quote}</PullQuote>
       ))}
+      {section.video ? <StageVideoPlate video={section.video} /> : null}
     </section>
   );
 }
@@ -120,10 +126,13 @@ function StoryBlock({ section }: { section: StageSection }) {
  * The same section shape inside a stamped plate, under a red stamp and the
  * red title rule with its diagonal kick. The failures are not tucked away,
  * they just read as a filed incident.
+ *
+ * Spacing is deliberately tight: a chevron divider sits directly above this
+ * block on the page and owns the gap.
  */
 function IncidentBlock({ section }: { section: StageSection }) {
   return (
-    <section className="plate mt-8">
+    <section className="plate mt-3">
       <div className="flex flex-col gap-3 p-5">
         {section.chrome ? (
           <p className="ts-hard -rotate-1 self-start bg-accent px-2 py-0.5 font-display text-xs font-black tracking-[0.2em] text-white uppercase">
@@ -135,9 +144,11 @@ function IncidentBlock({ section }: { section: StageSection }) {
           <div className="gt-rule mt-2 mr-3" />
         </div>
         <Prose body={section.body} />
+        <SectionFigure figure={section.figure} />
         {section.quotes?.map((quote) => (
           <PullQuote key={quote}>{quote}</PullQuote>
         ))}
+        {section.video ? <StageVideoPlate video={section.video} /> : null}
       </div>
     </section>
   );
@@ -199,14 +210,19 @@ export default async function StagePage({ params }: StagePageProps) {
       </header>
 
       <main className="flex flex-1 flex-col pb-10">
-        <div className="mt-10 max-w-[46ch] md:mt-12">
-          <p className="ts-hard font-display text-sm font-semibold tracking-[0.25em] text-silver uppercase">
-            {stage.chrome} · {stage.window}
-          </p>
-          <h1 className="gt-title text-3xl text-chrome md:text-4xl">
-            {stage.title}
-          </h1>
-          <div className="gt-rule mt-2 mr-3" />
+        <div className="mt-10 md:mt-12">
+          <TimingBoard
+            chrome={stage.chrome}
+            window={stage.window}
+            livery={RALLY_LIVERY}
+            className="max-w-[68ch]"
+          />
+          <div className="mt-5 max-w-[46ch]">
+            <h1 className="gt-title text-3xl text-chrome md:text-4xl">
+              {stage.title}
+            </h1>
+            <div className="gt-rule mt-2 mr-3" />
+          </div>
         </div>
 
         {stage.assertion ? (
@@ -218,6 +234,7 @@ export default async function StagePage({ params }: StagePageProps) {
         <div className="mt-4 flex flex-col gap-3">
           <Prose body={stage.lede} />
           {stage.pullQuote ? <PullQuote>{stage.pullQuote}</PullQuote> : null}
+          {stage.video ? <StageVideoPlate video={stage.video} /> : null}
         </div>
 
         {stage.careerEventSlug ? (
@@ -233,7 +250,8 @@ export default async function StagePage({ params }: StagePageProps) {
           </div>
         ) : null}
 
-        <section className="mt-9 flex flex-col gap-3">
+        <Chevron className="mt-9" />
+        <section className="mt-3 flex flex-col gap-3">
           <ChromeCaption>Stage log</ChromeCaption>
           <SectionHeading>Build log</SectionHeading>
           <ol className="flex flex-col gap-3">
@@ -258,7 +276,8 @@ export default async function StagePage({ params }: StagePageProps) {
           </ol>
         </section>
 
-        <section className="mt-9 flex flex-col gap-3">
+        <Chevron className="mt-9" />
+        <section className="mt-3 flex flex-col gap-3">
           <ChromeCaption>Timing sheet</ChromeCaption>
           <SectionHeading>Metrics</SectionHeading>
           <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -297,20 +316,26 @@ export default async function StagePage({ params }: StagePageProps) {
           </Fragment>
         ))}
 
+        {/* Rally blue and yellow here: the incident block already carries a red
+            stamp and a red rule, so a red chevron would double up on it. */}
+        <Chevron variant="livery" livery={RALLY_LIVERY} className="mt-9" />
         <IncidentBlock section={stage.failures} />
 
         <StoryBlock section={stage.debrief} />
 
         {stage.artifacts.length ? (
-          <section className="mt-9 flex flex-col gap-3">
-            <ChromeCaption>Service park</ChromeCaption>
-            <SectionHeading>Artifacts</SectionHeading>
-            <div className="flex flex-col gap-5">
-              {stage.artifacts.map((artifact) => (
-                <ArtifactFigure key={artifact.label} artifact={artifact} />
-              ))}
-            </div>
-          </section>
+          <>
+            <Chevron className="mt-9" />
+            <section className="mt-3 flex flex-col gap-3">
+              <ChromeCaption>Service park</ChromeCaption>
+              <SectionHeading>Artifacts</SectionHeading>
+              <div className="flex flex-col gap-5">
+                {stage.artifacts.map((artifact) => (
+                  <ArtifactFigure key={artifact.label} artifact={artifact} />
+                ))}
+              </div>
+            </section>
+          </>
         ) : null}
 
         <nav

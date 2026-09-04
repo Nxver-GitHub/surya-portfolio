@@ -30,6 +30,21 @@ export interface BuildLogEntry {
   body: string;
 }
 
+export interface StageVideo {
+  /** External share link (Cursorful); opens in a new tab */
+  href: string;
+  label: string;
+  /** Plain-language line under the label */
+  note?: string;
+}
+
+export interface StageFigure {
+  /** Public path under /gtme */
+  src: string;
+  alt: string;
+  caption: string;
+}
+
 export interface StageSection {
   heading: string;
   /** Optional rally-chrome caption over the plain heading */
@@ -37,6 +52,10 @@ export interface StageSection {
   body: readonly string[];
   /** Verbatim lines from the build writeups, rendered as pull quotes */
   quotes?: readonly string[];
+  /** Screen recording that walks through this section's build */
+  video?: StageVideo;
+  /** Workspace screenshot placed inline, after the body */
+  figure?: StageFigure;
 }
 
 export interface StageArtifact {
@@ -60,6 +79,8 @@ export interface CaseStudy {
   window: string;
   lede: readonly string[];
   pullQuote?: string;
+  /** Screen recording of the stage's build, linked from under the lede */
+  video?: StageVideo;
   buildLog: readonly BuildLogEntry[];
   metrics: readonly StageMetric[];
   sections: readonly StageSection[];
@@ -79,6 +100,29 @@ export const specialStage = {
   ],
   provenanceNote:
     "Numbers marked with a dot come from the working session and its published posts. Unmarked numbers are stated in the build artifacts on disk, with file and line.",
+  /** Every screen recording from the arc, listed once on the index */
+  footage: [
+    {
+      href: "https://cursorful.com/share/xQc6NQ6tmCPG",
+      label: "P5, an earlier build",
+      note: "Recorded before this arc started.",
+    },
+    {
+      href: "https://cursorful.com/share/fOxWpi6D1N3r",
+      label: "P6, the memory layer",
+      note: "The snapshot layer that gives Clay a clock.",
+    },
+    {
+      href: "https://cursorful.com/share/syYaoX9UCLOf",
+      label: "P8, segmentation",
+      note: "The cut, the gate, and the rename.",
+    },
+    {
+      href: "https://cursorful.com/share/bxlhgXZrc8Pj",
+      label: "P9, the outbound run",
+      note: "Twelve sends and the reply loop.",
+    },
+  ],
 } as const;
 
 export const throughLine =
@@ -183,6 +227,11 @@ export const caseStudies: readonly CaseStudy[] = [
         quotes: [
           "Clay could not remember. It holds one observation from one day, so it answers what is true now and never what changed. My second-strongest signal is a processor that was not detectable ninety days ago, which is not a property of a company. It is a property of two observations.",
         ],
+        video: {
+          href: "https://cursorful.com/share/fOxWpi6D1N3r",
+          label: "Onboard: building the memory layer",
+          note: "A screen recording made during the build.",
+        },
       },
     ],
     failures: {
@@ -218,6 +267,11 @@ export const caseStudies: readonly CaseStudy[] = [
     lede: [
       "The 909 scored companies cut into three segments and three exclusions, driven by one formula column. A segment without a time dimension is a filter. The clock is what makes it operable: who enters, who leaves, and when.",
     ],
+    video: {
+      href: "https://cursorful.com/share/syYaoX9UCLOf",
+      label: "Onboard: the segmentation pass",
+      note: "A screen recording made during the build.",
+    },
     buildLog: [
       {
         date: "Aug 27",
@@ -299,6 +353,11 @@ export const caseStudies: readonly CaseStudy[] = [
     lede: [
       "The last mile of GTM engineering is not delivery. It is the point where you stop trusting your own output because someone else is about to read it. Errors in a pipeline built for yourself cost nothing. Errors sent under your real name have a name and an inbox attached.",
     ],
+    video: {
+      href: "https://cursorful.com/share/bxlhgXZrc8Pj",
+      label: "Onboard: the outbound run",
+      note: "A screen recording made during the build.",
+    },
     buildLog: [
       {
         date: "Aug 30",

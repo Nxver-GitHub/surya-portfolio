@@ -269,3 +269,45 @@ describe("gtme content — pace-notes segment arithmetic", () => {
     expect(199 + 220 + 201 + 190 + 99 + 2023).toBe(2932);
   });
 });
+
+describe("gtme content — onboard footage links", () => {
+  const CURSORFUL_RE = /^https:\/\/cursorful\.com\/share\/[A-Za-z0-9]+$/;
+
+  const stageVideos = caseStudies.flatMap((s) => [
+    ...(s.video ? [{ where: `${s.slug}.video`, video: s.video }] : []),
+    ...s.sections
+      .filter((sec) => sec.video)
+      .map((sec) => ({
+        where: `${s.slug}.sections("${sec.heading}").video`,
+        video: sec.video!,
+      })),
+  ]);
+
+  it("uses only well-formed Cursorful share links, everywhere a video appears", () => {
+    for (const { where, video } of stageVideos) {
+      expect(video.href, where).toMatch(CURSORFUL_RE);
+      expect(video.label.trim().length, where).toBeGreaterThan(0);
+    }
+    for (const f of gtmeModule.specialStage.footage) {
+      expect(f.href, f.label).toMatch(CURSORFUL_RE);
+    }
+  });
+
+  it("links every stage-level video from the index footage strip too", () => {
+    // The index strip is the one place a skimmer sees all recordings, so a
+    // video wired into a stage must also be listed there.
+    const indexHrefs = new Set(
+      gtmeModule.specialStage.footage.map((f) => f.href),
+    );
+    for (const { where, video } of stageVideos) {
+      expect(indexHrefs.has(video.href), where).toBe(true);
+    }
+  });
+
+  it("keeps the P7 gap honest: recon carries no stage-level video", () => {
+    // No recording was made for the P7 prompt. The recon page's only video
+    // is the P6 memory-layer walkthrough inside its section, and pretending
+    // otherwise would break the arc's own provenance rules.
+    expect(caseStudyBySlug.get("recon")?.video).toBeUndefined();
+  });
+});

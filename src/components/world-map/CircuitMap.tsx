@@ -17,6 +17,14 @@ const CIRCUIT_PATH =
   "L 660 462 Q 630 498 570 498 L 300 498 Q 230 498 214 434 L 186 330 " +
   "Q 175 290 205 261 Q 236 231 206 196 L 178 166 Q 150 152 150 130 Z";
 
+// Gravel spur to the Special Stage node (content id "rally"): rally runs off
+// the shared circuit, so it gets a dirt access road instead of paved ribbon.
+// Starts at (707 427) — just outside the 18-wide road edge on the lower-right
+// diagonal, so the junction tucks under the asphalt — and ends at (820 445),
+// a few units past the node anchor at (820 420) so the tip finishes behind the
+// badge (which hangs 8px below its anchor) at every map scale.
+const GRAVEL_SPUR_PATH = "M 707 427 C 748 454 780 424 820 445";
+
 export function CircuitMap() {
   const { noticedId, notify } = useLockedNotice();
 
@@ -42,6 +50,24 @@ export function CircuitMap() {
           aria-hidden="true"
           focusable="false"
         >
+          {/* Gravel spur first: the paved ribbon then paints over the junction
+              so the dirt road reads as leaving the track, not crossing it. */}
+          <path
+            d={GRAVEL_SPUR_PATH}
+            fill="none"
+            stroke="#332e27"
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+          <path
+            d={GRAVEL_SPUR_PATH}
+            fill="none"
+            stroke="#8a7355"
+            strokeWidth="4"
+            strokeDasharray="5 8"
+            strokeLinecap="round"
+            opacity="0.9"
+          />
           <path
             d={CIRCUIT_PATH}
             fill="none"

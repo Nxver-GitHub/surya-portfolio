@@ -12,6 +12,8 @@ import { pavilions } from "../../../content/pavilions";
 import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { ProvenanceDot, ProvenanceLegend } from "@/components/rally/ProvenanceDot";
+import { SSDoorPlate, stageChromeParts } from "@/components/rally/SSDoorPlate";
+import { FootageStrip } from "@/components/rally/StageVideoPlate";
 
 /** The Special Stage pavilion's livery nod (blue/yellow WRC rally colours),
  * applied to card chrome only, like the other pavilions. */
@@ -28,17 +30,24 @@ export const metadata: Metadata = {
 function StageCard({ stage }: { stage: CaseStudy }) {
   /** Two headline numbers per card; the full set lives on the stage page. */
   const headline = stage.metrics.slice(0, 2);
+  /** "SS1 · RECON" becomes a stamped door plate plus the stage name. */
+  const { code, name } = stageChromeParts(stage.chrome);
 
   return (
     <article className="group relative flex flex-col border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
       <LiveryStripe livery={RALLY_LIVERY} className="absolute inset-x-0 top-0" />
 
       <div className="flex flex-1 flex-col gap-3 p-5 pt-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <p className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
-            {stage.chrome}
-          </p>
-          <p className="font-display text-xs tracking-wide text-silver uppercase">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="flex items-center gap-2">
+            {code ? (
+              <SSDoorPlate code={code} livery={RALLY_LIVERY} size="sm" />
+            ) : null}
+            <p className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
+              {name}
+            </p>
+          </div>
+          <p className="font-display text-xs tracking-wide text-silver uppercase tabular-nums">
             {stage.window}
           </p>
         </div>
@@ -139,6 +148,8 @@ export default function SpecialStagePage() {
             ))}
           </div>
         </section>
+
+        <FootageStrip footage={specialStage.footage} className="mt-9" />
 
         <section
           aria-label="Through line"
