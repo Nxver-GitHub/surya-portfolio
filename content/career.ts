@@ -320,6 +320,7 @@ export const seasons: readonly Season[] = [
       {
         slug: "alphaforge-gtme",
         title: "AlphaForge",
+        logo: "/logos/alphaforge.png",
         org: "AlphaForge",
         role: "GTM Engineer",
         dates: "Aug 2026 – Present",
