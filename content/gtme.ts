@@ -311,6 +311,19 @@ export const caseStudies: readonly CaseStudy[] = [
     ],
     sections: [
       {
+        heading: "The constant, on screen",
+        chrome: "TELEMETRY",
+        body: [
+          "The metrics above call the score a constant. Here it is on screen: signal_score reads 40 on every row, why_this_score repeats one sentence, and the evidence URL is the only column that varies. Some rows carry none, which is the citation gap named in the recon stage.",
+        ],
+        figure: {
+          src: "/gtme/clay-pool-scoring.png",
+          alt: "Clay table view of yc-tam-pool-2932 with four columns visible, where every signal_score cell reads 40 and several evidence URL cells are empty",
+          caption:
+            "Four columns from the scored pool: the state, the constant, the reason, and the evidence when there is one.",
+        },
+      },
+      {
         heading: "The finding given away free",
         chrome: "SPLIT TIMES",
         body: [
@@ -333,6 +346,12 @@ export const caseStudies: readonly CaseStudy[] = [
       body: [
         "The segment's name asserted a conclusion the instrument could not reach, and it took a week to notice. The score driving it turned out to be a constant. And the hand-check put the headline claim at 7 of 30. All three are in the deliverable, in the same voice as the counts.",
       ],
+      figure: {
+        src: "/gtme/clay-segment-formula.png",
+        alt: "Clay formula editor open on the segment column, whose code files tier A accounts from the 2021 to 2022 batch windows as SEG1_NO_VISIBLE_PROCESSOR",
+        caption:
+          "The segment formula, live in the workspace. The name in the code is the corrected one.",
+      },
     },
     debrief: {
       heading: "Debrief",
@@ -409,6 +428,12 @@ export const caseStudies: readonly CaseStudy[] = [
         body: [
           "The automated gate passed 57 of 199 accounts. Five of the twelve accounts I actually sent had been filed EXCL_SALES_LED by that gate, and every one of the five had verified in-house billing work anyway. The gate measured self-serve checkout. The research measured in-house metering. Run unsupervised, the gate would have cost five of the twelve best accounts, including one of the two high-confidence builders.",
         ],
+        figure: {
+          src: "/gtme/clay-seg1-gate.png",
+          alt: "Clay formula editor open on the seg1_gate column, with verdict cells reading SELF_SERVE_METERED, EXCL_SALES_LED, and EXCL_PAYMENTS_CO",
+          caption:
+            "The gate itself: one formula reading the evidence status and the checkout audit, filing each account as SELF_SERVE_METERED or an exclusion.",
+        },
       },
       {
         heading: "Twelve, when the brief allowed twenty-five",
@@ -427,6 +452,12 @@ export const caseStudies: readonly CaseStudy[] = [
         body: [
           "Two things the tooling gets wrong about this build, published here because the paper trail should be better than the tool's. The reply join is manual: capture lands in Clay in under 60 seconds, but a Clay enrichment fires on changes to its own row and never on changes in the table it reads from, so the lookup back onto the send row is refreshed by hand. And Clay's lineage graph shows the send seed parented to a CSV rather than the source table. Every field traces back to the segment, and the lineage does not know that.",
         ],
+        figure: {
+          src: "/gtme/clay-lineage.png",
+          alt: "Clay workspace lineage graph: CSV imports and webhooks feeding yc-tam-pool-2932, the people segment tables, and the P9 send and reply tables",
+          caption:
+            "The workspace lineage. P9-send-seed hangs off a CSV import rather than the segment that produced it, which is the seam this section is about.",
+        },
       },
     ],
     failures: {
@@ -435,6 +466,11 @@ export const caseStudies: readonly CaseStudy[] = [
       body: [
         "Zero replies against a pre-registered expectation of 2 to 4. At twelve sends the sample is built to produce labelled corrections rather than pipeline, and a zero still gets published, in the same voice as everything else, because the alternative is a portfolio of only the runs that flattered me.",
       ],
+      figure: {
+        src: "/gtme/clay-p9-replies.png",
+        alt: "The p9-replies Clay table with its webhook column waiting for events and zero rows of data",
+        caption: "The webhook table, waiting. Zero rows is the published outcome.",
+      },
     },
     debrief: {
       heading: "Debrief",
@@ -442,6 +478,12 @@ export const caseStudies: readonly CaseStudy[] = [
       body: [
         "The primary metric of the whole build is corrections received: a reply naming the actual billing stack is a labelled correction to the detection method. That is why the classifier machine-detects vendor names. And it is why opt-out is checked first anyway. Getting a data point does not override someone asking you to stop.",
       ],
+      figure: {
+        src: "/gtme/apps-script-reply-loop.png",
+        alt: "Google Apps Script editor showing the reply loop's testConnection and installTrigger functions",
+        caption:
+          "The loop's setup helpers in Apps Script: installTrigger wires the one-minute trigger, and testConnection posts a fake reply from a placeholder address to prove a row lands in Clay.",
+      },
     },
     artifacts: [
       {

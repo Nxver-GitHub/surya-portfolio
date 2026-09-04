@@ -311,3 +311,27 @@ describe("gtme content — onboard footage links", () => {
     expect(caseStudyBySlug.get("recon")?.video).toBeUndefined();
   });
 });
+
+describe("gtme content — workspace figures", () => {
+  const figures = caseStudies.flatMap((s) =>
+    [...s.sections, s.failures, s.debrief]
+      .filter((sec) => sec.figure)
+      .map((sec) => ({
+        where: `${s.slug}("${sec.heading}")`,
+        figure: sec.figure!,
+      })),
+  );
+
+  it("has at least the six audited Clay/Apps Script figures", () => {
+    expect(figures.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("points every figure at an existing file under public/, with alt and caption", () => {
+    for (const { where, figure } of figures) {
+      expect(figure.src.startsWith("/gtme/"), where).toBe(true);
+      expect(existsSync(join(PUBLIC_DIR, figure.src)), `${where}: ${figure.src}`).toBe(true);
+      expect(figure.alt.trim().length, where).toBeGreaterThan(0);
+      expect(figure.caption.trim().length, where).toBeGreaterThan(0);
+    }
+  });
+});
