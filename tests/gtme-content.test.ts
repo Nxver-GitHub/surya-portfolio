@@ -18,8 +18,15 @@ const NOT_X_ITS_Y_RE = /\bnot\b[^.!?\n]{0,60},\s*(it['’]s|it\s+is)\s/i;
 const EMAIL_RE = /[\w.+-]+@[\w-]+\.[a-z]{2,}/gi;
 const ALLOWED_EMAIL = "test@example.com";
 const SUPABASE_TOKEN_RE = /\b[a-z0-9]{20}\.supabase\b/;
-/** Guards an anonymization decision: this private individual's surname must never ship in copy. */
-const FORBIDDEN_SURNAME = "Crawbuck";
+/**
+ * Guards an anonymization decision: a private individual's surname must never
+ * ship in content. Stored as char codes so this public test file never
+ * carries the string it forbids; the guard exists to catch an accidental
+ * reintroduction by a future edit, not to name anyone.
+ */
+const FORBIDDEN_SEQUENCE = String.fromCharCode(
+  99, 114, 97, 119, 98, 117, 99, 107,
+);
 
 /**
  * Recursively collects every string value out of an arbitrary export tree
@@ -163,10 +170,10 @@ describe("gtme content — privacy redlines", () => {
     }
   });
 
-  it("never ships the private individual's surname", () => {
+  it("never ships the guarded anonymized string", () => {
     for (const s of allStrings) {
       expect(
-        s.value.includes(FORBIDDEN_SURNAME),
+        s.value.toLowerCase().includes(FORBIDDEN_SEQUENCE),
         `${s.module} ${s.path}`,
       ).toBe(false);
     }

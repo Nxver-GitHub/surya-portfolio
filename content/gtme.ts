@@ -132,7 +132,7 @@ export const ethicsStory: StageSection = {
   heading: "Where the line is",
   chrome: "STEWARDS' NOTE",
   body: [
-    "The best-researched contact in the build was a maintainer at a company that sells subscription billing infrastructure. Top contributor to their public docs repo. Personally wrote the checkout documentation I would have been asking about. Their working email was sitting in git commit author metadata on a personal domain.",
+    "The best-researched contact in the build was an engineer at a company that sells subscription billing infrastructure. Their working email was sitting in git commit author metadata on a personal domain, and their public work was exactly what I would have been asking about.",
     "I did not send, for two reasons. The company runs on the processor I was writing about, so the claim in my email would have been wrong, and wrong in a way that gets forwarded. And the address was never published as a contact channel. It leaked as a side effect of committing code. The same pattern came up twice more in the build, and I never used it.",
     "Reading someone's commit history to find out what they built is fine. Reading it to find out where to reach them is something else, and both start with the same git log. The line is not in the data. It is in what you do next with it.",
   ],
