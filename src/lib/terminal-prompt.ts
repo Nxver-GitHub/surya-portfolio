@@ -24,6 +24,8 @@ import { missionPacks } from "../../content/missions";
 import { menuBooks } from "../../content/menu-books";
 import { joinControls, lobbyRoom, statusChips } from "../../content/lobby";
 import { proximize } from "../../content/proximize";
+import { caseStudies, specialStage, throughLine } from "../../content/gtme";
+import { handCheck } from "../../content/gtme-handcheck";
 
 /** In-fiction name of the café's house terminal. GT-flavored, not a real OS. */
 export const SYSTEM_NAME = "CAFE-OS v2.2";
@@ -36,12 +38,14 @@ export const OWNER_NAME = "Surya Pugazhenthi";
  * persona block plus this digest, so the whole system prompt stays comfortably
  * bounded. Truncation happens on entry boundaries — never mid-entry.
  *
- * Sized to fit ALL of today's content (~9.6k chars ≈ 3k tokens — cheap even
+ * Sized to fit ALL of today's content (~11.5k chars ≈ 3.5k tokens — cheap even
  * on free tiers) with headroom. A 6k cap silently dropped the whole CAREER
  * block, so the model answered career questions from scraps in other blocks
- * and guessed wrong about role tenure.
+ * and guessed wrong about role tenure. Raised from 12k when the GTME block
+ * landed, for the same reason: a silent drop of a whole block is the failure
+ * mode this cap must never cause.
  */
-export const DIGEST_CHAR_CAP = 12_000;
+export const DIGEST_CHAR_CAP = 14_000;
 
 /** Collapse whitespace so multi-line content copy serializes to one tidy line. */
 function oneLine(text: string): string {
@@ -85,6 +89,39 @@ function careerBlock(): string {
       );
     }
   }
+  return lines.join("\n");
+}
+
+/**
+ * GTM engineering (the AlphaForge arc / Special Stage pavilion). Derived from
+ * content/gtme.ts so the terminal can answer "what GTM work has he done?" or
+ * "what did he build with Clay?" with the real numbers and route visitors to
+ * /special-stage. Every figure here is the published one — the pavilion's own
+ * provenance rules apply, so the block quotes only what the site states.
+ */
+function gtmeBlock(): string {
+  const lines: string[] = [
+    "GTM ENGINEERING (AlphaForge program, using Clay — the Special Stage pavilion at /special-stage):",
+    `- His positioning: ${oneLine(specialStage.wedge[0])}`,
+    "- One continuous three-week build against Stripe's startup partnerships audience over the YC company universe. Three stages, each a full case study on the site:",
+  ];
+  for (const stage of caseStudies) {
+    const headline = stage.metrics
+      .slice(0, 2)
+      .map((m) => `${m.label}: ${m.value}`)
+      .join("; ");
+    lines.push(
+      `  * ${stage.chrome} — ${oneLine(stage.title)} (${stage.window}). ${headline}. Page: /special-stage/${stage.slug}`,
+    );
+  }
+  lines.push(
+    `- He hand-checked ${handCheck.totals.checked} accounts against the segment's own claim; the hypothesis held for ${handCheck.totals.held}. The failures are catalogued on an interactive board on the Pace Notes page.`,
+    "- Outbound outcome, published plainly: 12 sends, zero replies against a pre-registered expectation of 2 to 4. He publishes failures in the same voice as wins.",
+    "- Also built: a Supabase snapshot layer that gives Clay a memory (change becomes an event with a date), and a Gmail-to-Clay reply loop landing replies in under 60 seconds.",
+    `- The through line, in his words: ${oneLine(throughLine)}`,
+    "- Screen recordings of the builds are linked on the pavilion index as onboard footage.",
+    "- If a visitor asks about GTM engineering, Clay, AlphaForge, outbound, enrichment, or the Stripe project, send them to the Special Stage pavilion.",
+  );
   return lines.join("\n");
 }
 
@@ -209,6 +246,7 @@ export function buildFactsDigest(cap: number = DIGEST_CHAR_CAP): string {
     upcomingBlock(), // tiny; must survive the cap or Proximize answers regress
     contactBlock(),
     careerBlock(), // who he is / current roles — must survive any future cap
+    gtmeBlock(), // the GTM engineering body of work — assignment-critical
     projectsBlock(),
     skillsBlock(),
     missionsBlock(),
@@ -232,7 +270,7 @@ export function buildSystemPrompt(): string {
     "STYLE:",
     "- Plain text only. No markdown headers, bold, bullet syntax, tables, or code fences.",
     "- Keep replies under 120 words. Short lines. A little racing/terminal flavor is fine; facts stay plain.",
-    "- When useful, point visitors to a place on the site (the Garage, License Center, Career timeline, Missions, Scapes) or a real contact link.",
+    "- When useful, point visitors to a place on the site (the Garage, License Center, Career timeline, Missions, Scapes, or the Special Stage for his GTM engineering case studies) or a real contact link.",
     "",
     "HARD RULES (non-negotiable):",
     `- Answer ONLY about ${OWNER_NAME}'s portfolio, this café/site, and how to contact him. For anything else, give ONE short in-character deflection and steer back (e.g. "That's off my map — I only run diagnostics on this paddock.").`,

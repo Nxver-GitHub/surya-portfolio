@@ -318,6 +318,28 @@ export const seasons: readonly Season[] = [
         },
       },
       {
+        slug: "alphaforge-gtme",
+        title: "AlphaForge",
+        logo: "/logos/alphaforge.png",
+        org: "AlphaForge",
+        role: "GTM Engineer",
+        dates: "Aug 2026 – Present",
+        result:
+          "One continuous GTM engineering build against Stripe's startup partnerships audience: 2,932 companies scanned, 909 scored, 12 signed sends.",
+        story: {
+          problem:
+            "Some markets cannot be reached from the database. The buying signal is an absence, enrichment returns nothing, and the identity layer has to be built underneath the tools.",
+          actions: [
+            "Built a payment-processor detection scan over 2,932 YC companies with cost and distribution predictions registered before the run, landing within five rows of the estimate.",
+            "Gave Clay a memory it does not have: a Supabase snapshot layer that turns a vendor appearing in a stack into an event with a date attached.",
+            "Cut the pool into segments, hand-checked 30 accounts against the segment's own claim, and renamed the segment when the name asserted more than the scan observed.",
+            "Sent 12 fully personalized, signed emails with an automated reply loop landing responses back in Clay in under 60 seconds.",
+          ],
+          results:
+            "The full arc, failures included, is documented stage by stage in the Special Stage pavilion.",
+        },
+      },
+      {
         slug: "project-silhouette",
         title: "Project Silhouette",
         org: "Undisclosed",

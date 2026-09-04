@@ -14,6 +14,7 @@ export const KNOWN_ROUTES = [
   "/garage",
   "/license-center",
   "/missions",
+  "/special-stage",
   "/scapes",
   "/cafe",
   "/lobby",
@@ -28,11 +29,12 @@ export function isKnownRoute(value: string): value is KnownRoute {
 
 /**
  * Normalize a browser pathname to a known route, or null if it maps to nothing
- * we count. Career-detail pages (`/career/<slug>`) collapse to `/career` so the
- * key cardinality stays bounded. Pure.
+ * we count. Detail pages (`/career/<slug>`, `/special-stage/<slug>`) collapse
+ * to their pavilion route so the key cardinality stays bounded. Pure.
  */
 export function normalizePathname(pathname: string): KnownRoute | null {
   if (isKnownRoute(pathname)) return pathname;
   if (pathname === "/career" || pathname.startsWith("/career/")) return "/career";
+  if (pathname.startsWith("/special-stage/")) return "/special-stage";
   return null;
 }

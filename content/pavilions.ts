@@ -82,6 +82,26 @@ export const pavilions: readonly Pavilion[] = [
     glyph: "MS",
   },
   {
+    id: "rally",
+    slug: "special-stage",
+    name: "Special Stage",
+    caption: "GTM engineering case studies",
+    status: "open",
+    // The only off-circuit node: rally leaves the shared track, so this anchor
+    // sits well outside the ribbon in the open lower-right, reached by the
+    // dashed gravel spur drawn in CircuitMap. It has to sit further right than
+    // the Missions/Scapes midpoint suggests: badges and label stacks are fixed
+    // px while the map box scales, so at the md breakpoint (map ≈ 0.69 scale)
+    // the Missions stack above and the Scapes stack to the lower left both
+    // grow to ~152px wide and squeeze this corridor. `bottom` is the only side
+    // that fits — `right` would need ~120px of vertical room that Missions'
+    // stack already occupies.
+    map: { x: 82, y: 75 },
+    labelSide: "bottom",
+    livery: "subaru555",
+    glyph: "SS",
+  },
+  {
     id: "scapes",
     slug: "scapes",
     name: "Scapes",
