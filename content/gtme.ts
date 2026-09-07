@@ -88,6 +88,13 @@ export interface CaseStudy {
   title: string;
   /** Published title assertion, where one exists */
   assertion?: string;
+  /** Journal-style publication head, for stages that are pieces of writing */
+  byline?: {
+    author: string;
+    /** The venue or program the piece was written for */
+    context: string;
+    date: string;
+  };
   window: string;
   lede: readonly string[];
   pullQuote?: string;
@@ -197,6 +204,11 @@ export const caseStudies: readonly CaseStudy[] = [
     chrome: "REASON CODES",
     title: "Reason Codes: five kinds of nothing, and the one worth 40 points",
     assertion: "A DNS is not a DNF. Your enrichment table thinks it is.",
+    byline: {
+      author: "Surya Pugazhenthi",
+      context: "Written for the Clay AlphaForge GTME course, Cohort 3",
+      date: "September 2026",
+    },
     window: "Aug 16 to Sep 6",
     careerEventSlug: "alphaforge-gtme",
     lede: [

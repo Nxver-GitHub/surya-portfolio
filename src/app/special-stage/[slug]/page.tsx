@@ -267,8 +267,20 @@ export default async function StagePage({ params }: StagePageProps) {
         </div>
 
         {stage.assertion ? (
-          <p className="ts-hard mt-4 max-w-[46ch] font-title text-xl text-chrome">
+          <p className="ts-hard mt-4 max-w-[46ch] font-title text-xl text-balance text-chrome">
             {stage.assertion}
+          </p>
+        ) : null}
+
+        {stage.byline ? (
+          <p className="mt-3 border-l-2 border-gt-bright pl-3 text-sm text-silver">
+            By <span className="font-bold text-chrome">{stage.byline.author}</span>
+            <span aria-hidden="true"> · </span>
+            <span className="sr-only">, </span>
+            {stage.byline.context}
+            <span aria-hidden="true"> · </span>
+            <span className="sr-only">, </span>
+            {stage.byline.date}
           </p>
         ) : null}
 

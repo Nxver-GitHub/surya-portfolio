@@ -130,7 +130,7 @@ function ThesisCard({ stage }: { stage: CaseStudy }) {
         </h3>
 
         {stage.assertion ? (
-          <p className="max-w-[56ch] font-title text-lg text-ink italic">
+          <p className="max-w-[56ch] font-title text-lg text-balance text-ink italic">
             {stage.assertion}
           </p>
         ) : null}
