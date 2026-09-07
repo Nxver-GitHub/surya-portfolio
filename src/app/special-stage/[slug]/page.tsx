@@ -17,6 +17,7 @@ import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { Chevron } from "@/components/rally/Chevron";
 import { HandCheckBoard } from "@/components/rally/HandCheckBoard";
 import { ProvenanceDot, ProvenanceLegend } from "@/components/rally/ProvenanceDot";
+import { ReasonCodeBoard } from "@/components/rally/ReasonCodeBoard";
 import { SectionFigure } from "@/components/rally/SectionFigure";
 import { StageVideoPlate } from "@/components/rally/StageVideoPlate";
 import { TimingBoard } from "@/components/rally/TimingBoard";
@@ -30,6 +31,10 @@ const RALLY_LIVERY: LiveryId =
  */
 const HAND_CHECK_STAGE: StageSlug = "pace-notes";
 const HAND_CHECK_AFTER_SECTION = "Thirty accounts, checked by hand";
+
+/** Same pattern for the five-code table on the Reason Codes stage. */
+const REASON_CODE_STAGE: StageSlug = "reason-codes";
+const REASON_CODE_AFTER_SECTION = "The five reason codes";
 
 interface StagePageProps {
   params: Promise<{ slug: string }>;
@@ -106,6 +111,40 @@ function Prose({ body }: { body: readonly string[] }) {
   );
 }
 
+/** Cross-reference plate links declared on a section. */
+function SectionLinks({ links }: { links: StageSection["links"] }) {
+  if (!links?.length) return null;
+  const plateClass =
+    "plate ts-hard inline-block px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright";
+  return (
+    <div className="flex flex-wrap gap-3">
+      {links.map((link) =>
+        link.external ? (
+          <a
+            key={link.href}
+            href={link.href}
+            target="_blank"
+            rel="noreferrer"
+            className={plateClass}
+          >
+            {link.label} <span aria-hidden="true">↗</span>
+          </a>
+        ) : (
+          <Link
+            key={link.href}
+            href={link.href}
+            transitionTypes={["nav-forward"]}
+            data-sfx="confirm"
+            className={plateClass}
+          >
+            {link.label} <span aria-hidden="true">→</span>
+          </Link>
+        ),
+      )}
+    </div>
+  );
+}
+
 /** A content section in the page's normal voice. */
 function StoryBlock({ section }: { section: StageSection }) {
   return (
@@ -118,6 +157,7 @@ function StoryBlock({ section }: { section: StageSection }) {
         <PullQuote key={quote}>{quote}</PullQuote>
       ))}
       {section.video ? <StageVideoPlate video={section.video} /> : null}
+      <SectionLinks links={section.links} />
     </section>
   );
 }
@@ -149,6 +189,7 @@ function IncidentBlock({ section }: { section: StageSection }) {
           <PullQuote key={quote}>{quote}</PullQuote>
         ))}
         {section.video ? <StageVideoPlate video={section.video} /> : null}
+        <SectionLinks links={section.links} />
       </div>
     </section>
   );
@@ -226,8 +267,20 @@ export default async function StagePage({ params }: StagePageProps) {
         </div>
 
         {stage.assertion ? (
-          <p className="ts-hard mt-4 max-w-[46ch] font-title text-xl text-chrome">
+          <p className="ts-hard mt-4 max-w-[46ch] font-title text-xl text-balance text-chrome">
             {stage.assertion}
+          </p>
+        ) : null}
+
+        {stage.byline ? (
+          <p className="mt-3 border-l-2 border-gt-bright pl-3 text-sm text-silver">
+            By <span className="font-bold text-chrome">{stage.byline.author}</span>
+            <span aria-hidden="true"> · </span>
+            <span className="sr-only">, </span>
+            {stage.byline.context}
+            <span aria-hidden="true"> · </span>
+            <span className="sr-only">, </span>
+            {stage.byline.date}
           </p>
         ) : null}
 
@@ -312,6 +365,10 @@ export default async function StagePage({ params }: StagePageProps) {
             {stage.slug === HAND_CHECK_STAGE &&
             section.heading === HAND_CHECK_AFTER_SECTION ? (
               <HandCheckBoard />
+            ) : null}
+            {stage.slug === REASON_CODE_STAGE &&
+            section.heading === REASON_CODE_AFTER_SECTION ? (
+              <ReasonCodeBoard />
             ) : null}
           </Fragment>
         ))}

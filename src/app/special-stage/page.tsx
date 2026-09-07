@@ -23,7 +23,7 @@ const RALLY_LIVERY: LiveryId =
 export const metadata: Metadata = {
   title: "Special Stage — Surya Pugazhenthi",
   description:
-    "GTM engineering case studies: detection, segmentation and outbound across 2,932 companies, with every number carrying its source and the failures reported alongside the wins.",
+    "GTM engineering case studies: the five reason codes for an empty cell, proven across detection, segmentation and outbound over 2,932 companies, with every number carrying its source and the failures reported alongside the wins.",
   alternates: { canonical: "/special-stage" },
 };
 
@@ -97,10 +97,84 @@ function StageCard({ stage }: { stage: CaseStudy }) {
   );
 }
 
+/**
+ * The thesis card: Reason Codes carries the through line the whole page is
+ * organised around, so it sits directly under the hero at full width, above
+ * the rally it draws its proofs from.
+ */
+function ThesisCard({ stage }: { stage: CaseStudy }) {
+  const headline = stage.metrics.slice(0, 2);
+
+  return (
+    <article className="group relative border border-steel bg-panel shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
+      <LiveryStripe livery={RALLY_LIVERY} />
+      <div className="flex flex-col gap-3 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <p className="font-display text-xs font-bold tracking-[0.22em] text-gt-bright uppercase">
+            Through line · {stage.chrome}
+          </p>
+          <p className="font-display text-xs tracking-wide text-silver uppercase tabular-nums">
+            {stage.window}
+          </p>
+        </div>
+
+        <h3 className="ts-hard max-w-[38ch] font-display text-xl leading-snug font-bold text-chrome md:text-2xl">
+          <Link
+            href={`/special-stage/${stage.slug}`}
+            transitionTypes={["nav-forward"]}
+            data-sfx="confirm"
+            className="outline-none after:absolute after:inset-0 group-hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
+          >
+            {stage.title}
+          </Link>
+        </h3>
+
+        {stage.assertion ? (
+          <p className="max-w-[56ch] font-title text-lg text-balance text-ink italic">
+            {stage.assertion}
+          </p>
+        ) : null}
+
+        <p className="max-w-[68ch] text-base text-ink leading-snug">
+          {throughLine}
+        </p>
+
+        <div className="flex flex-wrap items-end justify-between gap-3 pt-1">
+          <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {headline.map((metric) => (
+              <div
+                key={metric.label}
+                className="border border-steel bg-asphalt px-3 py-2"
+              >
+                <dt className="font-display text-xs tracking-[0.14em] text-silver uppercase">
+                  {metric.label}
+                </dt>
+                <dd className="ts-hard mt-0.5 flex items-center gap-1.5 font-display text-base font-bold break-words text-chrome">
+                  <span>{metric.value}</span>
+                  {metric.provenance === "session" ? <ProvenanceDot /> : null}
+                </dd>
+              </div>
+            ))}
+          </dl>
+
+          <p
+            aria-hidden="true"
+            className="plate ts-hard px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase group-hover:text-chrome"
+          >
+            Open stage
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function SpecialStagePage() {
   const stages = stageOrder
     .map((slug) => caseStudyBySlug.get(slug))
     .filter((stage): stage is CaseStudy => stage !== undefined);
+  const thesis = stages.find((stage) => stage.slug === "reason-codes");
+  const rallyStages = stages.filter((stage) => stage.slug !== "reason-codes");
 
   return (
     <div className="relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8">
@@ -133,38 +207,29 @@ export default function SpecialStagePage() {
           </div>
         </div>
 
+        {thesis ? (
+          <section aria-label="Through line" className="mt-10">
+            <ThesisCard stage={thesis} />
+          </section>
+        ) : null}
+
         <section aria-label="Stages" className="mt-10">
           <div className="flex items-baseline gap-3 border-b border-steel pb-2">
             <h2 className="ts-hard font-display text-2xl font-bold tracking-wide text-chrome uppercase">
               Stages
             </h2>
             <p className="text-sm text-ink">
-              One build, three stages, in the order it happened.
+              One rally, three stages, in the order it happened. The proofs.
             </p>
           </div>
           <div className="mt-5 grid gap-5 lg:grid-cols-3">
-            {stages.map((stage) => (
+            {rallyStages.map((stage) => (
               <StageCard key={stage.slug} stage={stage} />
             ))}
           </div>
         </section>
 
         <FootageStrip footage={specialStage.footage} className="mt-9" />
-
-        <section
-          aria-label="Through line"
-          className="mt-10 border border-steel bg-panel"
-        >
-          <LiveryStripe livery={RALLY_LIVERY} />
-          <div className="p-5">
-            <h2 className="font-display text-xs font-bold tracking-[0.22em] text-gt-bright uppercase">
-              Through line
-            </h2>
-            <p className="mt-2 max-w-[68ch] text-base text-ink leading-snug">
-              {throughLine}
-            </p>
-          </div>
-        </section>
       </main>
     </div>
   );
