@@ -313,6 +313,12 @@ export const caseStudies: readonly CaseStudy[] = [
           "A week later the same detector, pointed at billing vendors, returned an exciting 49.3 percent rate of payments closed but billing open. Zero billing vendors were detected across all 73 domains, and Chargebee, Recurly and Paddle returned zero across 300 domains through the same mechanism that found Stripe 56 times, so a blank in that category was structurally guaranteed before the run started. The number measured the instrument at full confidence.",
           "A BLIND row is one your vendor was never going to see. It does not belong in a denominator, and it stays invisible until you ask what your instrument is constitutionally unable to detect, a question no tool will volunteer.",
         ],
+        figure: {
+          src: "/gtme/clay-two-instruments.png",
+          alt: "Five Clay columns on tier A rows: Fn State reading NONE, Fn Tech empty, Fn Activity Confirmed reading YES, and sig2_metered_gap and signal_score both reading 40",
+          caption:
+            "Two instruments disagreeing in public. The scan reads NONE with an empty processor list, the pricing read confirms metered charging, and the 40 point component fires only on that intersection.",
+        },
       },
       {
         heading: "NIL: 609 companies scoring maximum on nothing",
@@ -327,6 +333,12 @@ export const caseStudies: readonly CaseStudy[] = [
         quotes: [
           "An absence is only a signal when it comes with the size of the search that failed to find anything.",
         ],
+        figure: {
+          src: "/gtme/clay-tier-a-rows.png",
+          alt: "Clay table filtered to tier A, 609 of 2,932 rows in the toolbar, with tier reading A and signal_score reading 40 on every row, Fn State reading NONE, and Fn Ntech carrying denominator counts",
+          caption:
+            "The top tier, live in the workspace: 609 of 2,932 rows at the maximum score, every state cell reading NONE. The score sits on a confirmed absence, and the toolbar carries the count.",
+        },
       },
       {
         heading: "DNS: when empty is the answer and the platform will not run",
@@ -352,6 +364,12 @@ export const caseStudies: readonly CaseStudy[] = [
           "5. Sentinel your empties. Where the platform refuses empty inputs, substitute a marker at the caller and translate it back at the function boundary.",
           "Then run the audit that catches BLIND, the only one of the five you cannot find by looking at a row: compute your qualification rate twice, once with BLIND rows in the denominator and once with them excluded. If the two numbers differ materially, you have been reporting on your instrument. My two numbers were 6 percent and 32 percent.",
         ],
+        figure: {
+          src: "/gtme/clay-ntech-denominator.png",
+          alt: "Four Clay columns: Fn State reading NONE, infra_absence_check reading Success, Fn Tech empty, and Fn Ntech recording counts, with 154 on the second row",
+          caption:
+            "Step 2 on screen. The run succeeded, the processor column is empty, and Fn Ntech records how many technologies the scan did see. The second row is the zero among 154.",
+        },
       },
       {
         heading: "The sixth code, and where the platform ends",
