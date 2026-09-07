@@ -1,8 +1,11 @@
 /**
  * Special Stage: GTM engineering case studies (the AlphaForge arc).
- * One continuous three-week build against a single audience, presented as
- * one rally in three stages: Recon (detection), Pace Notes (segmentation),
- * The Stage (outbound). Hand-check board data lives in gtme-handcheck.ts.
+ * The spine is thesis plus proofs: Reason Codes states the claim, and the
+ * rally beneath it is one continuous three-week build against a single
+ * audience, presented in three stages: Recon (detection), Pace Notes
+ * (segmentation), The Stage (outbound). Two further proofs sit outside the
+ * Stripe arc: the San Francisco SMB build and Proximize Scout. Hand-check
+ * board data lives in gtme-handcheck.ts.
  *
  * Voice rules for every string in this file (enforced by tests):
  * no em dashes, no "it's not X, it's Y" constructions, first person,
@@ -13,7 +16,9 @@
  * The UI marks session numbers so a skeptical reader can tell them apart.
  */
 
-export type StageSlug = "recon" | "pace-notes" | "the-stage";
+import { proximize } from "./proximize";
+
+export type StageSlug = "reason-codes" | "recon" | "pace-notes" | "the-stage";
 
 export type Provenance = "artifact" | "session";
 
@@ -45,6 +50,13 @@ export interface StageFigure {
   caption: string;
 }
 
+export interface StageLink {
+  href: string;
+  label: string;
+  /** External links open in a new tab; internal ones use the site's wipes */
+  external?: boolean;
+}
+
 export interface StageSection {
   heading: string;
   /** Optional rally-chrome caption over the plain heading */
@@ -56,6 +68,8 @@ export interface StageSection {
   video?: StageVideo;
   /** Workspace screenshot placed inline, after the body */
   figure?: StageFigure;
+  /** Cross-references rendered as plate links after the section */
+  links?: readonly StageLink[];
 }
 
 export interface StageArtifact {
@@ -96,7 +110,7 @@ export const specialStage = {
   headline: "The map ends where this work starts.",
   wedge: [
     "Circuit racing runs on a map every driver shares. Rally runs on pace notes the driver wrote during recon. I build go-to-market systems for the second kind of market: buyers no enrichment tool can see, signals that only exist as an absence, and claims I will only publish once two independent sources agree.",
-    "Everything below is one continuous three-week build against a single audience, Stripe's startup partnerships pool over the YC company universe. 2,932 companies loaded. 909 scored. 12 emails sent, each signed with my real name. The failures are reported in the same voice as the wins, because catching a wrong number before it ships is worth more than the pipeline the wrong number would have produced.",
+    "The centrepiece below is one continuous three-week build against a single audience, Stripe's startup partnerships pool over the YC company universe. 2,932 companies loaded. 909 scored. 12 emails sent, each signed with my real name. Around it sit two more builds that prove the same claim: a week against San Francisco restaurants where the standard tools could not even be invoked, and Proximize Scout, built before the course started, which scores local businesses on how badly they are missing from AI search answers. The failures are reported in the same voice as the wins, because catching a wrong number before it ships is worth more than the pipeline the wrong number would have produced.",
   ],
   provenanceNote:
     "Numbers marked with a dot come from the working session and its published posts. Unmarked numbers are stated in the build artifacts on disk, with file and line.",
@@ -125,6 +139,47 @@ export const specialStage = {
   ],
 } as const;
 
+/**
+ * The five reason codes, the teaching artifact of the Reason Codes stage.
+ * Rendered by ReasonCodeBoard as a real table that stacks on mobile.
+ */
+export interface ReasonCode {
+  code: "DNS" | "DNF" | "BLIND" | "NIL" | "OFF";
+  means: string;
+  tell: string;
+}
+
+export const reasonCodes: readonly ReasonCode[] = [
+  {
+    code: "DNS",
+    means: "Did not start. The question was never asked.",
+    tell: "The row was skipped rather than answered, usually because an input was missing, or was an absence the platform refused to run.",
+  },
+  {
+    code: "DNF",
+    means: "Started, and the instrument broke.",
+    tell: "Something threw, which makes this the honest one.",
+  },
+  {
+    code: "BLIND",
+    means: "Asked, and the instrument structurally cannot see this class of thing.",
+    tell: "Returns clean, confident and empty. Looks exactly like NIL, and is not NIL.",
+  },
+  {
+    code: "NIL",
+    means: "Asked, looked, and there is genuinely nothing there.",
+    tell: "The valuable one. Unfalsifiable without a denominator.",
+  },
+  {
+    code: "OFF",
+    means: "Asked, and got confident, well formed, wrong output.",
+    tell: "Nothing errors. Only independent verification catches it.",
+  },
+] as const;
+
+export const reasonCodesNote =
+  "BLIND and OFF are the two that cost you, because both return successfully. NIL is the one worth the most, because presence is what everyone else is already selling to.";
+
 export const throughLine =
   "Every build in this arc contains the same shape of finding: a thing that did not happen presenting as a thing that did. A null read as a zero. An absence read as unset. A blind instrument read as a market signal. The work is telling those apart, and that part is mine rather than the tool's.";
 
@@ -139,6 +194,199 @@ export const ethicsStory: StageSection = {
 };
 
 export const caseStudies: readonly CaseStudy[] = [
+  {
+    slug: "reason-codes",
+    chrome: "REASON CODES",
+    title: "Reason Codes: five kinds of nothing, and the one worth 40 points",
+    assertion: "A DNS is not a DNF. Your enrichment table thinks it is.",
+    window: "Aug 16 to Sep 6",
+    careerEventSlug: "alphaforge-gtme",
+    lede: [
+      "Every empty cell in your table means one of five different things. Rally scores all five separately. Clay scores them identically, and the one it cannot see was worth 40 points across 909 companies.",
+      "This page is the thesis. The three stages below are its proofs.",
+    ],
+    pullQuote: "A missing signal is not a weak signal.",
+    buildLog: [
+      {
+        date: "Earlier",
+        title: "Proximize Scout",
+        body: "Built before the course started: a prospecting tool for physical local businesses that ranks them on how badly they are missing from the answers AI search engines give. The score is the absence. I did not yet know that was a pattern.",
+      },
+      {
+        date: "Aug 16",
+        title: "The San Francisco control",
+        body: "Twenty owner operated restaurants and bars, prospected from the city's business registry. The conventional path produced zero named humans across all twenty, the registry path produced 8 of 10, and the build log recorded three different kinds of blank to keep that comparison honest.",
+      },
+      {
+        date: "Aug 25 to 31",
+        title: "The Stripe arc",
+        body: "The three stages below this card: 2,932 companies loaded, 909 scored, 12 signed sends. The top scoring tier fires on a confirmed absence, and 609 rows sit in it.",
+      },
+      {
+        date: "Sep 6",
+        title: "The write up",
+        body: "Put the builds side by side to teach the pattern, and found I had built the same column twice in two markets without noticing. The taxonomy on this page is the result.",
+      },
+    ],
+    metrics: [
+      {
+        label: "Kinds of nothing",
+        value: "5",
+        detail: "DNS, DNF, BLIND, NIL and OFF. With FOUND, six states in one column.",
+        provenance: "session",
+      },
+      {
+        label: "Rows at max score on an absence",
+        value: "609 of 909",
+        detail: "Metered pricing present, zero processors detected. The 40 point component.",
+        provenance: "artifact",
+      },
+      {
+        label: "Qualification rate, one instrument vs two",
+        value: "6% vs 32%",
+        detail: "The same question asked of the same segment. The gap is the BLIND audit.",
+        provenance: "artifact",
+      },
+      {
+        label: "Registry lookups returning a named human",
+        value: "8 of 10",
+        detail: "Against 0 of 20 on the conventional path. Trustworthy because one scraper artifact was excluded from the denominator on purpose.",
+        provenance: "artifact",
+      },
+      {
+        label: "Rows the platform refused to run",
+        value: "35",
+        detail: "The error was Some inputs missing. For every one of those rows, empty was the value.",
+        provenance: "artifact",
+      },
+    ],
+    sections: [
+      {
+        heading: "The board",
+        chrome: "OK / SOS",
+        body: [
+          "Every car on a rally stage carries two boards. Red says SOS, send help. Green says OK, we are fine, keep going. If you go off, you display one where the next crew can see it, and the following car is obliged to act on what it sees.",
+          "Then the rule that matters: a crew that has gone off and displays nothing at all. The regulation does not leave that to judgement. No board is treated as SOS. Stop, deploy your own red board, and the cars behind you stop too, until the stage is halted and medical reaches the scene.",
+          "Rally wrote that down because nobody displays OK from under an upside down car. Silence is the most likely shape an emergency takes, and a sport that read it as probably fine would kill people at a predictable rate.",
+          "Your enrichment table has the opposite rule.",
+        ],
+      },
+      {
+        heading: "The turn",
+        chrome: "RESULTS SHEET",
+        body: [
+          "A DNS never started. A DNF started and broke. On a results sheet both score zero points, and timing records them separately anyway, because why you scored nothing is the most important fact about your run.",
+          "Your table does not do this. A row never enriched, a row where the API timed out, a row where the vendor cannot see the thing you asked about, a row where there is genuinely nothing there, and a row of confident well formed garbage all arrive as the same empty cell. Then a filter reads that cell as a zero, the zero becomes a segment, and the segment becomes a send.",
+          "Four weeks of building GTM systems across three unrelated markets on three unrelated toolchains, and this was the failure in every one. Not the biggest. The only one that recurred.",
+        ],
+      },
+      {
+        heading: "The five reason codes",
+        chrome: "TIME CARD",
+        body: ["So here are the five, named, with what each cost me."],
+      },
+      {
+        heading: "OFF: twenty restaurants and nine wrong companies",
+        chrome: "OFF THE ROAD",
+        body: [
+          "Before the Stripe build I spent a week on twenty San Francisco restaurants and bars, pulled from the city's Registered Business Locations dataset. There is no Head of RevOps at a taqueria, and that is the whole problem: these businesses produce almost none of the digital exhaust prospecting tools are built on.",
+          "I ran the conventional path first, as a control. It produced four usable domains, two company records, and zero named humans. Clay's company tools want a domain or a LinkedIn URL. A legal entity name, a street address and a tax certificate number are not accepted inputs, so the conventional path could not even be invoked. That failure was at least legible. The next one was not.",
+          "Naive domain discovery appeared to find websites for fourteen of twenty. Validated against the real street address on file, four were correct, nine belonged to entirely unrelated companies, and all nine cells looked identical to the four that were right.",
+          "Then the registry. California's Secretary of State search is keyword based, so querying Mili Inc returned !PERFECTO! MILITARY FAMILIES UNITED, INC. Without validating the returned entity name against the query, I would have attached LegalZoom to a ramen shop as its registered owner and written an email to it.",
+          "Three failures, one shape. None threw an error. Each produced confident, well formed, wrong output, and only verification against something independent caught any of them. This is OFF, and it is why the other four codes exist. Once a returned value proves nothing about the lookup behind it, you have to say what each cell actually is.",
+          "The build log for that week records three outcomes distinctly: WRONG_ENTITY for the LegalZoom match, NO_RESULT for an entity that genuinely returns nothing, and NOT_ATTEMPTED for one row where my own scraper misfired, excluded from the denominator on purpose so a tooling failure would never count as evidence against the data source.",
+          "That is DNF kept out of NIL's denominator, four weeks before either had a name. The registry path returned a named human on 8 of 10 valid lookups against the control's 0 of 20, and that 80 percent is only trustworthy because the eleventh row was thrown out. Above those outcomes, without knowing I was writing the thesis of anything, I had put one sentence:",
+        ],
+        quotes: [
+          "Not every blank is the same blank. Collapsing them would misstate the result.",
+        ],
+      },
+      {
+        heading: "BLIND: the artifact that nearly deleted the right segment",
+        chrome: "BLIND CREST",
+        body: [
+          "BLIND is harder than OFF, because BLIND returns nothing and nothing is exactly what you were willing to believe.",
+          "Building the Stripe audience, I ran a technographic scan and asked what fraction of my first segment showed an open payments architecture signal. It came back at 6 percent. My pre-written kill threshold said below 10 percent, delete the segment. It was one command from deletion.",
+          "I added a second instrument first, a read of the company's actual pricing page, and the same question came back at 32 percent.",
+          "The difference was usage based billing. A technology scan detects installed vendors. A company that meters usage and invoices for it on internal tooling has no vendor to detect, so the scan returns clean and empty, and clean and empty reads as no signal here. A keyword pass over company descriptions had predicted usage based billing at 0.7 percent where the truth was 28 percent, wrong by a factor of forty, because metered billing is exactly the thing a description never mentions.",
+          "I did not nearly kill a bad segment. I nearly killed the correct segment, on a number that described my instrument rather than my market.",
+          "A week later the same detector, pointed at billing vendors, returned an exciting 49.3 percent rate of payments closed but billing open. Zero billing vendors were detected across all 73 domains, and Chargebee, Recurly and Paddle returned zero across 300 domains through the same mechanism that found Stripe 56 times, so a blank in that category was structurally guaranteed before the run started. The number measured the instrument at full confidence.",
+          "A BLIND row is one your vendor was never going to see. It does not belong in a denominator, and it stays invisible until you ask what your instrument is constitutionally unable to detect, a question no tool will volunteer.",
+        ],
+      },
+      {
+        heading: "NIL: 609 companies scoring maximum on nothing",
+        chrome: "THE 40 POINTS",
+        body: [
+          "Here is the payoff, and the reason this is more than a hygiene post.",
+          "The final build loaded every active YC company with a website, Winter 2021 through Spring 2026: 2,932 rows, no headcount filter. One was dropped for an invalid domain, six were disqualified as unscannable after returning zero technologies on scan, and 909 scored above zero to become the deliverable.",
+          "Fit is scored nowhere in that table: every row is YC and YC is a Stripe partner, so fit lives in the pool definition. The entire score is about window, the brief period when a payments architecture decision is open.",
+          "The highest weighted component in the model is worth 40 points, and it fires on a confirmed absence: metered pricing present, zero payment processors detected. They are charging per unit consumed, and there is nothing on the site that could be collecting the money. They are invoicing by hand or on something they built, which is the single condition Stripe Billing exists to end. 609 of the 909 rows sit in that state, the top tier of the deliverable, scoring maximum on a thing that is missing.",
+          "But a claim of absence is unfalsifiable on sight, so every row carries its denominator. Never just no processor detected, always zero processors among 154 detected technologies. One is a claim a rep can check in ten seconds, the other a shrug in a cell. The denominator converts NIL from an empty result into evidence, and it is the cheapest column in the entire build.",
+        ],
+        quotes: [
+          "An absence is only a signal when it comes with the size of the search that failed to find anything.",
+        ],
+      },
+      {
+        heading: "DNS: when empty is the answer and the platform will not run",
+        chrome: "DID NOT START",
+        body: [
+          "The last code is the one that broke the build, and the most specific thing I learned about the tool itself.",
+          "I extracted the logic above into a reusable function that takes the question as an input, a category label, a vendor list and an activity claim, so it does not know what it is looking for until someone tells it. Pointed at payments, it asks whether a company shows evidence of charging metered rates while showing no evidence of having bought a processor.",
+          "Thirty five rows refused to run. The error was Some inputs missing.",
+          "Clay will not execute a row when a mapped column is empty. That is a sensible default for almost every enrichment anyone has ever built. It was fatal here, because for those thirty five rows empty was the value. The detected processor list was empty precisely because no processor was detected, which is the finding, and the platform's type system cannot tell we looked and found nothing apart from this input is unset.",
+          "That is the whole essay in one error message. The signal I care most about is an absence, and the absence was being read as a DNS.",
+          "The fix is a sentinel: the caller substitutes a marker string where the value is a genuine empty, the function translates it back at the boundary, and storage records a real empty string rather than a null. Five minutes of work, and it exists only because I knew the difference between the two states before I saw the error.",
+        ],
+      },
+      {
+        heading: "The recipe",
+        chrome: "SERVICE PARK",
+        body: [
+          "Five columns. Any tool, any market, about fifteen minutes.",
+          "1. Make the state a column rather than an inference. An enum, DNS / DNF / BLIND / NIL / OFF / FOUND, with a default of DNS and never blank. If the cell is empty you have already lost the distinction.",
+          "2. Give every NIL a denominator. Record what was seen. Zero of 154 is checkable. Zero alone is a shrug.",
+          "3. Record provenance. Which source produced this value. Never overwrite a conflicting value from a different source; add a column and let them disagree in public.",
+          "4. Record the failure mode. One short string saying why this cell is blank. This is where DNF and BLIND get separated from NIL, and it is the column that makes the other four trustworthy.",
+          "5. Sentinel your empties. Where the platform refuses empty inputs, substitute a marker at the caller and translate it back at the function boundary.",
+          "Then run the audit that catches BLIND, the only one of the five you cannot find by looking at a row: compute your qualification rate twice, once with BLIND rows in the denominator and once with them excluded. If the two numbers differ materially, you have been reporting on your instrument. My two numbers were 6 percent and 32 percent.",
+        ],
+      },
+      {
+        heading: "The sixth code, and where the platform ends",
+        chrome: "THE CLOCK",
+        body: [
+          "There is one I could not build inside the tool at all. My second strongest signal was a payment processor that was invisible ninety days earlier, a decision that just resolved, caught while switching costs are still low. Call the code CHANGED. It is a property of two observations, and Clay holds one observation from one day. Every column answers what is true now, and nothing in the platform answers what changed.",
+          "So I left the platform for a Supabase edge function that diffs each vendor fingerprint against its prior snapshot and POSTs the classified change back into a Clay webhook table. Its two guards are reason codes: a failed scan is never stored, so a DNF cannot masquerade as a removal, and a first observation never fires an event, so a DNS cannot masquerade as an adoption. The layer is documented in the recon stage; what matters here is why I needed it, a distinction the table could not hold.",
+        ],
+        links: [
+          { href: "/special-stage/recon", label: "SS1 · Recon: the memory layer" },
+        ],
+      },
+    ],
+    failures: {
+      heading: "What I am not sure about",
+      chrome: "SCRUTINEERING",
+      body: [
+        "The 199 tier A rows with no clickable citation are the weakest part of the deliverable. Evidence URL coverage across the delivered set is 620 of 909, or 68 percent, so a rep can glance at a top tier score and find no source underneath about a third of the time. A second scraping source added specifically to close that gap rescued 0 of 10, because these companies do not publish prices at all, and on one attempt it produced a price quote from a page returning HTTP 404. That is OFF one layer further down, inside the fix.",
+        "BLIND may be a false category. I am uncertain it is distinct from DNF rather than being DNF at the level of the vendor instead of the level of the call. I lean distinct, because a retry fixes a DNF and never fixes a BLIND, so one remedy is a retry queue and the other is a second instrument. I have not stress tested that boundary and would not defend it hard.",
+        "And the strongest signal available to this buyer is one I cannot compute at all: a company that incorporated through Stripe Atlas six months ago and never activated payments. That is a partnership that half worked, invisible from outside, and the record belongs to Stripe. Sometimes the best available absence is one only the customer can see.",
+      ],
+    },
+    debrief: {
+      heading: "Debrief",
+      chrome: "STAGE END",
+      body: [
+        "I started on this before any of it had a name. The first version was Proximize Scout, which ranks physical local businesses, the ones with no domain, no LinkedIn and no digital exhaust, on how badly they are missing from the answers AI search engines give. The score is the absence. I built the same thing twice in two markets before I noticed.",
+        "The three stages below are the proofs. Recon is NIL earning its denominator, Pace Notes is a segment renamed when its name claimed more than the instrument saw, and The Stage is what a claim of absence must survive before someone signs their name under it.",
+      ],
+      links: [
+        { href: proximize.href, label: "Proximize", external: true },
+      ],
+    },
+    artifacts: [],
+  },
   {
     slug: "recon",
     chrome: "SS1 · RECON",
@@ -519,4 +767,9 @@ function classify_(lowerBody, lowerSubject, named) {
 
 export const caseStudyBySlug = new Map(caseStudies.map((s) => [s.slug, s] as const));
 
-export const stageOrder: readonly StageSlug[] = ["recon", "pace-notes", "the-stage"];
+export const stageOrder: readonly StageSlug[] = [
+  "reason-codes",
+  "recon",
+  "pace-notes",
+  "the-stage",
+];
