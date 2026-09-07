@@ -16,8 +16,6 @@
  * The UI marks session numbers so a skeptical reader can tell them apart.
  */
 
-import { proximize } from "./proximize";
-
 export type StageSlug = "reason-codes" | "recon" | "pace-notes" | "the-stage";
 
 export type Provenance = "artifact" | "session";
@@ -400,7 +398,11 @@ export const caseStudies: readonly CaseStudy[] = [
         "The three stages below are the proofs. Recon is NIL earning its denominator, Pace Notes is a segment renamed when its name claimed more than the instrument saw, and The Stage is what a claim of absence must survive before someone signs their name under it.",
       ],
       links: [
-        { href: proximize.href, label: "Proximize", external: true },
+        {
+          href: "https://proximize-scout.vercel.app",
+          label: "Proximize Scout",
+          external: true,
+        },
       ],
     },
     artifacts: [],
