@@ -36,13 +36,13 @@ function evidenceTarget(
 function MedalRow({ test }: { test: LicenseTest }) {
   const target = evidenceTarget(test);
   const row = (
-    <span className="flex w-full flex-wrap items-center gap-x-2.5 gap-y-1">
+    <span className="trophy-row w-full">
       <GradeChip grade={test.grade} />
-      <span className="ts-hard min-w-0 flex-1 truncate font-display text-sm leading-tight font-bold tracking-wide text-chrome uppercase">
+      <span className="trophy-row-title ts-hard min-w-0 font-display text-sm leading-tight font-bold text-chrome uppercase">
         {test.name}
       </span>
       {target ? (
-        <span className="ts-hard flex max-w-44 items-baseline gap-1 font-display text-xs font-semibold tracking-wider text-gt-bright uppercase">
+        <span className="trophy-evidence flex min-w-0 items-baseline gap-1 font-display text-xs font-semibold text-gt-bright uppercase">
           <span className="truncate">{target.label}</span>
           <span aria-hidden="true">→</span>
         </span>
@@ -72,20 +72,20 @@ function TierCard({ license }: { license: License }) {
   return (
     <article
       aria-labelledby={`trophy-tier-${license.id}`}
-      className="border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)]"
+      className="trophy-tier min-w-0"
     >
       <LiveryStripe livery={license.livery} />
       <div className="flex flex-col gap-3 p-4">
         <header className="flex items-center gap-3">
           <LicenseBadge glyph={license.id} livery={license.livery} />
           <div className="min-w-0">
-            <h3
+            <h2
               id={`trophy-tier-${license.id}`}
-              className="ts-hard truncate font-display text-base leading-tight font-bold tracking-wide text-chrome uppercase"
+              className="ts-hard font-display leading-tight font-bold text-chrome uppercase"
             >
               {license.name}
-            </h3>
-            <p className="truncate font-display text-xs font-bold tracking-[0.16em] text-gt-bright uppercase">
+            </h2>
+            <p className="mt-1 font-display text-xs font-bold text-silver uppercase">
               {license.theme}
             </p>
           </div>
@@ -102,7 +102,7 @@ function TierCard({ license }: { license: License }) {
 
 export function TrophyWall() {
   return (
-    <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div className="trophy-wall mt-6 grid gap-4">
       {licenses.map((license) => (
         <TierCard key={license.id} license={license} />
       ))}

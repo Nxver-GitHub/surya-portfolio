@@ -1,6 +1,14 @@
 import { Saira, Source_Serif_4 } from "next/font/google";
 import localFont from "next/font/local";
 
+/** Bitmap-inspired navigation lettering; prose remains independently readable. */
+export const pixel = localFont({
+  src: "../fonts/PixelifySans-Variable.ttf",
+  weight: "400 700",
+  variable: "--font-pixel",
+  display: "swap",
+});
+
 export const satoshi = localFont({
   src: [
     {

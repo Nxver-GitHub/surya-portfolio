@@ -9,7 +9,7 @@ import { CrtLayer } from "@/components/crt/CrtLayer";
 import { OptionsMenu } from "@/components/options/OptionsMenu";
 import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
 import { SITE_URL } from "@/lib/site";
-import { saira, satoshi, sourceSerif } from "./fonts";
+import { pixel, saira, satoshi, sourceSerif } from "./fonts";
 import "./globals.css";
 
 const TITLE =
@@ -42,7 +42,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-crt="on"
-      className={`${satoshi.variable} ${saira.variable} ${sourceSerif.variable} h-full antialiased`}
+      className={`${pixel.variable} ${satoshi.variable} ${saira.variable} ${sourceSerif.variable} h-full`}
     >
       <body className="flex min-h-full flex-col">
         <SoundProvider>

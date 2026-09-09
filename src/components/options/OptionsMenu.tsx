@@ -18,11 +18,10 @@ function OptionRow({
   return (
     <button
       type="button"
-      role="menuitemcheckbox"
-      aria-checked={on}
+      aria-pressed={on}
       onClick={onToggle}
       data-sfx="confirm"
-      className="flex w-full items-center justify-between gap-6 px-3 py-2 text-left outline-none hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-gt-bright"
+      className="flex min-h-11 w-full items-center justify-between gap-6 px-3 py-2 text-left outline-none hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-gt-bright"
     >
       <span className="ts-hard font-display text-xs font-bold tracking-[0.2em] text-chrome uppercase">
         {label}
@@ -80,19 +79,18 @@ export function OptionsMenu() {
   return (
     <div
       ref={rootRef}
-      className="absolute top-14 right-3 z-50 flex flex-col items-end gap-1.5 md:top-16 md:right-6"
+      className="console-options absolute z-50 flex flex-col items-end gap-1.5"
     >
       <button
         ref={triggerRef}
         type="button"
         aria-expanded={open}
-        aria-haspopup="menu"
         aria-controls={panelId}
         data-sfx="move"
         onClick={() => setOpen((o) => !o)}
         className={`${
-          open ? "plate-hot text-asphalt" : "plate ts-hard text-gt-bright"
-        } inline-flex min-h-9 items-center gap-1.5 px-2.5 py-1 font-display text-xs font-bold tracking-widest uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome`}
+          open ? "plate-hot text-asphalt" : "lozenge text-asphalt"
+        } inline-flex min-h-11 items-center gap-1.5 px-3 py-1 font-display text-sm font-bold tracking-wide uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome`}
       >
         <Glyph kind="badge" size="0.95em" className={open ? "" : "opacity-70"} />
         <span>Options</span>
@@ -101,7 +99,7 @@ export function OptionsMenu() {
       {open ? (
         <div
           id={panelId}
-          role="menu"
+          role="group"
           aria-label="Options"
           className="bg-grid-paper w-52 border-2 border-gt bg-asphalt shadow-[3px_4px_0_rgba(0,0,0,0.8)]"
         >

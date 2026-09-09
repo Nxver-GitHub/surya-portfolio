@@ -16,9 +16,9 @@ export function CareerBoard({ selected, onSelect }: CareerBoardProps) {
   const refs = seasonRefs(selected);
 
   return (
-    <div className="mt-8 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_260px]">
+    <div className="career-board mt-6 grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)_260px]">
       {/* Seasons ladder */}
-      <nav aria-label="Seasons" className="flex gap-2 lg:flex-col">
+      <nav aria-label="Seasons" className="console-menu flex min-w-0 gap-2 lg:flex-col">
         {seasons.map((s) => {
           const isActive = s.id === selected.id;
           return (

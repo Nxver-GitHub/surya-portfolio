@@ -9,6 +9,7 @@ import {
   type ComponentRef,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { ConsoleResolution } from "../gt/ConsoleResolution";
 import {
   Environment,
   Html,
@@ -632,9 +633,11 @@ export function CafeScene({
         fov: 60,
       }}
       flat
-      dpr={[1, 1.75]}
+      dpr={1}
+      gl={{ antialias: false }}
       className="touch-none"
     >
+      <ConsoleResolution />
       {/* warm ambient wash — café interior, not a studio */}
       <ambientLight intensity={0.6} color="#ffe6c0" />
       <directionalLight

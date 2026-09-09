@@ -56,7 +56,7 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
       role="tablist"
       aria-label="Menu Books"
       aria-orientation="vertical"
-      className="flex flex-col gap-2"
+      className="console-menu flex min-w-0 flex-col gap-2"
     >
       {menuBooks.map((book, index) => {
         const isActive = book.id === selectedId;

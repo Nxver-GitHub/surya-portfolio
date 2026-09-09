@@ -9,7 +9,7 @@ import {
 } from "../../../content/gtme";
 import type { LiveryId } from "../../../content/liveries";
 import { pavilions } from "../../../content/pavilions";
-import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
+import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { ProvenanceDot, ProvenanceLegend } from "@/components/rally/ProvenanceDot";
 import { SSDoorPlate, stageChromeParts } from "@/components/rally/SSDoorPlate";
@@ -177,14 +177,10 @@ export default function SpecialStagePage() {
   const rallyStages = stages.filter((stage) => stage.slug !== "reason-codes");
 
   return (
-    <div className="relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8">
+    <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="special-stage">
       <GtCrumb label="Special Stage" />
 
-      <header>
-        <LozengeLink href="/">
-          <span aria-hidden="true">←</span> World Map
-        </LozengeLink>
-      </header>
+      <GtBackHeader href="/" label="World Map" />
 
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">

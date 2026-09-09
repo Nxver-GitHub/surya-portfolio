@@ -342,13 +342,13 @@ export function CafeBrowser() {
       : null;
 
   return (
-    <div className="mt-8 grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div className="cafe-browser mt-6 grid min-w-0 gap-5 lg:grid-cols-[250px_minmax(0,1fr)]">
       {/* Semantic spine: the tablist that drives selection */}
       <nav aria-label="Menu Books" className="lg:order-1">
         <BookList selectedId={selected.id} onSelect={select} />
       </nav>
 
-      <div className="flex flex-col gap-6 lg:order-2">
+      <div className="flex min-w-0 flex-col gap-6 lg:order-2">
         {/* 3D café — enhancement only; falls back to a 2D backdrop. Sized to
             read like a ROOM, not a letterbox: portrait-ish on mobile so the
             floor-to-ceiling of the room is visible, a touch under 5:3 on desktop
@@ -357,7 +357,7 @@ export function CafeBrowser() {
             width). Focusable so keyboard users can enter free-roam; hover/focus
             marks the scene "engaged" (pauses the idle spin, arms WASD/arrows). */}
         <div
-          className="relative aspect-[4/5] max-h-[560px] min-h-[400px] overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-chrome sm:aspect-[16/10] sm:max-h-none sm:min-h-[440px] lg:aspect-[5/3] lg:min-h-[470px]"
+          className="console-scene relative aspect-[4/5] max-h-[560px] min-h-[340px] overflow-hidden bg-asphalt outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-chrome sm:aspect-[16/10] sm:max-h-none sm:min-h-[400px] lg:aspect-[5/3] lg:min-h-[420px]"
           tabIndex={0}
           aria-label="GT Café 3D view — drag to look, scroll to zoom, WASD or arrow keys to move around the room"
           onPointerEnter={engageScene}

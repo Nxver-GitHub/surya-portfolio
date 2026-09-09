@@ -10,10 +10,12 @@ export interface Pavilion {
   /** Plain-English caption — what this actually is */
   caption: string;
   status: PavilionStatus;
-  /** Node position on the circuit map, in % of the map canvas */
+  /**
+   * Where this destination's label sits on the terrain image, as a % of the
+   * map canvas. Anchored to the landmark drawn in the art, so it moves only
+   * when the terrain is regenerated.
+   */
   map: { x: number; y: number };
-  /** Which side of the node the label sits on, to keep it clear of the ribbon */
-  labelSide: "top" | "bottom" | "left" | "right";
   /** Livery-inspired decal system for this pavilion's chrome */
   livery: LiveryId;
   /** 1-3 char mark on the enamel badge (GT2 license-badge style) */
@@ -30,10 +32,7 @@ export const pavilions: readonly Pavilion[] = [
     name: "GT Café",
     caption: "Curated reading paths for founders & VCs",
     status: "open",
-    // deepest bottom-road node: its two-line caption hangs the stack below
-    // the map box and into the HUD strip, so the label flips above the badge
-    map: { x: 33, y: 89 },
-    labelSide: "top",
+    map: { x: 43, y: 57 },
     livery: "warsteiner",
     glyph: "GT",
   },
@@ -43,8 +42,7 @@ export const pavilions: readonly Pavilion[] = [
     name: "Career",
     caption: "Education & work, season by season",
     status: "open",
-    map: { x: 15, y: 23.2 },
-    labelSide: "bottom",
+    map: { x: 18, y: 22 },
     livery: "marlboro",
     glyph: "CR",
   },
@@ -54,8 +52,7 @@ export const pavilions: readonly Pavilion[] = [
     name: "Garage",
     caption: "Projects, presented as cars",
     status: "open",
-    map: { x: 56, y: 23.2 },
-    labelSide: "top",
+    map: { x: 64, y: 12 },
     livery: "gulf",
     glyph: "GR",
   },
@@ -65,8 +62,7 @@ export const pavilions: readonly Pavilion[] = [
     name: "License Center",
     caption: "Skills, backed by proof",
     status: "open",
-    map: { x: 70.5, y: 42.3 },
-    labelSide: "right",
+    map: { x: 83, y: 33 },
     livery: "west",
     glyph: "LC",
   },
@@ -76,8 +72,7 @@ export const pavilions: readonly Pavilion[] = [
     name: "Missions",
     caption: "Hackathons & challenges",
     status: "open",
-    map: { x: 75, y: 60.7 },
-    labelSide: "right",
+    map: { x: 84, y: 51 },
     livery: "jager",
     glyph: "MS",
   },
@@ -87,17 +82,7 @@ export const pavilions: readonly Pavilion[] = [
     name: "Special Stage",
     caption: "GTM engineering case studies",
     status: "open",
-    // The only off-circuit node: rally leaves the shared track, so this anchor
-    // sits well outside the ribbon in the open lower-right, reached by the
-    // dashed gravel spur drawn in CircuitMap. It has to sit further right than
-    // the Missions/Scapes midpoint suggests: badges and label stacks are fixed
-    // px while the map box scales, so at the md breakpoint (map ≈ 0.69 scale)
-    // the Missions stack above and the Scapes stack to the lower left both
-    // grow to ~152px wide and squeeze this corridor. `bottom` is the only side
-    // that fits — `right` would need ~120px of vertical room that Missions'
-    // stack already occupies.
-    map: { x: 82, y: 75 },
-    labelSide: "bottom",
+    map: { x: 88, y: 65 },
     livery: "subaru555",
     glyph: "SS",
   },
@@ -107,8 +92,7 @@ export const pavilions: readonly Pavilion[] = [
     name: "Scapes",
     caption: "Photography & interests",
     status: "locked",
-    map: { x: 61.2, y: 85.7 },
-    labelSide: "bottom",
+    map: { x: 64, y: 79 },
     livery: "leyton",
     glyph: "SC",
   },
@@ -118,8 +102,7 @@ export const pavilions: readonly Pavilion[] = [
     name: "Online Lobby",
     caption: "Contact & communities",
     status: "open",
-    map: { x: 19.8, y: 67 },
-    labelSide: "left",
+    map: { x: 17, y: 46 },
     livery: "redbull",
     glyph: "OL",
   },
