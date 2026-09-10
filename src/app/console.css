@@ -61,6 +61,8 @@ input, textarea { caret-color: #ffbf19; }
 /* The mark sits beside the screen title, the way a console game's logo holds
    the corner while the menu name changes underneath it. */
 .world-brand { display: flex; align-items: center; gap: 18px; min-width: 0; }
+/* The screen name is a single line at every width — it is a title, not prose. */
+.world-header .gt-title { white-space: nowrap; }
 .gt-mark { display: inline-flex; flex-shrink: 0; }
 /* Pixelify's cap-height sits low in the em, so the glyph needs to run larger
    than a normal face would to fill the enamel the way the boot badge does. */
@@ -116,7 +118,7 @@ input, textarea { caret-color: #ffbf19; }
 .map-information { border-top: 2px solid #7c8494; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 40px; min-height: 100px; }
 .map-information h2 { color: #ffbf19; font: 700 28px/1.1 var(--font-display); text-transform: uppercase; }
 .map-information p { font: 20px/1.4 var(--font-display); color: #e0e3ec; margin-top: 5px; }
-.map-enter { display: flex; align-items: center; gap: 26px; padding: 10px 24px; font: 700 25px/1 var(--font-display); text-transform: uppercase; color: #090e18; background: #ffb900; border: 3px solid; border-color: #ffe39a #7b5100 #7b5100 #ffe39a; }
+.map-enter { display: flex; align-items: center; gap: 26px; padding: 10px 24px; font: 700 25px/1 var(--font-display); text-transform: uppercase; color: #090e18; background: #ffb900; border: 3px solid; border-color: #ffe59a #724b00 #724b00 #ffe59a; }
 .map-enter:hover { background: #ffcb40; }
 .map-unavailable { font: 20px var(--font-display); color: #bfc4cf; text-transform: uppercase; }
 .map-control-strip { display: flex; justify-content: space-between; padding: 8px 40px; border-top: 2px solid #586377; font: 700 16px var(--font-display); color: #bfc4cf; text-transform: uppercase; }
@@ -148,11 +150,27 @@ input, textarea { caret-color: #ffbf19; }
   /* 354px is the non-map chrome: header, information strip, control strip and
      HUD totals. The driver card made the header taller than the old 330px
      allowance, which pushed the HUD off a 1000px-tall screen. */
-  .world-screen { max-width: min(1440px, calc((100dvh - 354px) * 4 / 3)); min-width: 760px; }
+  .world-screen {
+    max-width: min(1440px, calc((100dvh - 354px) * 4 / 3));
+    /* The floor caps how small the map can get, so it also sets the shortest
+       viewport that fits without scrolling: 720 * 3/4 + 354px of chrome = 894px.
+       At the old 760px floor that threshold was 924px, so a 900px-tall window
+       scrolled no matter what. */
+    min-width: 720px;
+    /* The screen's width is derived from viewport HEIGHT here, so anything
+       sized against the viewport disagrees with it. Make it a query container
+       and size the title against the box it actually sits in. */
+    container-type: inline-size;
+  }
   .world-header { min-height: 128px; padding-inline: 28px; }
-  .world-header .gt-title { font-size: 60px; }
+  /* "World Map" measures 5.352px per 1px of font-size, and the title's slot is
+     the screen minus 488px of chrome (padding, driver card, mark and gaps). At
+     the 760px floor that allows ~50px, so a fixed 60px wrapped onto two lines
+     on short-but-wide windows. 6.2cqi stays under the limit at every width and
+     still reaches the 60px design size once there is room. */
+  .world-header .gt-title { font-size: clamp(38px, 6.2cqi, 60px); }
   .world-screen .map-information { padding: 14px 28px; min-height: 86px; }
-  body:has(.world-screen) .console-options { right: max(28px, calc((100vw - max(760px, min(1440px, (100dvh - 330px) * 4 / 3))) / 2 + 28px)); top: 20px; }
+  body:has(.world-screen) .console-options { right: max(28px, calc((100vw - max(760px, min(1440px, (100dvh - 354px) * 4 / 3))) / 2 + 28px)); top: 20px; }
 }
 @media (max-width: 1199px) {
   .garage-browser { grid-template-columns: 200px minmax(0, 1fr); }

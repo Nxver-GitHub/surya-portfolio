@@ -54,6 +54,25 @@ colors:
   map-ink: "#e0e3ec"
   map-ink-alt: "#e4e6ec"
   pointer-white: "#ffffff"
+  # CRT phosphor. The café terminal is a green-phosphor tube seen inside the
+  # scene, so it is deliberately outside the menu palette — a monitor does not
+  # match the interface it sits in.
+  phosphor-ground: "#030c07"
+  phosphor-ground-deep: "#020604"
+  phosphor-text: "#7dff9b"
+  phosphor-dim: "#9aa6a0"
+  phosphor-black: "#050505"
+  phosphor-tube: "#03140a"
+  phosphor-glow: "#147838"
+  # Café interior. The room is warm wood and lamplight, its own world beside
+  # the midnight console chrome.
+  cafe-wood: "#23201a"
+  cafe-shadow: "#141311"
+  cafe-lamp: "#c9a54a"
+  cafe-dust: "#786e5a"
+  # Scrims. Neutral black at low alpha for overlays, drop shadows and vignettes
+  # — depth, not hue.
+  scrim: "#000000"
 typography:
   title:
     fontFamily: "Source Serif 4, Georgia, serif"
@@ -67,6 +86,11 @@ typography:
     fontFamily: "Pixelify Sans, Saira, sans-serif"
   numeric:
     fontFamily: "Saira, sans-serif"
+  # The café's CRT terminal is a diegetic machine, not site chrome: a terminal
+  # renders in the system monospace, so it uses the platform stack rather than
+  # a brand face.
+  mono:
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace"
 rounded:
   control: "0px"
 components:
@@ -108,6 +132,8 @@ Primary amber uses `gt` for text selection, `gt-bright` for emphasis and focus, 
 
 Beyond the base palette, each surface carries a three-value bevel ramp — light edge, dark edge, inset keyline — because every control in this system is stamped rather than filled. The ramps are listed above so they read as a deliberate part of the system; a literal bevel colour that is not in that list is drift and should be reconciled, not added ad hoc.
 
+Three sub-worlds sit outside the menu palette on purpose, and are listed above so they read as intentional rather than as drift: the **CRT phosphor** greens (the café terminal is a tube seen inside the scene — a monitor does not match the interface around it), the **café interior's** warm wood and lamplight, and neutral **scrims** used at low alpha for depth rather than hue. Per-item accents in content — destination liveries in [liveries.ts](content/liveries.ts) and the Menu Book colors in [menu-books.ts](content/menu-books.ts) — are content data, not system colors, and each carries its own value by design.
+
 These values are extracted from [globals.css](src/app/globals.css) and [console.css](src/app/console.css). Existing destination liveries and source media retain their own colors.
 
 ## Typography
@@ -122,7 +148,11 @@ The home title has its own responsive sizing: 60px in the desktop height-aware l
 
 Interior pages share a centered shell capped at 1600px. Their layouts remain purpose-specific: Career seasons and detail views, Garage car selection, Café room/menu books/terminal, License Center trophy wall, Missions event selector, Scapes photo browser, Lobby contact room, and Special Stage rally briefing/case studies. No pages were added.
 
-The home landscape uses an uncropped 4:3 coordinate plane capped at 1440px. Desktop width also responds to viewport height when width is at least 1100px and height at least 700px, deriving the map from the space left over after the chrome: `(100dvh - 354px) * 4 / 3`. That 354px is the header, information strip, control strip and HUD totals added up — **if the header's height changes, this constant has to change with it**, or the HUD drops below the fold and the desktop screen starts to scroll. Eight independently positioned controls include the Special Stage dirt spur.
+The home landscape uses an uncropped 4:3 coordinate plane capped at 1440px. Desktop width also responds to viewport height when width is at least 1100px and height at least 700px, deriving the map from the space left over after the chrome: `(100dvh - 354px) * 4 / 3`. That 354px is the header, information strip, control strip and HUD totals added up — **if the header's height changes, this constant has to change with it**, or the HUD drops below the fold and the desktop screen starts to scroll.
+
+The no-scroll guarantee is bounded, and honestly so: a `min-width: 720px` floor stops the map shrinking past legibility, which means it holds on viewports about **940px tall and up**. Shorter desktop windows scroll by a few pixels, and shorter still by more. That is the floor doing its job rather than a bug to chase — closing the gap would mean shrinking the map below a usable size. The chrome also breathes slightly with width, because the information strip's caption wraps to a second line on narrow screens, so the constant is a close fit rather than an exact one.
+
+The title is the other half of this: it is sized in `cqi` against the screen container, never against the viewport, because the container's width here comes from viewport *height*. Anything in this header sized in `vw` will disagree with the box it lives in. Eight independently positioned controls include the Special Stage dirt spur.
 
 Below 768px, map labels become 44px glyph controls and a two-column named directory follows the information strip. Interior shell padding becomes 16px. Garage stacks its selector, fixed 330px scene and details. The trophy wall moves from three columns to two below 1200px, then one below 768px, using shrinking tracks and wrapping evidence.
 

@@ -48,7 +48,12 @@ export function HudTotals() {
               <Link
                 transitionTypes={["nav-forward"]}
                 href={s.href}
-                className="ts-hard group inline-flex items-baseline gap-1.5 text-silver outline-none hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
+                /* max-sm:py-1.5 lifts the tap target from 16px to 28px on
+                   touch, clearing the 24px WCAG 2.5.8 minimum. Padding is
+                   phone-only on purpose: on desktop this strip is inside the
+                   height-aware no-scroll budget, and growing it there would
+                   push the HUD back below the fold. */
+                className="ts-hard group inline-flex items-baseline gap-1.5 text-silver outline-none max-sm:py-1.5 hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
               >
                 <span className="text-chrome tabular-nums group-hover:text-gt-bright">
                   {s.value}

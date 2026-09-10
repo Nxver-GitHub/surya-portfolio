@@ -22,7 +22,7 @@ function fakeResponse(
 
 describe("requestAdminLogin — status → outcome (mock fetch)", () => {
   it("POSTs the passphrase to the auth route with same-origin credentials", async () => {
-    const fetchImpl = vi.fn(async () => fakeResponse(200, { ok: true }));
+    const fetchImpl = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () => fakeResponse(200, { ok: true }));
     await requestAdminLogin("s3cret", fetchImpl);
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
@@ -79,7 +79,7 @@ describe("requestAdminLogin — status → outcome (mock fetch)", () => {
 
 describe("requestAdminLogout", () => {
   it("POSTs logout same-origin and swallows failures", async () => {
-    const fetchImpl = vi.fn(async () => fakeResponse(200, { ok: true }));
+    const fetchImpl = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () => fakeResponse(200, { ok: true }));
     await requestAdminLogout(fetchImpl);
     expect(fetchImpl).toHaveBeenCalledWith(
       "/api/admin/logout",

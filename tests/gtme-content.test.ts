@@ -303,7 +303,7 @@ describe("gtme content — onboard footage links", () => {
   it("links every stage-level video from the index footage strip too", () => {
     // The index strip is the one place a skimmer sees all recordings, so a
     // video wired into a stage must also be listed there.
-    const indexHrefs = new Set(
+    const indexHrefs = new Set<string>(
       gtmeModule.specialStage.footage.map((f) => f.href),
     );
     for (const { where, video } of stageVideos) {

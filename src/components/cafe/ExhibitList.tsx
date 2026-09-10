@@ -21,9 +21,9 @@ export function ExhibitList({ available, activeId, onSelect }: ExhibitListProps)
 
   return (
     <section aria-label="On display" className="flex flex-col gap-2">
-      <h3 className="font-display text-xs font-black tracking-[0.18em] text-gt-bright uppercase">
+      <h2 className="font-display text-xs font-black tracking-[0.18em] text-gt-bright uppercase">
         On display
-      </h3>
+      </h2>
       <div className="flex flex-wrap gap-2">
         {available.map((exhibit) => {
           const isActive = exhibit.id === activeId;
