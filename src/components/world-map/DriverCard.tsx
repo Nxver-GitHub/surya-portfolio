@@ -12,30 +12,34 @@ export function DriverCard() {
       transitionTypes={["nav-forward"]}
       href="/career"
       data-sfx="confirm"
-      className="plate group flex w-fit shrink-0 items-center gap-3.5 px-3.5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gt-bright"
+      className="driver-selector"
+      aria-label="Driver profile: Surya Pugazhenthi — view career and experience"
     >
+      {/* Source is 480×480. Asking for 64 served a 64px file into a 58×66 box,
+          so the one real face on the landing screen arrived soft — the intrinsic
+          size has to lead the CSS box, not match it. */}
       <Image
         src="/terminal/portrait.jpg"
         alt="Portrait of Surya Pugazhenthi"
-        width={64}
-        height={64}
-        className="h-16 w-16 rounded-[4px] border border-gt/60 object-cover"
+        width={128}
+        height={128}
+        className="driver-selector-portrait"
       />
-      <span className="flex flex-col">
-        <span className="ts-hard font-display text-xs font-bold tracking-[0.3em] text-gt-bright uppercase">
-          Profile
+      <span className="driver-selector-details">
+        <span className="driver-selector-label">
+          Driver Profile
         </span>
-        <span className="ts-hard mt-0.5 font-display text-sm font-black tracking-wider text-chrome uppercase transition-colors duration-(--duration-snap) group-hover:text-gt-bright group-focus-visible:text-gt-bright">
+        <span className="driver-selector-name">
           Surya Pugazhenthi
         </span>
-        <span className="ts-hard mt-1 font-display text-xs font-medium tracking-wide text-silver">
-          {/* Segments stay whole — wraps land on the dividers, never inside
-              a role. */}
-          <span className="whitespace-nowrap">Builder</span> ·{" "}
-          <span className="whitespace-nowrap">Venture Associate @ 16VC</span> ·{" "}
-          <span className="whitespace-nowrap">CS Alum @ UCSC</span>
+        <span className="driver-selector-role">
+          Builder · Venture Associate @ 16VC
+        </span>
+        <span className="driver-selector-role">
+          CS Alum @ UCSC
         </span>
       </span>
+      <span className="driver-selector-arrow" aria-hidden="true">▸</span>
     </Link>
   );
 }

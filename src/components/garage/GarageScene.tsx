@@ -17,6 +17,7 @@ import { liveries } from "../../../content/liveries";
 import { cars, type Car } from "../../../content/cars";
 import { runOnIdle } from "../../lib/runOnIdle";
 import { useReducedMotion } from "./useReducedMotion";
+import { ConsoleResolution } from "../gt/ConsoleResolution";
 
 /** Normalized car length in scene units — every model fits the same stage. */
 const CAR_LENGTH = 2.8;
@@ -240,12 +241,14 @@ export function GarageScene({ car }: { car: Car }) {
   return (
     <Canvas
       camera={{ position: [4.1, 1.9, 4.1], fov: 38 }}
-      dpr={[1, 1.75]}
+      dpr={1}
+      gl={{ antialias: false }}
       className="touch-none"
       flat
     >
-      <color attach="background" args={["#0d0d0f"]} />
-      <fog attach="fog" args={["#0d0d0f", 10, 20]} />
+      <ConsoleResolution />
+      <color attach="background" args={["#18202c"]} />
+      <fog attach="fog" args={["#18202c", 8, 16]} />
 
       {/* Lambert-only rig — flat era shading needs no env map to reflect */}
       <ambientLight intensity={0.85} />
@@ -254,10 +257,10 @@ export function GarageScene({ car }: { car: Car }) {
 
       {/* concrete floor + subtle grid */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
-        <circleGeometry args={[7, 48]} />
-        <meshLambertMaterial color="#17181b" />
+        <circleGeometry args={[7, 12]} />
+        <meshLambertMaterial color="#464a50" />
       </mesh>
-      <gridHelper args={[14, 28, "#2c2e33", "#222429"]} position={[0, 0, 0]} />
+      <gridHelper args={[14, 7, "#62666c", "#333940"]} position={[0, 0, 0]} />
 
       {car.modelPath ? (
         <CarModel path={car.modelPath} reducedMotion={reducedMotion} />

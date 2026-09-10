@@ -8,7 +8,9 @@ import {
   CAR_SILHOUETTES,
   FRAMES,
   FRAMES_COMPACT,
+  formatLap,
   type FrameEntry,
+  type LapTime,
 } from "../src/components/boot/intro/sequence";
 
 const CARS_DIR = join(__dirname, "..", "public", "intro", "cars");
@@ -65,6 +67,31 @@ describe.each(Object.entries(reels))("intro montage — %s reel", (_name, reel) 
     }
   });
 
+  it("never shows a stopped clock", () => {
+    const laps = reel
+      .filter((e) => e.frame.kind === "numerals")
+      .map((e) => (e.frame as { kind: "numerals"; lap: LapTime }).lap);
+    for (const lap of laps) {
+      // A zeroed timer reads as "not started". The era's clock ran, and GT2
+      // drew an unset record as --'--"--- rather than as zeros.
+      expect(lap.minutes + lap.seconds + lap.millis).toBeGreaterThan(0);
+      expect(lap.seconds).toBeLessThan(60);
+      expect(lap.millis).toBeLessThan(1000);
+    }
+  });
+
+  it("advances the clock across timing cuts instead of repeating one time", () => {
+    const totals = reel
+      .filter((e) => e.frame.kind === "numerals")
+      .map((e) => (e.frame as { kind: "numerals"; lap: LapTime }).lap)
+      .map((l) => l.minutes * 60_000 + l.seconds * 1000 + l.millis);
+    // Two cuts to the same clock made it look broken. Each later cut must show
+    // the lap further along than the one before it.
+    for (let i = 1; i < totals.length; i++) {
+      expect(totals[i]).toBeGreaterThan(totals[i - 1]);
+    }
+  });
+
   it("uses only known frame kinds", () => {
     const known = new Set([
       "grid",
@@ -80,6 +107,21 @@ describe.each(Object.entries(reels))("intro montage — %s reel", (_name, reel) 
     for (const e of reel) {
       expect(known).toContain(e.frame.kind);
     }
+  });
+});
+
+describe("intro montage — lap time notation", () => {
+  it("uses GT's apostrophe/quote notation, not a generic stopwatch", () => {
+    const { head, millis } = formatLap({ minutes: 1, seconds: 8, millis: 431 });
+    expect(head).toBe("1'08\"");
+    expect(millis).toBe("431");
+    expect(head).not.toContain(":");
+  });
+
+  it("pads seconds and thousandths", () => {
+    const { head, millis } = formatLap({ minutes: 2, seconds: 4, millis: 7 });
+    expect(head).toBe("2'04\"");
+    expect(millis).toBe("007");
   });
 });
 

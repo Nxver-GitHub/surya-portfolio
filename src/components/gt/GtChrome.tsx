@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { GtMark } from "./GtMark";
 
 /** Orange breadcrumb strip bleeding off the right screen edge (GT2). */
 export function GtCrumb({ label }: { label: string }) {
   return (
-    <div className="pointer-events-none absolute top-6 right-0 md:top-8">
-      <span className="gt-crumb block py-1 pr-6 pl-5 font-display text-sm font-bold tracking-[0.2em] text-asphalt uppercase md:pr-10">
+    <div className="console-location">
+      <span className="gt-crumb font-display text-sm font-bold uppercase">
         {label}
       </span>
     </div>
@@ -30,23 +31,37 @@ export function GtTitle({
    */
   ink?: GtTitleInk;
 }) {
-  const kickerClass =
-    ink === "dark" ? "text-asphalt" : ink === "light" ? "text-chrome" : "text-silver";
   const titleClass = ink === "dark" ? "text-asphalt" : "text-chrome";
   return (
-    <div className="max-w-fit">
-      {kicker ? (
-        <p
-          className={`ts-hard font-display text-sm font-semibold tracking-[0.25em] uppercase ${kickerClass}`}
-        >
-          {kicker}
-        </p>
-      ) : null}
-      <h1 className={`gt-title text-5xl md:text-6xl ${titleClass}`}>
+    <div className="console-title-block max-w-fit" title={kicker}>
+      <h1 className={`gt-title ${titleClass}`}>
         {children}
       </h1>
       <div className="gt-rule mt-2 mr-3" />
     </div>
+  );
+}
+
+/**
+ * Every interior screen's top strip: the system mark, then the way back out.
+ * Composed rather than left to each page so the mark can't be forgotten on a
+ * pavilion added later — it's chrome that has to be everywhere or nowhere.
+ */
+export function GtBackHeader({
+  href,
+  label,
+}: {
+  href: string;
+  /** Plain destination name — the component supplies the arrow. */
+  label: string;
+}) {
+  return (
+    <header className="console-header">
+      <GtMark />
+      <LozengeLink href={href}>
+        <span aria-hidden="true">←</span> {label}
+      </LozengeLink>
+    </header>
   );
 }
 
@@ -63,7 +78,7 @@ export function LozengeLink({
       href={href}
       data-sfx="back"
       transitionTypes={["nav-back"]}
-      className="lozenge inline-flex min-h-11 items-center gap-2 px-4 py-1.5 font-display text-sm font-bold tracking-widest text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
+      className="lozenge inline-flex min-h-11 items-center gap-2 px-4 py-1.5 font-display text-sm font-bold tracking-wide text-asphalt uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome"
     >
       {children}
     </Link>

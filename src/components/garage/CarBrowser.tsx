@@ -101,9 +101,9 @@ export function CarBrowser() {
   };
 
   return (
-    <div className="mt-8 grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_340px]">
+    <div className="garage-browser mt-6 grid gap-5">
       {/* Car list */}
-      <nav aria-label="Cars" className="flex flex-col gap-2">
+      <nav aria-label="Cars" className="console-menu flex flex-col gap-2">
         {cars.map((c) => (
           <CarListButton
             key={c.id}
@@ -118,7 +118,7 @@ export function CarBrowser() {
       {/* Scene */}
       <section
         aria-label={`${selected.name} in the garage`}
-        className="relative min-h-72 overflow-hidden border border-steel bg-[#0d0d0f] shadow-[2px_3px_0_rgba(0,0,0,0.7)] lg:min-h-96"
+        className="garage-viewport console-scene relative overflow-hidden bg-asphalt"
       >
         {selected.status === "hero" ? (
           <>

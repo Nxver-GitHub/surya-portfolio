@@ -6,7 +6,7 @@ import { pavilions } from "../../../content/pavilions";
 import type { LiveryId } from "../../../content/liveries";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { OrgLogo } from "@/components/career/OrgLogo";
-import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
+import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { Glyph } from "@/components/gt/Glyph";
 
 /** The Missions pavilion's livery nod (Jägermeister DTM orange/green), applied
@@ -115,14 +115,10 @@ function MissionCard({ mission }: { mission: Mission }) {
 
 export default function MissionsPage() {
   return (
-    <div className="relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8">
+    <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="missions">
       <GtCrumb label="Missions" />
 
-      <header>
-        <LozengeLink href="/">
-          <span aria-hidden="true">←</span> World Map
-        </LozengeLink>
-      </header>
+      <GtBackHeader href="/" label="World Map" />
 
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">
