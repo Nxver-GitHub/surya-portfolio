@@ -27,6 +27,7 @@ export function BootSequence() {
   const [phase, setPhase] = useState<Phase | null>(null);
   const [compact, setCompact] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
 
   const finish = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
@@ -63,29 +64,22 @@ export function BootSequence() {
     };
   }, [phase, finish]);
 
-  // Any key or click advances: logo/montage jump to the title gate; the title
-  // gate itself is the only way into the World Map.
+  // A native modal keeps the visible gate and the keyboard focus in sync.
   useEffect(() => {
-    if (phase !== "logo" && phase !== "montage" && phase !== "title") return;
-    const advance = () => {
-      setPhase(phase === "title" ? "exit" : "title");
-    };
-    window.addEventListener("keydown", advance);
-    window.addEventListener("pointerdown", advance);
-    return () => {
-      window.removeEventListener("keydown", advance);
-      window.removeEventListener("pointerdown", advance);
-    };
+    if (phase && phase !== "done" && dialog.current && !dialog.current.open) {
+      dialog.current.showModal();
+    }
   }, [phase]);
 
   if (!phase || phase === "done") return null;
 
   return (
-    <div
-      role="presentation"
-      aria-hidden="true"
+    <dialog
+      ref={dialog}
+      aria-label="Surya Racing portfolio introduction"
+      onCancel={(event) => { event.preventDefault(); finish(); }}
       data-boot-overlay=""
-      className={`fixed inset-0 z-60 overflow-hidden bg-asphalt bg-grid-paper transition-transform duration-(--duration-panel) ease-(--ease-mech) ${
+      className={`fixed inset-0 z-60 m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden border-0 bg-asphalt p-0 text-chrome transition-transform duration-(--duration-panel) ease-(--ease-mech) ${
         phase === "exit" ? "-translate-y-full" : ""
       }`}
     >
@@ -93,7 +87,9 @@ export function BootSequence() {
       {phase === "montage" && (
         <IntroMontage compact={compact} onComplete={startTitle} />
       )}
-      {(phase === "title" || phase === "exit") && <IntroTitle />}
-    </div>
+      {(phase === "title" || phase === "exit") && <IntroTitle onStart={finish} />}
+      <button type="button" className="lozenge absolute right-6 bottom-6 z-20 min-h-11 px-5 py-2 font-display text-base text-asphalt uppercase"
+        onClick={finish}>{phase === "title" ? "Enter World Map ▸" : "Skip intro ▸"}</button>
+    </dialog>
   );
 }

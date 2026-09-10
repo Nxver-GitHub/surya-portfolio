@@ -74,6 +74,11 @@ test-results/
 *.blend1
 *.blend2
 .playwright-mcp/
+# Local design-review screenshots; the production map asset lives in public/.
+.impeccable/review/
+# Local hook state. config.json stays tracked — it carries the ruling that the
+# GT2 selection cursor is not an AI-slop accent border, worth keeping.
+.impeccable/hook.cache.json
 assets-src/cars/incoming/*
 !assets-src/cars/incoming/README.md
 assets-src/cafe/incoming/**

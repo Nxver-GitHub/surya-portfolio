@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
+import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { ScapesBrowser } from "@/components/scapes/ScapesBrowser";
 import { pavilions } from "../../../content/pavilions";
 
@@ -16,14 +16,10 @@ const livery = scapesPavilion?.livery ?? "leyton";
 
 export default function ScapesPage() {
   return (
-    <div className="relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8">
+    <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="scapes">
       <GtCrumb label="Scapes" />
 
-      <header>
-        <LozengeLink href="/">
-          <span aria-hidden="true">←</span> World Map
-        </LozengeLink>
-      </header>
+      <GtBackHeader href="/" label="World Map" />
 
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">

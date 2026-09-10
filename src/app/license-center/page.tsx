@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { GtCrumb, GtTitle, LozengeLink } from "@/components/gt/GtChrome";
+import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { TrophyWall } from "@/components/license/TrophyWall";
 
 export const metadata: Metadata = {
@@ -11,14 +11,10 @@ export const metadata: Metadata = {
 
 export default function LicenseCenterPage() {
   return (
-    <div className="relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8">
+    <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="license-center">
       <GtCrumb label="License Center" />
 
-      <header>
-        <LozengeLink href="/">
-          <span aria-hidden="true">←</span> World Map
-        </LozengeLink>
-      </header>
+      <GtBackHeader href="/" label="World Map" />
 
       <main className="flex flex-1 flex-col pb-10">
         <div className="mt-10 md:mt-12">

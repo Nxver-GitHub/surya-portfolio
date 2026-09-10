@@ -1,5 +1,5 @@
 import { liveries, type LiveryId } from "../../../../content/liveries";
-import type { CarSilhouetteId, Frame } from "./sequence";
+import { formatLap, type CarSilhouetteId, type Frame, type LapTime } from "./sequence";
 
 /**
  * Beat 2 montage renderer — one view per frame kind. The reel itself (which
@@ -182,11 +182,12 @@ function Rim() {
   );
 }
 
-function Numerals() {
+function Numerals({ lap }: { lap: LapTime }) {
+  const { head, millis } = formatLap(lap);
   return (
     <div className={HERO}>
       <span className="intro-flash ts-hard font-display text-[clamp(44px,13vw,150px)] font-black tracking-tight text-gt-bright tabular-nums">
-        00:00.<span className="text-chrome">000</span>
+        {head}<span className="text-chrome">{millis}</span>
       </span>
     </div>
   );
@@ -232,7 +233,7 @@ export function FrameView({ frame }: { frame: Frame }) {
     case "rim":
       return <Rim />;
     case "numerals":
-      return <Numerals />;
+      return <Numerals lap={frame.lap} />;
     case "word":
       return <WordSlam text={frame.text} />;
   }

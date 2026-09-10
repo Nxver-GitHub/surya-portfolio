@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { allEventSlugs, findEvent } from "../../../../content/career";
-import { GtCrumb, LozengeLink } from "@/components/gt/GtChrome";
+import { GtBackHeader, GtCrumb } from "@/components/gt/GtChrome";
 import { EventBriefing } from "@/components/career/EventBriefing";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
@@ -55,14 +55,10 @@ export default async function EventPage({ params }: EventPageProps) {
   const { season, event } = found;
 
   return (
-    <div className="relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8">
+    <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="career">
       <GtCrumb label={season.number} />
 
-      <header>
-        <LozengeLink href="/career">
-          <span aria-hidden="true">←</span> Career
-        </LozengeLink>
-      </header>
+      <GtBackHeader href="/career" label="Career" />
 
       <main className="flex flex-1 flex-col pb-10">
         <CareerTitleBand

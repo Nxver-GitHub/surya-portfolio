@@ -4,7 +4,7 @@
  * until the visitor clicks or presses a key, like the original title screen.
  * Centred vertically to stay inside a 9:16 story-safe band.
  */
-export function IntroTitle() {
+export function IntroTitle({ onStart }: { onStart: () => void }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
       <div
@@ -19,7 +19,7 @@ export function IntroTitle() {
           Surya Pugazhenthi
         </h1>
         <div className="gt-rule mt-3 w-64 md:w-104" />
-        <p className="intro-blink mt-8 font-display text-xs font-semibold tracking-[0.34em] text-silver uppercase">
+        <button type="button" onClick={onStart} className="intro-blink mt-8 min-h-11 px-5 py-2 font-display text-base font-semibold tracking-[0.15em] text-silver uppercase focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gt-bright">
           <span aria-hidden="true" className="text-gt-bright">
             ▸
           </span>{" "}
@@ -27,7 +27,7 @@ export function IntroTitle() {
           <span aria-hidden="true" className="text-gt-bright">
             ◂
           </span>
-        </p>
+        </button>
       </div>
     </div>
   );
