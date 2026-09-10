@@ -200,7 +200,7 @@ function BookMarker({ book, isActive, onSelect, idle, focused }: BookMarkerProps
               whiteSpace: "normal",
               maxWidth: 150,
               textAlign: "center",
-              background: "#0a0a0b",
+              background: "var(--color-asphalt)",
               border: `2px solid ${color}`,
               boxShadow: "2px 3px 0 rgba(0,0,0,0.7)",
               padding: "4px 8px",

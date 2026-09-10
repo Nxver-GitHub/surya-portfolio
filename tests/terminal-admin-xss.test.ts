@@ -19,7 +19,7 @@ const ATTACK = `<img src=x onerror="alert(1)"></script>{{7*7}}` + "${jndi:ldap:/
 
 /** Render the given admin log lines to their real static markup. */
 function renderLogs(html: string): string {
-  const lines = formatLogs([{ t: Date.now(), q: html }], Date.now());
+  const lines = formatLogs([{ t: Date.now(), q: html, src: "guest" }], Date.now());
   return renderToStaticMarkup(createElement(LogRenderer, { lines }));
 }
 

@@ -18,7 +18,11 @@ import {
 /** A recording mock of the minimal Redis surface events.ts uses. */
 function mockRedis() {
   return {
-    lpush: vi.fn(async () => 1),
+    // Typed via the generic rather than declared params: vi.fn needs the
+    // signature to infer the call tuple (without it `lpush.mock.calls[0]`
+    // types as `[]` and destructuring it fails to compile), and this way the
+    // mock body stays zero-arg with nothing unused.
+    lpush: vi.fn<(key: string, payload: string) => Promise<number>>(async () => 1),
     ltrim: vi.fn(async () => "OK"),
     incr: vi.fn(async () => 1),
     expire: vi.fn(async () => 1),

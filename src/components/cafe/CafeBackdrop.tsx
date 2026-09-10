@@ -15,7 +15,7 @@ export function CafeBackdrop({ reason }: { reason: "loading" | "error" }) {
       className="relative flex h-full min-h-72 flex-col items-center justify-center overflow-hidden lg:min-h-96"
       style={{
         background:
-          "radial-gradient(120% 90% at 50% 8%, #23201a 0%, #141311 46%, #0a0a0b 100%)",
+          "radial-gradient(120% 90% at 50% 8%, #23201a 0%, #141311 46%, #0b101b 100%)",
       }}
     >
       {/* warm café glow — a hanging-lamp pool of light */}

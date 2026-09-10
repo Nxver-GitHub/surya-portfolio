@@ -33,9 +33,11 @@ export function SpecSheet({ car }: { car: Car }) {
       <LiveryStripe livery={car.livery} />
       <div className="flex flex-col gap-4 p-5">
         <div>
-          <p className="ts-hard font-display text-2xl font-bold tracking-wide text-chrome uppercase">
+          {/* The spec sheet's own title, and the rung between the page h1 and
+              the SpecLabel h3s — without it a screen reader jumps h1 to h3. */}
+          <h2 className="ts-hard font-display text-2xl font-bold tracking-wide text-chrome uppercase">
             {car.name}
-          </p>
+          </h2>
           {car.chassis ? (
             <p className="text-sm text-silver">{car.chassis}</p>
           ) : (

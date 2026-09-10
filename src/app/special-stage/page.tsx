@@ -52,7 +52,7 @@ function StageCard({ stage }: { stage: CaseStudy }) {
           </p>
         </div>
 
-        <h3 className="ts-hard font-display text-lg leading-snug font-bold text-chrome">
+        <h2 className="ts-hard font-display text-lg leading-snug font-bold text-chrome">
           <Link
             href={`/special-stage/${stage.slug}`}
             transitionTypes={["nav-forward"]}
@@ -61,7 +61,7 @@ function StageCard({ stage }: { stage: CaseStudy }) {
           >
             {stage.title}
           </Link>
-        </h3>
+        </h2>
 
         {stage.assertion ? (
           <p className="max-w-[52ch] font-title text-base text-ink italic">
@@ -118,7 +118,7 @@ function ThesisCard({ stage }: { stage: CaseStudy }) {
           </p>
         </div>
 
-        <h3 className="ts-hard max-w-[38ch] font-display text-xl leading-snug font-bold text-chrome md:text-2xl">
+        <h2 className="ts-hard max-w-[38ch] font-display text-xl leading-snug font-bold text-chrome md:text-2xl">
           <Link
             href={`/special-stage/${stage.slug}`}
             transitionTypes={["nav-forward"]}
@@ -127,7 +127,7 @@ function ThesisCard({ stage }: { stage: CaseStudy }) {
           >
             {stage.title}
           </Link>
-        </h3>
+        </h2>
 
         {stage.assertion ? (
           <p className="max-w-[56ch] font-title text-lg text-balance text-ink italic">

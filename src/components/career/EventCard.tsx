@@ -23,9 +23,9 @@ function LockedEventCard({ event }: { event: CareerEvent }) {
     <div className="border border-dashed border-steel bg-panel p-4 shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
       <div className="flex items-center gap-3">
         <Glyph kind="lock" />
-        <h3 className="ts-hard font-display text-xl font-bold tracking-wide text-silver uppercase">
-          {event.title}
-        </h3>
+        <h2 className="ts-hard font-display text-xl font-bold tracking-wide text-silver uppercase">
+
+        </h2>
       </div>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
         <Field label="Track" value={event.org} />
@@ -56,9 +56,9 @@ export function EventCard({ event }: { event: CareerEvent }) {
       <div className="p-4">
         <div className="flex items-center gap-3">
           <OrgLogo logo={event.logo} org={event.org} size={32} />
-          <h3 className="ts-hard font-display text-xl font-bold tracking-wide text-chrome uppercase group-hover:text-gt-bright">
-            {event.title}
-          </h3>
+          <h2 className="ts-hard font-display text-xl font-bold tracking-wide text-chrome uppercase group-hover:text-gt-bright">
+
+          </h2>
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
           <Field label="Track" value={event.org} />

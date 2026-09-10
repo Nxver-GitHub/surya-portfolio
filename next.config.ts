@@ -15,12 +15,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
-  experimental: {
-    // React <ViewTransition> integration — powers the GT2 screen-wipe
-    // between pavilions. Browsers without the View Transitions API (and
-    // prefers-reduced-motion users, via CSS) just get the hard cut.
-    viewTransition: true,
-  },
+  // The GT2 screen-wipe between pavilions needs no config as of Next 16.3:
+  // "View transitions work in the App Router with no configuration."
+  // `experimental.viewTransition` was removed when the feature went stable, so
+  // the flag is gone rather than renamed — the `transitionTypes` props on our
+  // Links are now a supported API. Browsers without the View Transitions API,
+  // and prefers-reduced-motion users via CSS, still get the hard cut.
 };
 
 export default nextConfig;

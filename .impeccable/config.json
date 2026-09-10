@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-09-09T22:08:38.258Z",
         "reason": "CSS triangle (width:0/height:0 + transparent block borders) forming the GT2 selection cursor, not a card accent border; DESIGN.md 'Shapes' documents it as intentional and names this detector false positive"
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "tests/terminal-admin-xss.test.ts"
+        ],
+        "createdAt": "2026-09-10T07:18:53.286Z",
+        "reason": "The <img src=x onerror> string is the XSS attack payload this security test asserts is neutralized, not shipped UI"
       }
     ]
   }

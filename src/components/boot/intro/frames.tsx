@@ -141,11 +141,11 @@ function Tach({ redline }: { redline?: boolean }) {
             y1="116"
             x2="100"
             y2="48"
-            stroke="#ffb000"
+            stroke="#ffbf19"
             strokeWidth="4"
             strokeLinecap="round"
           />
-          <circle cx="100" cy="116" r="8" fill="#ffb000" />
+          <circle cx="100" cy="116" r="8" fill="#ffbf19" />
         </g>
       </svg>
     </div>
@@ -176,7 +176,7 @@ function Rim() {
             strokeLinecap="round"
           />
         ))}
-        <circle cx="60" cy="60" r="8" fill="#ffb000" />
+        <circle cx="60" cy="60" r="8" fill="#ffbf19" />
       </svg>
     </div>
   );
@@ -209,7 +209,7 @@ function Grid() {
       className="intro-scanlines absolute inset-0 bg-asphalt"
       style={{
         backgroundImage:
-          "linear-gradient(rgba(255,176,0,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,176,0,0.16) 1px, transparent 1px)",
+          "linear-gradient(rgba(255,191,25,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,191,25,0.16) 1px, transparent 1px)",
         backgroundSize: "26px 26px",
       }}
     />
