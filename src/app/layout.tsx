@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-crt="on"
+      data-crt="subtle"
       className={`${pixel.variable} ${satoshi.variable} ${saira.variable} ${sourceSerif.variable} h-full`}
     >
       <body className="flex min-h-full flex-col">
