@@ -6,7 +6,6 @@ import { useSound } from "@/components/sound/SoundProvider";
 import { useCrtMode } from "@/components/crt/CrtLayer";
 import { MemoryCardToast } from "@/components/toast/MemoryCardToast";
 import { useMemoryCardToast } from "@/components/toast/useMemoryCardToast";
-import { musicCredit } from "../../../content/music";
 
 /** One GT options row: label left, ON/OFF state chip right; click flips. */
 function OptionRow({
@@ -69,46 +68,6 @@ function CycleRow({
         {value === "off" ? "Off" : value === "subtle" ? "Subtle" : "Full"}
       </span>
     </button>
-  );
-}
-
-/**
- * The music credit, sat under the toggle rows. CC BY 4.0 obliges us to name
- * the work and its author, link the source and the licence, and say what we
- * changed — so this is a licence term rendered as a caption, not decoration,
- * and it stays even though the panel is narrow. Facts in plain English under
- * a game label, like every other caption on the site.
- */
-function MusicCredit() {
-  const link =
-    "underline decoration-silver/40 underline-offset-2 hover:text-chrome";
-  return (
-    <div className="border-t border-steel px-3 py-2">
-      <p className="ts-hard font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
-        Sound
-      </p>
-      <p className="mt-1 text-xs leading-snug text-silver">
-        Music: &ldquo;{musicCredit.shortTitle}&rdquo; by{" "}
-        <a
-          href={musicCredit.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={link}
-        >
-          {musicCredit.author}
-        </a>{" "}
-        (itch.io) &mdash;{" "}
-        <a
-          href={musicCredit.licenseUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={link}
-        >
-          {musicCredit.licenseName}
-        </a>
-        , {musicCredit.changes}.
-      </p>
-    </div>
   );
 }
 
@@ -185,11 +144,11 @@ export function OptionsMenu() {
           <p className="border-b border-steel px-3 py-1.5 font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
             Options
           </p>
-          <OptionRow
-            label="Music"
-            on={sound.musicEnabled}
-            onToggle={() => { sound.toggleMusic(); memoryCardToast.notify(); }}
-          />
+          {/* No MUSIC row and no music credit: the Sound Select bar along the
+              bottom edge owns play state, and carries the CC BY 4.0 attribution
+              in its own caption and popup. One visible source for each — two
+              controls for one preference is one too many, and a licence notice
+              repeated in two places is a licence notice nobody reads. */}
           <OptionRow
             label="Sound FX"
             on={sound.enabled}
@@ -200,7 +159,6 @@ export function OptionsMenu() {
             value={crt.mode}
             onCycle={() => { crt.cycle(); memoryCardToast.notify(); }}
           />
-          <MusicCredit />
         </div>
       ) : null}
       <MemoryCardToast visible={memoryCardToast.visible} />

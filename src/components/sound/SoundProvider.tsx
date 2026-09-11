@@ -11,22 +11,20 @@ import {
 } from "react";
 import { sfx, type SfxKind } from "@/lib/sfx";
 import { bgm } from "@/lib/bgm";
-import {
-  createPreferenceStore,
-  MUSIC_STORAGE_KEY,
-  SFX_STORAGE_KEY,
-} from "@/lib/sound-preferences";
+import { musicPreference, sfxPreference } from "@/lib/sound-preferences";
+import { DEFAULT_VOLUME_STEP, musicVolume } from "@/lib/music-volume";
 
 // ── Persisted preferences ───────────────────────────────────────────────────
 // Two independent opt-ins, each a tiny external store read via
 // useSyncExternalStore: the server snapshot is always "off" (no hydration
 // mismatch), and same-tab writes notify subscribers directly since the native
-// "storage" event only fires in other tabs. The split lives in
-// lib/sound-preferences.ts so it is unit-testable without a DOM.
-const sfxPreference = createPreferenceStore(SFX_STORAGE_KEY);
-const musicPreference = createPreferenceStore(MUSIC_STORAGE_KEY);
+// "storage" event only fires in other tabs. The stores are module singletons
+// in lib/sound-preferences.ts so the Sound Select strip writes through the
+// same objects this provider reads — and so the split stays unit-testable
+// without a DOM.
 
 const alwaysOff = () => false;
+const alwaysDefaultVolume = () => DEFAULT_VOLUME_STEP;
 
 /** Kinds the delegated `data-sfx` click listener will play. */
 const CLICK_KINDS: readonly SfxKind[] = [
@@ -73,8 +71,10 @@ export function useSound(): SoundContextValue {
 }
 
 /**
- * Site-wide sound layer. The two persistent toggle rows live in the Options
- * menu (OptionsMenu consumes useSound). Owns the muted-by-default,
+ * Site-wide sound layer. SOUND FX keeps its row in the Options menu; MUSIC is
+ * driven by the Sound Select strip in the page header (see useMusicDeck),
+ * which writes the same persisted key this provider reads. Owns the
+ * muted-by-default,
  * gesture-gated policy — now across two independent opt-ins, MUSIC and
  * SOUND FX, each with its own preference key and its own AudioContext:
  *
@@ -109,8 +109,21 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     musicPreference.read,
     alwaysOff,
   );
+  const volumeStep = useSyncExternalStore(
+    musicVolume.subscribe,
+    musicVolume.read,
+    alwaysDefaultVolume,
+  );
 
   const lastTickRef = useRef(0);
+
+  // One owner for the resting level, so whichever gesture arms the engine —
+  // the strip's play button, a track pick, or the first-gesture re-arm below —
+  // finds the visitor's persisted notch already set. Cheap while music is off:
+  // the engine just remembers the value.
+  useEffect(() => {
+    bgm.setVolumeStep(volumeStep);
+  }, [volumeStep]);
 
   const play = useCallback(
     (kind: SfxKind) => {

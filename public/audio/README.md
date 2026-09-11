@@ -1,8 +1,8 @@
 # Menu music
 
-The rotating playlist behind OPTIONS → MUSIC. Five tracks, played through in
-order and cycled, one continuous rotation site-wide — deliberately not a theme
-per destination.
+The rotating playlist behind the Sound Select strip in the page header. Three
+tracks, played through in order and cycled, one continuous rotation site-wide —
+deliberately not a theme per destination.
 
 The playlist and its attribution are declared in
 [`content/music.ts`](../../content/music.ts); the player is
@@ -31,15 +31,18 @@ It is a term, not a courtesy.
 
 | File | Track | Length | Size |
 | --- | --- | --- | --- |
-| `short-circuit.m4a` | Short Circuit | 2:06 | 1.5 MB |
-| `jungle-jargon.m4a` | Jungle Jargon | 2:31 | 1.8 MB |
-| `activez-les-plaisir.m4a` | Activez les Plaisir | 3:12 | 2.3 MB |
-| `midnight-trial.m4a` | Midnight Trial | 3:39 | 2.6 MB |
 | `sunset-relay.m4a` | Sunset Relay | 3:55 | 2.8 MB |
+| `midnight-trial.m4a` | Midnight Trial | 3:39 | 2.6 MB |
+| `activez-les-plaisir.m4a` | Activez les Plaisir | 3:12 | 2.3 MB |
 
-**Total: 11.0 MB / 15:24.** Only one track is fetched at a time — the rotation
+**Total: 7.7 MB / 10:46.** Only one track is fetched at a time — the rotation
 pulls the next track's bytes while the current one plays — so a visitor who
 turns music on and leaves after a minute downloads about 3 MB, not all of it.
+
+The rotation was cut from five tracks to three when the Sound Select strip
+landed: the strip lists the whole playlist as pickable rows, and a list short
+enough to read at a glance beats two extra minutes of audio in the repository.
+`short-circuit.m4a` and `jungle-jargon.m4a` were removed.
 
 The `seamless_loop` cuts from the pack are used rather than the plain versions:
 they end where they begin, so the join between tracks lands on a musical edge
@@ -61,9 +64,10 @@ ffmpeg -i "source.ogg" -vn -c:a aac -b:a 96k -ar 44100 -ac 2 \
 Then add it to `musicPlaylist` in `content/music.ts`.
 
 - **Keep it light.** Every track ships in the repository and over the wire.
-- **Mix it low.** The player applies a 0.5 resting gain so the music sits under
-  the synthesized menu tones; master accordingly rather than relying on that
-  gain to rescue a hot file.
+- **Mix it low.** The player's resting gain is the MID notch of the Sound
+  Select level (`src/lib/music-volume.ts` — LO/MID/HI, spaced by ear and
+  capped well under unity) so the music sits under the synthesized menu tones.
+  Master accordingly rather than relying on that gain to rescue a hot file.
 - **Ship only what you have the rights to ship.** This repository and the
   deployed site are both public. Original work or an explicitly licensed track
   only, and record the licence here and in `content/music.ts`.

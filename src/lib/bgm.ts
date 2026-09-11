@@ -31,9 +31,19 @@
  */
 
 import { musicPlaylist } from "../../content/music";
+import {
+  DEFAULT_VOLUME_STEP,
+  gainForVolumeStep,
+  type VolumeStep,
+} from "./music-volume";
 
-/** Resting gain. Modest on purpose: the music sits UNDER the menu tones. */
-export const BGM_GAIN = 0.5;
+/**
+ * Default resting gain — the MID notch of the Sound Select level, derived from
+ * that table rather than duplicated here so the two can never drift. Modest on
+ * purpose: the music sits UNDER the menu tones. See music-volume.ts for why
+ * the notches are spaced by ear rather than evenly.
+ */
+export const BGM_GAIN = gainForVolumeStep(DEFAULT_VOLUME_STEP);
 /** Fade on start, stop and either side of a track change, in milliseconds.
  * Mechanical linear ramp, no bounce. */
 export const BGM_FADE_MS = 300;
@@ -78,6 +88,24 @@ export interface BgmEngineOptions {
 }
 
 /**
+ * What the Sound Select strip renders: is a track sounding, and which track is
+ * the deck cued to. Snapshots are frozen and reference-stable between real
+ * changes, because `useSyncExternalStore` compares them by identity.
+ */
+export interface BgmState {
+  /** True only while a track is actually sounding. */
+  readonly playing: boolean;
+  /** Playlist index the deck is cued to, or -1 before the first track. */
+  readonly index: number;
+}
+
+/** Server/idle snapshot. The site is silent until a visitor presses play. */
+export const BGM_IDLE_STATE: BgmState = Object.freeze({
+  playing: false,
+  index: -1,
+});
+
+/**
  * Owns the music AudioContext, the master gain and the one source node that is
  * sounding.
  *
@@ -86,6 +114,12 @@ export interface BgmEngineOptions {
  * silent rather than with an orphaned loop. `start()` must be called from a
  * user gesture — creating a context outside one leaves it suspended under
  * every browser's autoplay policy.
+ *
+ * The deck also exposes a transport for the Sound Select strip in the page
+ * header — `pause()`, `next()`, `prev()`, `selectTrack()`, `setVolumeStep()` —
+ * plus `subscribe()`/`getState()` so the strip's readout follows the rotation.
+ * Resuming playback is `start()` itself, which is idempotent; the name
+ * `resume()` was already taken by the iOS context-wake path below.
  */
 export class BgmEngine {
   private readonly factory: AudioContextFactory;
@@ -96,7 +130,15 @@ export class BgmEngine {
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private source: AudioBufferSourceNode | null = null;
+  /** The sounding track's own gain node, kept so a skip can fade it out. */
+  private sourceGain: GainNode | null = null;
   private index = -1;
+  /** Resting master gain, set by the Sound Select level. */
+  private resting = BGM_GAIN;
+  private listeners = new Set<() => void>();
+  private snapshot: BgmState = BGM_IDLE_STATE;
+  /** Bumped by every transport move, so a superseded skip abandons quietly. */
+  private skipToken = 0;
   /** Encoded bytes for the next track, fetched during the current one. */
   private prefetch: { index: number; bytes: Promise<ArrayBuffer | null> } | null =
     null;
@@ -128,6 +170,136 @@ export class BgmEngine {
     return this.source ? this.index : -1;
   }
 
+  // ── External store ────────────────────────────────────────────────────────
+  // The header strip reads the deck through useSyncExternalStore, so the title
+  // updates on its own when the rotation advances mid-track — the strip never
+  // polls and never owns a copy of this state.
+
+  /** Subscribe to transport changes. Returns an unsubscribe. */
+  subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
+
+  /** Current snapshot. Reference-stable until something actually changes. */
+  getState = (): BgmState => this.snapshot;
+
+  private emit(): void {
+    const playing = this.source !== null;
+    if (this.snapshot.playing === playing && this.snapshot.index === this.index) {
+      return;
+    }
+    this.snapshot = Object.freeze({ playing, index: this.index });
+    for (const notify of this.listeners) notify();
+  }
+
+  /**
+   * Set the resting level from the Sound Select notch, riding there over the
+   * standard fade rather than jumping. Safe to call while music is off: the
+   * value is remembered and applied when the context is next armed.
+   */
+  setVolumeStep(step: VolumeStep): void {
+    this.resting = gainForVolumeStep(step);
+    const ctx = this.context;
+    // A hidden tab is ducked to silence; restoring it is setHidden's job, and
+    // ramping here would un-duck a backgrounded tab.
+    if (!ctx || !this.master || this.hidden) return;
+    ramp(this.master.gain, ctx.currentTime, this.resting, BGM_FADE_MS);
+  }
+
+  /**
+   * Stop the deck. Pausing IS opting out: the persisted preference goes off
+   * and the context is torn down, because the standing invariant is that no
+   * AudioContext exists while music is off. Pressing play again re-arms and
+   * restarts the cued track from its top. Alias of {@link stop} so the
+   * transport reads the way the control does.
+   */
+  async pause(): Promise<void> {
+    await this.stop();
+  }
+
+  /** Next track in the rotation, with the same fades as a natural advance. */
+  async next(): Promise<void> {
+    await this.skipTo(this.index + 1);
+  }
+
+  /**
+   * Previous track. Always the previous ENTRY, never "restart this one if it
+   * is more than a few seconds in": with a three-track rotation on screen the
+   * strip is a list you are steering, and a button that sometimes moves and
+   * sometimes does not is the worse control.
+   */
+  async prev(): Promise<void> {
+    await this.skipTo(this.index - 1);
+  }
+
+  /** Jump straight to a playlist entry — the popup's pickable rows. */
+  async selectTrack(index: number): Promise<void> {
+    if (!Number.isInteger(index)) return;
+    await this.skipTo(index);
+  }
+
+  /**
+   * Cue an index and play it. Off the air (no context) this only moves the
+   * cue, so the popup's selection is still meaningful on an idle deck.
+   *
+   * Only ONE decoded buffer is ever resident: the outgoing source is dropped
+   * before the incoming one is decoded, exactly as at a natural track seam.
+   */
+  private async skipTo(target: number): Promise<void> {
+    const length = musicPlaylist.length;
+    if (length === 0) return;
+
+    const index = ((target % length) + length) % length;
+    const token = ++this.skipToken;
+    this.index = index;
+
+    const ctx = this.context;
+    if (!ctx || !this.wanted) {
+      this.emit();
+      return;
+    }
+
+    await this.cut(ctx);
+    // Superseded by a later skip, a stop, or a teardown while we faded out.
+    if (this.skipToken !== token || this.context !== ctx || !this.wanted) return;
+
+    this.starting = true;
+    try {
+      await this.playTrack(ctx, index, 0);
+    } finally {
+      this.starting = false;
+    }
+    this.emit();
+  }
+
+  /** Fade the sounding track out and release it. */
+  private async cut(ctx: AudioContext): Promise<void> {
+    const source = this.source;
+    const gain = this.sourceGain;
+    this.source = null;
+    this.sourceGain = null;
+    // Deliberately no emit here: the strip holds the outgoing title through
+    // the 300ms fade and swaps once the incoming track is actually sounding,
+    // rather than blinking to an idle readout in between.
+    if (!source) return;
+
+    // Clear the handler first: a deliberate cut must not be mistaken for the
+    // track running out and advancing the rotation on its own.
+    source.onended = null;
+    if (gain) {
+      ramp(gain.gain, ctx.currentTime, SILENT, BGM_FADE_MS);
+      await this.waiter(BGM_FADE_MS);
+    }
+    try {
+      source.stop();
+    } catch {
+      // Already stopped; nothing actionable.
+    }
+  }
+
   /**
    * Arm the context and start the rotation with a fade-in. MUST be called from
    * within a user gesture. Idempotent: calling it while a track is already
@@ -140,7 +312,7 @@ export class BgmEngine {
       this.context = this.factory();
       const master = this.context.createGain();
       master.gain.setValueAtTime(
-        this.hidden ? SILENT : BGM_GAIN,
+        this.hidden ? SILENT : this.resting,
         this.context.currentTime,
       );
       master.connect(this.context.destination);
@@ -161,6 +333,7 @@ export class BgmEngine {
     } finally {
       this.starting = false;
     }
+    this.emit();
   }
 
   /** Fade out, stop the rotation and tear the context down completely. */
@@ -173,7 +346,11 @@ export class BgmEngine {
     this.context = null;
     this.master = null;
     this.source = null;
+    this.sourceGain = null;
     this.prefetch = null;
+    // The cue survives a stop, so pressing play again resumes on the track the
+    // visitor last chose rather than re-rolling the rotation.
+    this.emit();
 
     if (!ctx) return;
 
@@ -225,7 +402,7 @@ export class BgmEngine {
       await ctx.resume();
     }
     if (this.master) {
-      ramp(this.master.gain, ctx.currentTime, BGM_GAIN, BGM_DUCK_MS);
+      ramp(this.master.gain, ctx.currentTime, this.resting, BGM_DUCK_MS);
     }
   }
 
@@ -253,7 +430,12 @@ export class BgmEngine {
     skipped: number,
   ): Promise<void> {
     if (!this.wanted || this.context !== ctx) return;
-    if (skipped >= musicPlaylist.length) return; // nothing playable: silence
+    if (skipped >= musicPlaylist.length) {
+      // Nothing playable: silence, and the strip says so rather than holding a
+      // title that is not sounding.
+      this.emit();
+      return;
+    }
 
     const buffer = await this.decode(ctx, index);
     if (!this.wanted || this.context !== ctx || this.source) return;
@@ -280,6 +462,7 @@ export class BgmEngine {
     source.onended = () => {
       if (this.source !== source) return;
       this.source = null;
+      this.sourceGain = null;
       if (!this.wanted || this.context !== ctx) return;
       void this.playTrack(ctx, next(index), 0);
     };
@@ -288,6 +471,8 @@ export class BgmEngine {
     source.stop(endsAt);
     this.index = index;
     this.source = source;
+    this.sourceGain = gain;
+    this.emit();
 
     // Pull the NEXT track's encoded bytes now, while this one plays, so the
     // seam costs a decode rather than a round trip. Bytes only — the decoded
