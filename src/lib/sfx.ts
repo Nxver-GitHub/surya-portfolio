@@ -17,6 +17,8 @@ export type SfxKind =
   | "move"
   | "confirm"
   | "back"
+  | "locked"
+  | "enter"
   | "teaserDrop"
   | "teaserSlam";
 
@@ -33,8 +35,14 @@ export interface ToneStep {
 }
 
 /**
- * The tone table: three era menu-feedback blips, plus two cinematic cues for
+ * The tone table: five era menu-feedback blips, plus two cinematic cues for
  * the Proximize teaser takeover.
+ *
+ * The five menu tones are one family, deliberately: the same square wave, the
+ * same 30–80ms steps, distinguished by CONTOUR rather than by timbre. `move`
+ * is a single tick, `confirm` rises twice, `enter` rises three times and lands
+ * higher, `locked` falls, `back` sits low and alone. That is what lets someone
+ * navigate the menus by ear.
  *
  * The teaser cues are LONGER GESTURES BUILT FROM SHORT STEPS. The per-step
  * 30–80ms window is policy (and asserted over this whole table in
@@ -57,6 +65,22 @@ export const SFX_SPECS: Record<SfxKind, readonly ToneStep[]> = {
   ],
   // lozenge back button — single lower blip ~330Hz, ~50ms
   back: [{ freq: 330, type: "square", delayMs: 0, durationMs: 50, peak: 0.11 }],
+  // a locked destination refusing the press — two low steps DOWN, the exact
+  // inverse of `confirm`'s rise, so the refusal is legible by shape alone and
+  // not only by pitch. Quieter than confirm: a deny should not be the loudest
+  // thing on the page. ~120ms.
+  locked: [
+    { freq: 165, type: "square", delayMs: 0, durationMs: 55, peak: 0.1 },
+    { freq: 110, type: "square", delayMs: 55, durationMs: 65, peak: 0.09 },
+  ],
+  // entering a destination — `confirm` with a third step and a longer tail, so
+  // crossing into a pavilion reads as a bigger commitment than picking a row in
+  // a list. Still the same square-wave family. ~115ms.
+  enter: [
+    { freq: 440, type: "square", delayMs: 0, durationMs: 34, peak: 0.12 },
+    { freq: 660, type: "square", delayMs: 34, durationMs: 34, peak: 0.13 },
+    { freq: 880, type: "square", delayMs: 68, durationMs: 47, peak: 0.13 },
+  ],
 
   // Teaser beat 1 — the terminal's signal collapsing: a six-step fall from
   // 392Hz to a 73Hz sub, thinning as it drops (~445ms, inside the 600ms beat).

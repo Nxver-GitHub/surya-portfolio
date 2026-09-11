@@ -17,7 +17,7 @@ export function PavilionList() {
             transitionTypes={["nav-forward"]}
             key={p.id}
             href={`/${p.slug}`}
-            data-sfx="confirm"
+            data-sfx="enter"
             className="plate group flex items-center gap-4 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-gt-bright"
           >
             <LicenseBadge glyph={p.glyph} livery={p.livery} size={48} />
@@ -40,6 +40,7 @@ export function PavilionList() {
             type="button"
             aria-disabled="true"
             aria-label={`${p.name} — locked, unlocks soon`}
+            data-sfx="locked"
             onClick={() => notify(p.id)}
             className={`plate flex cursor-not-allowed items-center gap-4 px-4 py-3 text-left opacity-80 outline-none [border-color:var(--color-steel)] [box-shadow:inset_0_0_0_2px_#0d0d0e,inset_0_0_0_3px_var(--color-steel),1px_2px_0_rgba(0,0,0,0.8)] focus-visible:ring-2 focus-visible:ring-gt-bright ${
               noticedId === p.id ? "locked-shake" : ""

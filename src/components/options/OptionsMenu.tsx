@@ -4,6 +4,9 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Glyph } from "@/components/gt/Glyph";
 import { useSound } from "@/components/sound/SoundProvider";
 import { useCrtMode } from "@/components/crt/CrtLayer";
+import { MemoryCardToast } from "@/components/toast/MemoryCardToast";
+import { useMemoryCardToast } from "@/components/toast/useMemoryCardToast";
+import { musicCredit } from "../../../content/music";
 
 /** One GT options row: label left, ON/OFF state chip right; click flips. */
 function OptionRow({
@@ -70,6 +73,46 @@ function CycleRow({
 }
 
 /**
+ * The music credit, sat under the toggle rows. CC BY 4.0 obliges us to name
+ * the work and its author, link the source and the licence, and say what we
+ * changed — so this is a licence term rendered as a caption, not decoration,
+ * and it stays even though the panel is narrow. Facts in plain English under
+ * a game label, like every other caption on the site.
+ */
+function MusicCredit() {
+  const link =
+    "underline decoration-silver/40 underline-offset-2 hover:text-chrome";
+  return (
+    <div className="border-t border-steel px-3 py-2">
+      <p className="ts-hard font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
+        Sound
+      </p>
+      <p className="mt-1 text-xs leading-snug text-silver">
+        Music: &ldquo;{musicCredit.shortTitle}&rdquo; by{" "}
+        <a
+          href={musicCredit.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={link}
+        >
+          {musicCredit.author}
+        </a>{" "}
+        (itch.io) &mdash;{" "}
+        <a
+          href={musicCredit.licenseUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={link}
+        >
+          {musicCredit.licenseName}
+        </a>
+        , {musicCredit.changes}.
+      </p>
+    </div>
+  );
+}
+
+/**
  * The corner OPTIONS plate — a miniature GT2 options screen. Replaces the
  * former pile of per-setting chips (Sound, CRT) with one trigger that drops a
  * panel of toggle rows, so site chrome never stacks over page content (the
@@ -85,6 +128,10 @@ export function OptionsMenu() {
   const panelId = useId();
   const sound = useSound();
   const crt = useCrtMode();
+  // Kept as a thin wrap around the existing onToggle handlers below — two
+  // other PRs touch this file in parallel, so this is deliberately additive
+  // rather than a restructure. See MemoryCardToast / useMemoryCardToast.
+  const memoryCardToast = useMemoryCardToast();
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
@@ -138,10 +185,25 @@ export function OptionsMenu() {
           <p className="border-b border-steel px-3 py-1.5 font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
             Options
           </p>
-          <OptionRow label="Sound" on={sound.enabled} onToggle={sound.toggle} />
-          <CycleRow label="CRT FX" value={crt.mode} onCycle={crt.cycle} />
+          <OptionRow
+            label="Music"
+            on={sound.musicEnabled}
+            onToggle={() => { sound.toggleMusic(); memoryCardToast.notify(); }}
+          />
+          <OptionRow
+            label="Sound FX"
+            on={sound.enabled}
+            onToggle={() => { sound.toggle(); memoryCardToast.notify(); }}
+          />
+          <CycleRow
+            label="CRT FX"
+            value={crt.mode}
+            onCycle={() => { crt.cycle(); memoryCardToast.notify(); }}
+          />
+          <MusicCredit />
         </div>
       ) : null}
+      <MemoryCardToast visible={memoryCardToast.visible} />
     </div>
   );
 }
