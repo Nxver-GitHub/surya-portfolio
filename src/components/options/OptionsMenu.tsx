@@ -106,7 +106,16 @@ export function OptionsMenu() {
           <p className="border-b border-steel px-3 py-1.5 font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
             Options
           </p>
-          <OptionRow label="Sound" on={sound.enabled} onToggle={sound.toggle} />
+          <OptionRow
+            label="Music"
+            on={sound.musicEnabled}
+            onToggle={sound.toggleMusic}
+          />
+          <OptionRow
+            label="Sound FX"
+            on={sound.enabled}
+            onToggle={sound.toggle}
+          />
           <OptionRow label="CRT FX" on={crt.on} onToggle={crt.toggle} />
         </div>
       ) : null}

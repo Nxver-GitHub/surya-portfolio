@@ -6,56 +6,59 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useSyncExternalStore,
 } from "react";
 import { sfx, type SfxKind } from "@/lib/sfx";
+import { bgm } from "@/lib/bgm";
+import {
+  createPreferenceStore,
+  MUSIC_STORAGE_KEY,
+  SFX_STORAGE_KEY,
+} from "@/lib/sound-preferences";
 
-const STORAGE_KEY = "surya-sfx-enabled";
+// ── Persisted preferences ───────────────────────────────────────────────────
+// Two independent opt-ins, each a tiny external store read via
+// useSyncExternalStore: the server snapshot is always "off" (no hydration
+// mismatch), and same-tab writes notify subscribers directly since the native
+// "storage" event only fires in other tabs. The split lives in
+// lib/sound-preferences.ts so it is unit-testable without a DOM.
+const sfxPreference = createPreferenceStore(SFX_STORAGE_KEY);
+const musicPreference = createPreferenceStore(MUSIC_STORAGE_KEY);
 
-// ── Persisted preference store ──────────────────────────────────────────────
-// A tiny external store read via useSyncExternalStore: the server snapshot is
-// always "off" (no hydration mismatch), and same-tab writes notify subscribers
-// directly since the native "storage" event only fires in other tabs.
-const listeners = new Set<() => void>();
+const alwaysOff = () => false;
 
-function readPreference(): boolean {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY) === "on";
-  } catch {
-    return false;
-  }
-}
+/** Kinds the delegated `data-sfx` click listener will play. */
+const CLICK_KINDS: readonly SfxKind[] = [
+  "move",
+  "confirm",
+  "back",
+  "locked",
+  "enter",
+];
 
-function writePreference(on: boolean): void {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, on ? "on" : "off");
-  } catch {
-    // Persisting is best-effort (private mode etc.).
-  }
-  for (const notify of listeners) notify();
-}
-
-function subscribe(callback: () => void): () => void {
-  listeners.add(callback);
-  window.addEventListener("storage", callback);
-  return () => {
-    listeners.delete(callback);
-    window.removeEventListener("storage", callback);
-  };
-}
+/** Floor between selection ticks, in ms. Fast keyboard scrolling through a
+ * list must not stack blips into a buzz. */
+const TICK_THROTTLE_MS = 60;
 
 function markContextCreated(): void {
   (window as unknown as { __sfxCtxCreated?: boolean }).__sfxCtxCreated = true;
 }
 
 interface SoundContextValue {
-  /** Whether the user has opted into sound. Default off, persisted. */
+  /** Whether the visitor has opted into menu tones. Default off, persisted. */
   enabled: boolean;
-  /** Toggle sound on/off. Owns opt-in/opt-out; arming also happens on the
-   * first gesture of a session when the persisted preference is already on. */
+  /** Toggle menu tones on/off. */
   toggle: () => void;
-  /** Play a menu tone. No-op while sound is off. */
+  /** Whether the visitor has opted into the menu theme. Default off. */
+  musicEnabled: boolean;
+  /** Toggle the menu theme on/off. */
+  toggleMusic: () => void;
+  /** Play a menu tone. No-op while tones are off. */
   play: (kind: SfxKind) => void;
+  /** Play the selection tick. Throttled, so callers can fire it on every
+   * selection change without policing the rate themselves. */
+  tick: () => void;
 }
 
 const SoundContext = createContext<SoundContextValue | null>(null);
@@ -70,24 +73,44 @@ export function useSound(): SoundContextValue {
 }
 
 /**
- * Site-wide sound layer. The persistent toggle row lives in the Options menu
- * (OptionsMenu consumes useSound). Owns the muted-by-default, gesture-gated
- * policy:
+ * Site-wide sound layer. The two persistent toggle rows live in the Options
+ * menu (OptionsMenu consumes useSound). Owns the muted-by-default,
+ * gesture-gated policy — now across two independent opt-ins, MUSIC and
+ * SOUND FX, each with its own preference key and its own AudioContext:
  *
- * - Default off. Nothing plays until the user opts in via the toggle.
- * - While sound is off, zero AudioContext exists: enabling it first is always
- *   a toggle click, and switching off tears the context down.
+ * - Both default off. Nothing plays until the visitor opts in via a toggle.
+ * - While a preference is off, zero AudioContext exists for it: enabling it is
+ *   always a toggle click, and switching it off tears that context down. With
+ *   both off the page holds no audio state at all.
  * - A persisted-on preference is standing consent: after a reload the engine
  *   re-arms on the session's FIRST user gesture (pointer/key, anywhere) —
  *   autoplay policy requires a gesture, not specifically the toggle's. This
- *   keeps a button that reads "Sound On" truthful; previously every return
- *   visit was silent until the user cycled the toggle off and on.
+ *   keeps a button that reads "On" truthful; previously every return visit was
+ *   silent until the visitor cycled the toggle off and on.
  * - A single delegated click listener plays tones for elements tagged with a
- *   `data-sfx` attribute ("move" | "confirm" | "back"), keeping per-component
- *   wiring to a single attribute.
+ *   `data-sfx` attribute, keeping per-component wiring to one attribute.
+ * - Selection-driven components call `tick()` when the SELECTED ITEM CHANGES,
+ *   which is not the same thing as hovering: sweeping the pointer across a
+ *   list should tick per row entered, never per mouse event.
+ *
+ * The provider lives in the root layout, and App Router layouts preserve state
+ * across navigation, so the music keeps playing through client-side route
+ * changes without a seam. The engine is a module singleton besides, so even a
+ * remount would not interrupt the loop.
  */
 export function SoundProvider({ children }: { children: React.ReactNode }) {
-  const enabled = useSyncExternalStore(subscribe, readPreference, () => false);
+  const enabled = useSyncExternalStore(
+    sfxPreference.subscribe,
+    sfxPreference.read,
+    alwaysOff,
+  );
+  const musicEnabled = useSyncExternalStore(
+    musicPreference.subscribe,
+    musicPreference.read,
+    alwaysOff,
+  );
+
+  const lastTickRef = useRef(0);
 
   const play = useCallback(
     (kind: SfxKind) => {
@@ -96,6 +119,14 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     },
     [enabled],
   );
+
+  const tick = useCallback(() => {
+    if (!enabled) return;
+    const now = Date.now();
+    if (now - lastTickRef.current < TICK_THROTTLE_MS) return;
+    lastTickRef.current = now;
+    sfx.play("move");
+  }, [enabled]);
 
   const toggle = useCallback(() => {
     // Persisted-on but the context was lost on a hard reload and no other
@@ -106,7 +137,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     }
 
     const next = !enabled;
-    writePreference(next);
+    sfxPreference.write(next);
     if (next) {
       void sfx.arm().then(markContextCreated);
     } else {
@@ -114,19 +145,41 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     }
   }, [enabled]);
 
+  const toggleMusic = useCallback(() => {
+    // Same standing-consent rule as the tones: a persisted-on preference whose
+    // context died on reload re-arms here instead of flipping to off.
+    if (musicEnabled && !bgm.isAlive()) {
+      void bgm.start();
+      return;
+    }
+
+    const next = !musicEnabled;
+    musicPreference.write(next);
+    if (next) {
+      void bgm.start();
+    } else {
+      void bgm.stop();
+    }
+  }, [musicEnabled]);
+
   // Expose a probe so tooling can confirm no context exists while off.
   useEffect(() => {
     (window as unknown as { __sfxProbe?: () => boolean }).__sfxProbe = () =>
-      sfx.isAlive();
+      sfx.isAlive() || bgm.isAlive();
   }, []);
 
-  // Persisted-on after a reload: re-arm on the session's first gesture so
-  // "Sound On" is true from the first data-sfx click (e.g. the PRESS START
-  // gate). arm() is idempotent, and this never runs while sound is off.
+  // Persisted-on after a reload: re-arm on the session's first gesture so a
+  // toggle reading "On" is true from the first data-sfx click (e.g. the PRESS
+  // START gate). Both engines are idempotent, and this never runs while the
+  // matching preference is off.
   useEffect(() => {
-    if (!enabled || sfx.isAlive()) return;
+    const needsSfx = enabled && !sfx.isAlive();
+    const needsMusic = musicEnabled && !bgm.isAlive();
+    if (!needsSfx && !needsMusic) return;
+
     const rearm = () => {
-      void sfx.arm().then(markContextCreated);
+      if (enabled) void sfx.arm().then(markContextCreated);
+      if (musicEnabled) void bgm.start();
     };
     window.addEventListener("pointerdown", rearm, { once: true });
     window.addEventListener("keydown", rearm, { once: true });
@@ -134,7 +187,36 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("pointerdown", rearm);
       window.removeEventListener("keydown", rearm);
     };
-  }, [enabled]);
+  }, [enabled, musicEnabled]);
+
+  // iOS Safari suspends an AudioContext on its own (backgrounding, a call, the
+  // ringer switch) and only a gesture brings it back. Cheap no-op while the
+  // context is already running.
+  useEffect(() => {
+    if (!musicEnabled) return;
+    const wake = () => {
+      void bgm.resume();
+    };
+    window.addEventListener("pointerdown", wake);
+    window.addEventListener("keydown", wake);
+    return () => {
+      window.removeEventListener("pointerdown", wake);
+      window.removeEventListener("keydown", wake);
+    };
+  }, [musicEnabled]);
+
+  // A backgrounded tab ducks to silence and suspends; returning fades back.
+  useEffect(() => {
+    if (!musicEnabled) return;
+    const onVisibility = () => {
+      void bgm.setHidden(document.visibilityState === "hidden");
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      void bgm.setHidden(false);
+    };
+  }, [musicEnabled]);
 
   // One delegated listener drives all menu tones. Keyboard activation of a
   // button/link also fires a click, so Enter/Space are covered too.
@@ -144,7 +226,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
       const target = event.target as HTMLElement | null;
       const el = target?.closest<HTMLElement>("[data-sfx]");
       const kind = el?.dataset.sfx as SfxKind | undefined;
-      if (kind === "move" || kind === "confirm" || kind === "back") {
+      if (kind && CLICK_KINDS.includes(kind)) {
         sfx.play(kind);
       }
     };
@@ -153,8 +235,8 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
   }, [enabled]);
 
   const value = useMemo(
-    () => ({ enabled, toggle, play }),
-    [enabled, toggle, play],
+    () => ({ enabled, toggle, musicEnabled, toggleMusic, play, tick }),
+    [enabled, toggle, musicEnabled, toggleMusic, play, tick],
   );
 
   return (
