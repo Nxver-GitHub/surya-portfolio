@@ -20,16 +20,19 @@ export interface MusicTrack {
  * continuous playlist that ignores where you are keeps the site feeling like
  * one console session rather than seven themed rooms.
  *
+ * Three tracks, not the pack's five: the Sound Select strip puts the whole
+ * rotation on screen as a pickable list, and a list a visitor can read at a
+ * glance is worth more than two extra minutes of audio shipped in the
+ * repository and over the wire.
+ *
  * These are the pack's `seamless_loop` versions: they are cut to end where
  * they begin, so the join between tracks lands on a musical edge instead of a
  * fade-out tail.
  */
 export const musicPlaylist: readonly MusicTrack[] = [
-  { src: "/audio/short-circuit.m4a", title: "Short Circuit" },
-  { src: "/audio/jungle-jargon.m4a", title: "Jungle Jargon" },
-  { src: "/audio/activez-les-plaisir.m4a", title: "Activez les Plaisir" },
-  { src: "/audio/midnight-trial.m4a", title: "Midnight Trial" },
   { src: "/audio/sunset-relay.m4a", title: "Sunset Relay" },
+  { src: "/audio/midnight-trial.m4a", title: "Midnight Trial" },
+  { src: "/audio/activez-les-plaisir.m4a", title: "Activez les Plaisir" },
 ];
 
 /** Everything CC BY 4.0 obliges us to show, as plain facts. */

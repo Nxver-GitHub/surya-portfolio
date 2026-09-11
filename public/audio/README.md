@@ -1,8 +1,8 @@
 # Menu music
 
-The rotating playlist behind OPTIONS → MUSIC. Five tracks, played through in
-order and cycled, one continuous rotation site-wide — deliberately not a theme
-per destination.
+The rotating playlist behind the Sound Select strip in the page header. Three
+tracks, played through in order and cycled, one continuous rotation site-wide —
+deliberately not a theme per destination.
 
 The playlist and its attribution are declared in
 [`content/music.ts`](../../content/music.ts); the player is
@@ -31,15 +31,18 @@ It is a term, not a courtesy.
 
 | File | Track | Length | Size |
 | --- | --- | --- | --- |
-| `short-circuit.m4a` | Short Circuit | 2:06 | 1.5 MB |
-| `jungle-jargon.m4a` | Jungle Jargon | 2:31 | 1.8 MB |
-| `activez-les-plaisir.m4a` | Activez les Plaisir | 3:12 | 2.3 MB |
-| `midnight-trial.m4a` | Midnight Trial | 3:39 | 2.6 MB |
 | `sunset-relay.m4a` | Sunset Relay | 3:55 | 2.8 MB |
+| `midnight-trial.m4a` | Midnight Trial | 3:39 | 2.6 MB |
+| `activez-les-plaisir.m4a` | Activez les Plaisir | 3:12 | 2.3 MB |
 
-**Total: 11.0 MB / 15:24.** Only one track is fetched at a time — the rotation
+**Total: 7.7 MB / 10:46.** Only one track is fetched at a time — the rotation
 pulls the next track's bytes while the current one plays — so a visitor who
 turns music on and leaves after a minute downloads about 3 MB, not all of it.
+
+The rotation was cut from five tracks to three when the Sound Select strip
+landed: the strip lists the whole playlist as pickable rows, and a list short
+enough to read at a glance beats two extra minutes of audio in the repository.
+`short-circuit.m4a` and `jungle-jargon.m4a` were removed.
 
 The `seamless_loop` cuts from the pack are used rather than the plain versions:
 they end where they begin, so the join between tracks lands on a musical edge
