@@ -145,6 +145,13 @@ export function SoundBar() {
           takes it out of the accessibility tree too, so there is never a second
           copy of these links in the tab order. */}
       <MusicCreditLine variant="short" className="sound-bar-credit" />
+
+      {/* The rotation advances on its own every few minutes; a button's text
+          changing is silent to a screen reader, so the deck says so here.
+          Empty while stopped — a stopped deck has nothing to announce. */}
+      <span aria-live="polite" className="sr-only">
+        {deck.playing && deck.track ? `Now playing ${deck.track.title}` : ""}
+      </span>
     </div>
   );
 }

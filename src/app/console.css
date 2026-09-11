@@ -156,7 +156,9 @@ input, textarea { caret-color: #ffbf19; }
 }
 .sound-panel-steps { display: flex; gap: 4px; }
 .sound-panel-step {
-  min-width: 40px; min-height: 30px; padding: 2px 6px;
+  /* 44px like every other pressable thing here — on a phone the popup is the
+     only volume UI, so these notches are primary touch targets, not chrome. */
+  min-width: 44px; min-height: 44px; padding: 2px 6px;
   font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
 }
 .sound-panel-foot {
