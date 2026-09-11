@@ -1,49 +1,79 @@
-# Menu theme
+# Menu music
 
-The looping menu track the OPTIONS → MUSIC toggle plays. **It is not in the
-repository yet** — the track is auditioned separately and lands here in a
-follow-up commit. Until then the toggle works and produces silence.
+The rotating playlist behind OPTIONS → MUSIC. Five tracks, played through in
+order and cycled, one continuous rotation site-wide — deliberately not a theme
+per destination.
 
-## Expected files
+The playlist and its attribution are declared in
+[`content/music.ts`](../../content/music.ts); the player is
+[`src/lib/bgm.ts`](../../src/lib/bgm.ts). Adding or removing a file here means
+editing that content file, not the engine.
 
-The player (`src/lib/bgm.ts`) tries these paths in order and uses the first one
-that loads:
+## Attribution (required)
 
-| Path                       | Format                | Notes                                   |
-| -------------------------- | --------------------- | --------------------------------------- |
-| `public/audio/menu-theme.m4a`  | AAC-LC in MP4     | Primary. The one format every target browser decodes. |
-| `public/audio/menu-theme.opus` | Opus in Ogg       | Optional smaller alternative; only reached if the `.m4a` is absent. |
+These tracks are **not ours**. They are used under CC BY 4.0, which obliges us
+to name the work and its author, link the source and the licence, and state
+what we changed. The same credit is rendered in the Options panel so it is
+visible to visitors, not only to people reading the repository.
 
-If neither exists, the fetch 404s, the loader returns `null`, and nothing is
-logged or thrown. That is the designed state while the track is being chosen,
-not a failure to fix.
+> Music: "(FREE) PS1-Era Inspired Jungle - Drum & Bass (Music Pack)" by
+> **elevchyt**, from
+> <https://elevchyt.itch.io/ps1-era-inspired-jungledrum-bass-music-pack-free>,
+> licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+> **Changes:** the pack's `seamless_loop` versions were re-encoded from Ogg
+> Vorbis to AAC (96 kbps, 44.1 kHz, stereo) for web delivery. The audio itself
+> is otherwise unaltered — no edits, no re-arrangement, no remixing.
 
-## Preparing a track
+If the credit is ever removed from the Options panel, the licence is breached.
+It is a term, not a courtesy.
 
-- **Loop point matters more than length.** The file is decoded once into an
-  `AudioBuffer` and looped by an `AudioBufferSourceNode`, which restarts at
-  sample zero with no gap — so the *audio* has to loop cleanly. Trim so the
-  last sample leads musically back into the first, with no trailing reverb tail
-  and no leading silence.
-- **Keep it small.** It is fetched on the first toggle and held in memory
-  decoded. A 60–90 second loop at ~96–128 kbps is the target; a whole-file
-  download over a slow connection is the only cost the visitor pays.
-- **Mix it low.** The player applies a 0.5 resting gain so the theme sits under
-  the synthesized menu tones. Master accordingly rather than relying on that
-  gain to rescue a hot file.
-- **Ship what you have the rights to ship.** This repository and the deployed
-  site are public. Original composition or an explicitly licensed track only,
-  with the license recorded alongside the other credits.
+## Files
 
-## Encoding
+| File | Track | Length | Size |
+| --- | --- | --- | --- |
+| `short-circuit.m4a` | Short Circuit | 2:06 | 1.5 MB |
+| `jungle-jargon.m4a` | Jungle Jargon | 2:31 | 1.8 MB |
+| `activez-les-plaisir.m4a` | Activez les Plaisir | 3:12 | 2.3 MB |
+| `midnight-trial.m4a` | Midnight Trial | 3:39 | 2.6 MB |
+| `sunset-relay.m4a` | Sunset Relay | 3:55 | 2.8 MB |
+
+**Total: 11.0 MB / 15:24.** Only one track is fetched at a time — the rotation
+pulls the next track's bytes while the current one plays — so a visitor who
+turns music on and leaves after a minute downloads about 3 MB, not all of it.
+
+The `seamless_loop` cuts from the pack are used rather than the plain versions:
+they end where they begin, so the join between tracks lands on a musical edge
+instead of a fade-out tail.
+
+## Adding or replacing a track
+
+Encode from the source to AAC in an MP4 container — the one format every target
+browser decodes — and give it a kebab-case name:
 
 ```bash
-# AAC-LC in MP4 — the primary source
-ffmpeg -i source.wav -c:a aac -b:a 128k -movflags +faststart menu-theme.m4a
-
-# Opus in Ogg — optional
-ffmpeg -i source.wav -c:a libopus -b:a 96k menu-theme.opus
+ffmpeg -i "source.ogg" -vn -c:a aac -b:a 96k -ar 44100 -ac 2 \
+  -movflags +faststart \
+  -metadata title="Track Title" -metadata artist="elevchyt" \
+  -metadata copyright="CC BY 4.0" \
+  track-title.m4a
 ```
+
+Then add it to `musicPlaylist` in `content/music.ts`.
+
+- **Keep it light.** Every track ships in the repository and over the wire.
+- **Mix it low.** The player applies a 0.5 resting gain so the music sits under
+  the synthesized menu tones; master accordingly rather than relying on that
+  gain to rescue a hot file.
+- **Ship only what you have the rights to ship.** This repository and the
+  deployed site are both public. Original work or an explicitly licensed track
+  only, and record the licence here and in `content/music.ts`.
+
+## Missing files are not an error
+
+Any track whose file is absent 404s, is skipped, and the rotation moves on. If
+none of them resolve, the toggle still works and simply produces silence —
+nothing is thrown and nothing is logged. That behaviour is deliberate, so the
+control never lies about its own state, and it is covered by `tests/bgm.test.ts`.
 
 ## Serving
 

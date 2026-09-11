@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Glyph } from "@/components/gt/Glyph";
 import { useSound } from "@/components/sound/SoundProvider";
 import { useCrtMode } from "@/components/crt/CrtLayer";
+import { musicCredit } from "../../../content/music";
 
 /** One GT options row: label left, ON/OFF state chip right; click flips. */
 function OptionRow({
@@ -34,6 +35,46 @@ function OptionRow({
         {on ? "On" : "Off"}
       </span>
     </button>
+  );
+}
+
+/**
+ * The music credit, sat under the toggle rows. CC BY 4.0 obliges us to name
+ * the work and its author, link the source and the licence, and say what we
+ * changed — so this is a licence term rendered as a caption, not decoration,
+ * and it stays even though the panel is narrow. Facts in plain English under
+ * a game label, like every other caption on the site.
+ */
+function MusicCredit() {
+  const link =
+    "underline decoration-silver/40 underline-offset-2 hover:text-chrome";
+  return (
+    <div className="border-t border-steel px-3 py-2">
+      <p className="ts-hard font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
+        Sound
+      </p>
+      <p className="mt-1 text-xs leading-snug text-silver">
+        Music: &ldquo;{musicCredit.shortTitle}&rdquo; by{" "}
+        <a
+          href={musicCredit.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={link}
+        >
+          {musicCredit.author}
+        </a>{" "}
+        (itch.io) &mdash;{" "}
+        <a
+          href={musicCredit.licenseUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={link}
+        >
+          {musicCredit.licenseName}
+        </a>
+        , {musicCredit.changes}.
+      </p>
+    </div>
   );
 }
 
@@ -117,6 +158,7 @@ export function OptionsMenu() {
             onToggle={sound.toggle}
           />
           <OptionRow label="CRT FX" on={crt.on} onToggle={crt.toggle} />
+          <MusicCredit />
         </div>
       ) : null}
     </div>

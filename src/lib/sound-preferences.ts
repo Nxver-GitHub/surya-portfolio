@@ -7,7 +7,7 @@
  * - `surya-sfx-enabled` — the synthesized menu blips. This key predates the
  *   split and is deliberately unchanged, so anyone who already turned tones on
  *   keeps them on across the upgrade.
- * - `surya-music-enabled` — the looping menu theme. New, therefore absent for
+ * - `surya-music-enabled` — the menu playlist. New, therefore absent for
  *   every existing visitor, which reads as off. Nobody is opted into music by
  *   an upgrade; they have to ask for it.
  *
@@ -23,7 +23,7 @@
 
 /** Menu tones. Predates the music/SFX split — never rename it. */
 export const SFX_STORAGE_KEY = "surya-sfx-enabled";
-/** Looping menu theme. Added by the split; absent means off. */
+/** Menu playlist. Added by the split; absent means off. */
 export const MUSIC_STORAGE_KEY = "surya-music-enabled";
 
 /** The value that counts as opted in. Everything else is off. */

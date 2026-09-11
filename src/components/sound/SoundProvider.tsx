@@ -50,9 +50,9 @@ interface SoundContextValue {
   enabled: boolean;
   /** Toggle menu tones on/off. */
   toggle: () => void;
-  /** Whether the visitor has opted into the menu theme. Default off. */
+  /** Whether the visitor has opted into the menu playlist. Default off. */
   musicEnabled: boolean;
-  /** Toggle the menu theme on/off. */
+  /** Toggle the menu playlist on/off. */
   toggleMusic: () => void;
   /** Play a menu tone. No-op while tones are off. */
   play: (kind: SfxKind) => void;
@@ -94,9 +94,9 @@ export function useSound(): SoundContextValue {
  *   list should tick per row entered, never per mouse event.
  *
  * The provider lives in the root layout, and App Router layouts preserve state
- * across navigation, so the music keeps playing through client-side route
- * changes without a seam. The engine is a module singleton besides, so even a
- * remount would not interrupt the loop.
+ * across navigation, so the playlist keeps running through client-side route
+ * changes without a seam — mid-track included. The engine is a module
+ * singleton besides, so even a remount would not interrupt it.
  */
 export function SoundProvider({ children }: { children: React.ReactNode }) {
   const enabled = useSyncExternalStore(
