@@ -1,3 +1,4 @@
+import { AttractMode } from "@/components/attract/AttractMode";
 import { BootSequence } from "@/components/boot/BootSequence";
 import { GtMark } from "@/components/gt/GtMark";
 import { CircuitMap } from "@/components/world-map/CircuitMap";
@@ -8,6 +9,7 @@ export default function Home() {
   return (
     <div className="world-screen">
       <BootSequence />
+      <AttractMode />
       <header className="world-header">
         {/* Mark + screen name on the left, driver on the right. The visitor's
             own name lives in the driver card alone — it used to sit here too,

@@ -322,6 +322,31 @@ body {
   animation: locked-shake var(--duration-slide) var(--ease-mech);
 }
 
+/* Selected map destination: a hard 1Hz blink on the triangular pointer
+   cursor, using the same hard-steps idiom as .cafe-caret-blink above rather
+   than a smooth fade. Unselected nodes are left alone — DESIGN.md's
+   restraint favors one deliberate blink over seven quiet nodes pulsing. */
+@keyframes map-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.map-node-selected .map-cursor {
+  animation: map-cursor-blink 1s step-end infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-node-selected .map-cursor {
+    animation: none;
+  }
+}
+
 /* ── Signature intro (BootSequence) ──────────────────────────────────────
    GT2 boot-to-menu homage: a studio monogram under a spotlight, a hard-cut
    heritage montage on a fixed ~165ms beat grid, then the title. All motion is
@@ -739,6 +764,53 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .gt-checker {
+    animation: none;
+  }
+}
+
+/* ── Attract mode (AttractMode.tsx) ───────────────────────────────────────
+   Idle-loop reel on the World Map: a hard, mechanical fade in only.
+   Dismissal is instant — the component simply unmounts on any input — so
+   there is no exit animation to define. useIdleTimer never arms the
+   countdown under reduced motion, so this query is a second safety net
+   rather than the primary guard. */
+@keyframes attract-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.attract-mode {
+  animation: attract-fade-in var(--duration-panel) var(--ease-mech) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .attract-mode {
+    animation: none;
+  }
+}
+
+/* ── Memory-card save toast (MemoryCardToast.tsx) ─────────────────────────
+   Hard mechanical fade-in on show; hides with a hard cut (the panel simply
+   unmounts), so again there is no exit animation. Unlike attract mode, the
+   toast must stay functional under reduced motion — only the fade is
+   skipped, per the acceptance criteria. */
+@keyframes memory-card-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.memory-card-toast-panel {
+  animation: memory-card-toast-in var(--duration-snap) var(--ease-mech) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .memory-card-toast-panel {
     animation: none;
   }
 }
