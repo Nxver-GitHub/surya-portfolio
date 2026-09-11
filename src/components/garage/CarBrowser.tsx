@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSound } from "@/components/sound/SoundProvider";
 import { cars, type Car } from "../../../content/cars";
 import { liveries } from "../../../content/liveries";
 import { LiveryStripe } from "../livery/LiveryStripe";
@@ -37,7 +38,6 @@ function CarListButton({
   return (
     <button
       type="button"
-      data-sfx="move"
       onClick={() => onSelect(car)}
       onMouseEnter={warm}
       onFocus={warm}
@@ -89,13 +89,17 @@ function CarListButton({
 export function CarBrowser() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { tick } = useSound();
 
   // URL is the single source of truth — back/forward stays in sync
   const carId = searchParams.get("car");
   const selected = cars.find((c) => c.id === carId) ?? cars[0];
 
+  // The tick belongs to the selection change, so re-clicking the car already
+  // in the bay is silent — same guard the URL update already uses.
   const select = (car: Car) => {
     if (car.id !== selected.id) {
+      tick();
       router.replace(`/garage?car=${car.id}`, { scroll: false });
     }
   };
