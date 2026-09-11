@@ -4,6 +4,8 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Glyph } from "@/components/gt/Glyph";
 import { useSound } from "@/components/sound/SoundProvider";
 import { useCrtMode } from "@/components/crt/CrtLayer";
+import { MemoryCardToast } from "@/components/toast/MemoryCardToast";
+import { useMemoryCardToast } from "@/components/toast/useMemoryCardToast";
 
 /** One GT options row: label left, ON/OFF state chip right; click flips. */
 function OptionRow({
@@ -53,6 +55,10 @@ export function OptionsMenu() {
   const panelId = useId();
   const sound = useSound();
   const crt = useCrtMode();
+  // Kept as a thin wrap around the existing onToggle handlers below — two
+  // other PRs touch this file in parallel, so this is deliberately additive
+  // rather than a restructure. See MemoryCardToast / useMemoryCardToast.
+  const memoryCardToast = useMemoryCardToast();
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
@@ -106,10 +112,19 @@ export function OptionsMenu() {
           <p className="border-b border-steel px-3 py-1.5 font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
             Options
           </p>
-          <OptionRow label="Sound" on={sound.enabled} onToggle={sound.toggle} />
-          <OptionRow label="CRT FX" on={crt.on} onToggle={crt.toggle} />
+          <OptionRow
+            label="Sound"
+            on={sound.enabled}
+            onToggle={() => { sound.toggle(); memoryCardToast.notify(); }}
+          />
+          <OptionRow
+            label="CRT FX"
+            on={crt.on}
+            onToggle={() => { crt.toggle(); memoryCardToast.notify(); }}
+          />
         </div>
       ) : null}
+      <MemoryCardToast visible={memoryCardToast.visible} />
     </div>
   );
 }
