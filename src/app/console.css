@@ -3,7 +3,20 @@
   color-scheme: dark;
   scrollbar-color: #8f99aa #111723;
   scrollbar-width: thin;
+  /* Height of the fixed Sound Select bar: a 44px control row under the 2px
+     stamped rule that caps it. 44 is the shared minimum for anything you press
+     here, so the transport keys fill the strip edge to edge rather than
+     floating in a shorter one — a deck face, not a toolbar. Everything that
+     has to clear the bar derives from this one value. */
+  --deck-bar-h: 46px;
+  /* Phones put a home indicator under the bar; desktops report 0. */
+  --deck-bar-reserve: calc(var(--deck-bar-h) + env(safe-area-inset-bottom, 0px));
 }
+/* The bar is fixed, so the page has to be told to stop above it. Reserved on
+   body rather than per-shell: every route is inside it, and border-box keeps
+   `min-height: 100%` honest, so the reserve comes out of the viewport instead
+   of adding a scrollbar to a screen that previously fit. */
+body { padding-bottom: var(--deck-bar-reserve); }
 a { text-underline-offset: .2em; }
 button, a, input, textarea { -webkit-tap-highlight-color: #ffbf1933; }
 :focus-visible { outline: 2px solid #ffbf19; outline-offset: 4px; }
@@ -53,20 +66,44 @@ input, textarea { caret-color: #ffbf19; }
 .console-reading p, .console-reading li { max-width: 72ch; }
 
 /* ── Sound Select ───────────────────────────────────────────────────────────
-   The deck built into the page header: stamped steel transport keys, a panel
-   readout, and a popup for the rotation and the level. Amber means running,
-   the same way it means "selected" everywhere else in this system. */
-.sound-select { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; }
+   The deck bar: a slim strip pinned along the bottom edge of every screen.
+   Stamped steel transport keys and the track readout hold the left, the licence
+   credit the right, and the rotation/level popup opens upward out of it. Amber
+   means running, the same way it means "selected" everywhere else here.
+
+   It was first built into the page headers, where it sat in the middle of
+   whatever each screen was trying to say and had to be floated out of flow on
+   the world map. A transport belongs on its own strip. */
+.sound-bar {
+  position: fixed; inset-inline: 0; bottom: 0; z-index: 55;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  box-sizing: border-box;
+  height: var(--deck-bar-reserve);
+  padding-inline: 40px; padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--color-asphalt);
+  /* The same stamped rule that caps the map's control strip — this is what a
+     hint strip along the bottom of a screen already looks like in this system. */
+  border-top: 2px solid #586377;
+}
+/* The transport and its drawer are one positioned run, so the popup hangs off
+   the readout instead of off the full-width bar. */
+.sound-bar-transport { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; }
 .sound-deck { display: flex; gap: 4px; flex-shrink: 0; }
 .sound-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 44px; min-height: 44px; padding: 0; color: var(--color-asphalt);
+  width: 44px; height: 44px; padding: 0; color: var(--color-asphalt);
   transition: filter 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .sound-btn:hover { filter: brightness(1.1); }
 .sound-readout {
-  display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px;
-  padding: 0 10px; max-width: 230px;
+  display: flex; align-items: center; gap: 8px; min-width: 0; height: 44px;
+  padding: 0 10px; max-width: 260px;
+}
+/* Facts in plain English, crisp and independently rendered — the credit is
+   reading matter, not lettering, so it is body type at the 12px floor. */
+.sound-bar-credit {
+  flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; font-size: 12px; color: var(--color-silver);
 }
 .sound-readout:hover { border-top-color: var(--color-gt-bright); }
 .sound-readout-mark { display: inline-flex; flex-shrink: 0; color: var(--color-gt-bright); }
@@ -74,17 +111,22 @@ input, textarea { caret-color: #ffbf19; }
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   font-size: 13px; font-weight: 700; letter-spacing: .02em; color: var(--color-chrome);
 }
-/* Period selection cursor, pointed at the drawer it opens. */
+/* Period selection cursor, pointed at the drawer it opens — which is now
+   above the bar, so the triangle reads upward. */
 .sound-readout-chevron {
   flex-shrink: 0; width: 0; height: 0;
   border-inline: 5px solid transparent; border-bottom: 6px solid var(--color-gt-bright);
 }
+/* Opens upward out of the bar, anchored to the readout's run. The bar's own
+   z-index already lifts this whole stack over page content, the world map
+   included, so the panel only has to win inside the bar. */
 .sound-panel {
-  position: absolute; z-index: 60; top: calc(100% + 6px); right: 0; width: 232px;
+  position: absolute; z-index: 1; bottom: calc(100% + 8px); left: 0;
+  width: 232px; max-width: calc(100vw - 32px);
   border: 2px solid var(--color-gt); box-shadow: 3px 4px 0 rgba(0, 0, 0, .8);
   animation: sound-panel-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-@keyframes sound-panel-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes sound-panel-in { from { opacity: 0; transform: translateY(4px); } }
 .sound-panel-heading {
   border-bottom: 1px solid var(--color-steel); padding: 6px 10px;
   font-size: 12px; font-weight: 900; letter-spacing: .28em; text-transform: uppercase;
@@ -122,32 +164,27 @@ input, textarea { caret-color: #ffbf19; }
   border-top: 1px solid var(--color-steel); padding: 6px 10px;
   font-size: 12px; color: var(--color-silver);
 }
-/* Interior headers: the deck sits in the empty run between the back control
-   and the page label. It is left-aligned in that run by default and only
-   centred once there is provably room, because the page label and the OPTIONS
-   plate on the right are absolutely positioned — flex centring cannot see them,
-   so the reserve below is what keeps the deck out of their way. */
-.console-header .sound-select { margin-inline-end: auto; }
-@media (min-width: 1024px) {
-  .console-header { padding-inline-end: clamp(320px, 30vw, 420px); }
-  .console-header .sound-select { margin-inline: auto; }
+/* The full CC BY 4.0 attribution, at every width. The bar's caption is the
+   short form and folds away on a phone, so this is the copy that has to carry
+   the title, the author, both links and the note of what changed. */
+.sound-panel-credit {
+  border-top: 1px solid var(--color-steel); padding: 6px 10px;
+  font-size: 12px; line-height: 1.45; color: var(--color-silver);
 }
-/* World map: the brand and the driver card already fill this header's width —
-   on the height-derived desktop layout the screen can be as narrow as 720px —
-   so the deck takes the band the driver card's 48px top margin leaves empty,
-   centred between the two. Out of flow on purpose: the header's height feeds
-   the 354px chrome constant the no-scroll map is sized against, and the deck
-   must not add to it. */
-/* Lifted above the map: both are positioned, so without this the landscape
-   that follows in the DOM paints over the deck's popup. */
-.world-header { position: relative; z-index: 20; }
-.world-header .sound-select { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); }
-/* Narrow viewports: a glyph cluster. Play/pause and next only — no prev, no
-   title — with the readout shrunk to a chevron that still opens the popup, so
-   the rotation and the level stay reachable without the tight header growing. */
-@media (max-width: 1023px) {
-  .sound-btn-prev, .sound-readout-title { display: none; }
-  .sound-readout { justify-content: center; min-width: 44px; padding: 0; }
+/* Things that also live along the bottom edge have to clear the bar. */
+.controller-hints { bottom: calc(var(--deck-bar-reserve) + 12px); }
+.memory-card-toast { bottom: calc(var(--deck-bar-reserve) + 16px); }
+/* Phones: the credit folds into the popup, which the readout still opens, and
+   the bar keeps what a thumb needs — play/pause, next and a truncated title. */
+@media (max-width: 767px) {
+  .sound-bar { padding-inline: 16px; gap: 12px; }
+  .sound-bar-credit { display: none; }
+  .sound-bar-transport { flex: 1; min-width: 0; }
+  .sound-readout { flex: 1; max-width: none; }
+}
+/* Narrowest phones: prev is the one key a rotation of three can spare. */
+@media (max-width: 479px) {
+  .sound-btn-prev { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sound-panel { animation: none; }
@@ -249,15 +286,20 @@ input, textarea { caret-color: #ffbf19; }
 .trophy-tier ul a { min-height: 64px; }
 
 @media (min-width: 1100px) and (min-height: 700px) {
-  /* 354px is the non-map chrome: header, information strip, control strip and
-     HUD totals. The driver card made the header taller than the old 330px
-     allowance, which pushed the HUD off a 1000px-tall screen. */
+  /* 400px is everything on this screen that is not the map: header,
+     information strip, control strip, HUD totals — 354px of those — plus the
+     46px the Sound Select bar reserves along the bottom edge. The driver card
+     made the header taller than the old 330px allowance, which pushed the HUD
+     off a 1000px-tall screen; the deck bar is the same kind of debt, so it is
+     paid here rather than left to overlap the HUD. */
   .world-screen {
-    max-width: min(1440px, calc((100dvh - 354px) * 4 / 3));
+    max-width: min(1440px, calc((100dvh - 400px) * 4 / 3));
     /* The floor caps how small the map can get, so it also sets the shortest
-       viewport that fits without scrolling: 720 * 3/4 + 354px of chrome = 894px.
-       At the old 760px floor that threshold was 924px, so a 900px-tall window
-       scrolled no matter what. */
+       viewport that fits without scrolling. Measured, it holds from about
+       980px tall — 46px further up than before, which is exactly what the bar
+       costs. Shorter windows scroll by a few pixels; that is the floor doing
+       its job, not a bug to chase, because closing the gap would mean shrinking
+       the map below a usable size. */
     min-width: 720px;
     /* The screen's width is derived from viewport HEIGHT here, so anything
        sized against the viewport disagrees with it. Make it a query container
@@ -272,7 +314,10 @@ input, textarea { caret-color: #ffbf19; }
      still reaches the 60px design size once there is room. */
   .world-header .gt-title { font-size: clamp(38px, 6.2cqi, 60px); }
   .world-screen .map-information { padding: 14px 28px; min-height: 86px; }
-  body:has(.world-screen) .console-options { right: max(28px, calc((100vw - max(760px, min(1440px, (100dvh - 354px) * 4 / 3))) / 2 + 28px)); top: 20px; }
+  /* Derived from the same expression as the screen width above — if the chrome
+     constant moves, this moves with it or the OPTIONS plate drifts off the
+     screen's right edge. */
+  body:has(.world-screen) .console-options { right: max(28px, calc((100vw - max(760px, min(1440px, (100dvh - 400px) * 4 / 3))) / 2 + 28px)); top: 20px; }
 }
 @media (max-width: 1199px) {
   .garage-browser { grid-template-columns: 200px minmax(0, 1fr); }
@@ -285,14 +330,6 @@ input, textarea { caret-color: #ffbf19; }
   .console-location { display: none; }
   .console-options { top: 16px; right: 16px; }
   .console-page > header .lozenge { padding-inline: 10px; }
-  /* Phone: the mark, the way out and the OPTIONS plate already own the top
-     row, so the deck takes the line under them rather than being squeezed
-     between two things it would collide with. */
-  .console-header { flex-wrap: wrap; }
-  .console-header .sound-select { flex-basis: 100%; margin-top: 4px; }
-  /* Phone: the header is a stack, so the deck rejoins the flow under the
-     title instead of floating over a row that no longer exists. */
-  .world-header .sound-select { position: static; transform: none; margin-top: 14px; }
   .world-header { padding: 18px 16px 14px; min-height: 144px; display: block; }
   /* At phone width the title needs the full line: OPTIONS holds the top-right
      corner, so the mark takes the row above rather than the space beside it. */

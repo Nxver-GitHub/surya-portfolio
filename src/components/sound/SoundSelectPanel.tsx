@@ -6,6 +6,7 @@ import {
   VOLUME_STEPS,
   type VolumeStep,
 } from "@/lib/music-volume";
+import { MusicCreditLine } from "./MusicCreditLine";
 import type { MusicDeck } from "./useMusicDeck";
 
 /**
@@ -17,7 +18,12 @@ import type { MusicDeck } from "./useMusicDeck";
  * both directions, activate with Enter and Space for free, and carry the state
  * in `aria-current` (this is the track playing) and `aria-pressed` (this notch
  * is set) — which is what a visitor on a screen reader actually needs to know.
- * Escape and click-away are handled by the strip that owns this panel.
+ * Escape and click-away are handled by the bar that owns this panel.
+ *
+ * It also carries the full CC BY 4.0 credit. The bar's own caption is the short
+ * form and folds away on a phone, so this is the one place, at every width,
+ * where a visitor can reach the complete attribution — a licence term kept one
+ * press from the control it describes.
  */
 export function SoundSelectPanel({
   id,
@@ -89,6 +95,8 @@ export function SoundSelectPanel({
           {deck.playing ? "Now playing" : "Deck stopped"}
         </span>
       </p>
+
+      <MusicCreditLine variant="full" className="sound-panel-credit" />
     </div>
   );
 }

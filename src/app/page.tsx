@@ -4,7 +4,6 @@ import { GtMark } from "@/components/gt/GtMark";
 import { CircuitMap } from "@/components/world-map/CircuitMap";
 import { HudTotals } from "@/components/world-map/HudTotals";
 import { DriverCard } from "@/components/world-map/DriverCard";
-import { SoundSelect } from "@/components/sound/SoundSelect";
 
 export default function Home() {
   return (
@@ -19,10 +18,6 @@ export default function Home() {
           <GtMark />
           <h1 className="gt-title">World Map</h1>
         </div>
-        {/* The deck rides the middle of the header on every screen, this one
-            included — same control, same place, so music is never a thing you
-            have to go looking for in a menu. */}
-        <SoundSelect />
         <DriverCard />
       </header>
       <main id="world-content"><CircuitMap /></main>
