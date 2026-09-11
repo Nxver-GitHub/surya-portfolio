@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SoundSelect } from "@/components/sound/SoundSelect";
 import { GtMark } from "./GtMark";
 
 /** Orange breadcrumb strip bleeding off the right screen edge (GT2). */
@@ -43,9 +44,11 @@ export function GtTitle({
 }
 
 /**
- * Every interior screen's top strip: the system mark, then the way back out.
- * Composed rather than left to each page so the mark can't be forgotten on a
- * pavilion added later — it's chrome that has to be everywhere or nowhere.
+ * Every interior screen's top strip: the system mark, the way back out, then
+ * the Sound Select deck in the run that was left empty between them and the
+ * page label. Composed rather than left to each page so neither the mark nor
+ * the deck can be forgotten on a pavilion added later — both are chrome that
+ * has to be everywhere or nowhere.
  */
 export function GtBackHeader({
   href,
@@ -61,6 +64,7 @@ export function GtBackHeader({
       <LozengeLink href={href}>
         <span aria-hidden="true">←</span> {label}
       </LozengeLink>
+      <SoundSelect />
     </header>
   );
 }

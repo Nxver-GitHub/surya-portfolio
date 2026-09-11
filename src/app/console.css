@@ -52,6 +52,108 @@ input, textarea { caret-color: #ffbf19; }
 .console-reading { line-height: 1.65; }
 .console-reading p, .console-reading li { max-width: 72ch; }
 
+/* ── Sound Select ───────────────────────────────────────────────────────────
+   The deck built into the page header: stamped steel transport keys, a panel
+   readout, and a popup for the rotation and the level. Amber means running,
+   the same way it means "selected" everywhere else in this system. */
+.sound-select { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sound-deck { display: flex; gap: 4px; flex-shrink: 0; }
+.sound-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; padding: 0; color: var(--color-asphalt);
+  transition: filter 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sound-btn:hover { filter: brightness(1.1); }
+.sound-readout {
+  display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px;
+  padding: 0 10px; max-width: 230px;
+}
+.sound-readout:hover { border-top-color: var(--color-gt-bright); }
+.sound-readout-mark { display: inline-flex; flex-shrink: 0; color: var(--color-gt-bright); }
+.sound-readout-title {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13px; font-weight: 700; letter-spacing: .02em; color: var(--color-chrome);
+}
+/* Period selection cursor, pointed at the drawer it opens. */
+.sound-readout-chevron {
+  flex-shrink: 0; width: 0; height: 0;
+  border-inline: 5px solid transparent; border-bottom: 6px solid var(--color-gt-bright);
+}
+.sound-panel {
+  position: absolute; z-index: 60; top: calc(100% + 6px); right: 0; width: 232px;
+  border: 2px solid var(--color-gt); box-shadow: 3px 4px 0 rgba(0, 0, 0, .8);
+  animation: sound-panel-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes sound-panel-in { from { opacity: 0; transform: translateY(-4px); } }
+.sound-panel-heading {
+  border-bottom: 1px solid var(--color-steel); padding: 6px 10px;
+  font-size: 12px; font-weight: 900; letter-spacing: .28em; text-transform: uppercase;
+  color: var(--color-gt-bright);
+}
+.sound-panel-list { list-style: none; margin: 0; padding: 0; }
+.sound-panel-row {
+  display: flex; align-items: center; gap: 9px; width: 100%; min-height: 44px;
+  padding: 6px 10px; text-align: left;
+}
+.sound-panel-row:hover { background: rgba(255, 255, 255, .05); }
+.plate-hot.sound-panel-row:hover { background: var(--color-gt-bright); }
+/* Saira for the track numbers, as everywhere else small numerics appear: the
+   bitmap face is for lettering, and its digits are a coin-toss at 12px. */
+.sound-panel-num {
+  flex-shrink: 0; font-family: var(--font-saira), sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: .06em;
+}
+.sound-panel-name { min-width: 0; font-size: 13px; line-height: 1.25; }
+.sound-panel-volume {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border-top: 1px solid var(--color-steel); padding: 8px 10px;
+}
+.sound-panel-label {
+  font-size: 12px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--color-chrome);
+}
+.sound-panel-steps { display: flex; gap: 4px; }
+.sound-panel-step {
+  min-width: 40px; min-height: 30px; padding: 2px 6px;
+  font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase;
+}
+.sound-panel-foot {
+  display: flex; align-items: center; gap: 6px;
+  border-top: 1px solid var(--color-steel); padding: 6px 10px;
+  font-size: 12px; color: var(--color-silver);
+}
+/* Interior headers: the deck sits in the empty run between the back control
+   and the page label. It is left-aligned in that run by default and only
+   centred once there is provably room, because the page label and the OPTIONS
+   plate on the right are absolutely positioned — flex centring cannot see them,
+   so the reserve below is what keeps the deck out of their way. */
+.console-header .sound-select { margin-inline-end: auto; }
+@media (min-width: 1024px) {
+  .console-header { padding-inline-end: clamp(320px, 30vw, 420px); }
+  .console-header .sound-select { margin-inline: auto; }
+}
+/* World map: the brand and the driver card already fill this header's width —
+   on the height-derived desktop layout the screen can be as narrow as 720px —
+   so the deck takes the band the driver card's 48px top margin leaves empty,
+   centred between the two. Out of flow on purpose: the header's height feeds
+   the 354px chrome constant the no-scroll map is sized against, and the deck
+   must not add to it. */
+/* Lifted above the map: both are positioned, so without this the landscape
+   that follows in the DOM paints over the deck's popup. */
+.world-header { position: relative; z-index: 20; }
+.world-header .sound-select { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); }
+/* Narrow viewports: a glyph cluster. Play/pause and next only — no prev, no
+   title — with the readout shrunk to a chevron that still opens the popup, so
+   the rotation and the level stay reachable without the tight header growing. */
+@media (max-width: 1023px) {
+  .sound-btn-prev, .sound-readout-title { display: none; }
+  .sound-readout { justify-content: center; min-width: 44px; padding: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sound-panel { animation: none; }
+  .sound-btn { transition: none; }
+}
+
 /* World map: one uncropped coordinate plane, with real HTML on top. */
 .world-screen { width: 100%; max-width: 1440px; margin: 0 auto; background: #0b101b; }
 .world-header {
@@ -183,6 +285,14 @@ input, textarea { caret-color: #ffbf19; }
   .console-location { display: none; }
   .console-options { top: 16px; right: 16px; }
   .console-page > header .lozenge { padding-inline: 10px; }
+  /* Phone: the mark, the way out and the OPTIONS plate already own the top
+     row, so the deck takes the line under them rather than being squeezed
+     between two things it would collide with. */
+  .console-header { flex-wrap: wrap; }
+  .console-header .sound-select { flex-basis: 100%; margin-top: 4px; }
+  /* Phone: the header is a stack, so the deck rejoins the flow under the
+     title instead of floating over a row that no longer exists. */
+  .world-header .sound-select { position: static; transform: none; margin-top: 14px; }
   .world-header { padding: 18px 16px 14px; min-height: 144px; display: block; }
   /* At phone width the title needs the full line: OPTIONS holds the top-right
      corner, so the mark takes the row above rather than the space beside it. */

@@ -185,11 +185,9 @@ export function OptionsMenu() {
           <p className="border-b border-steel px-3 py-1.5 font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
             Options
           </p>
-          <OptionRow
-            label="Music"
-            on={sound.musicEnabled}
-            onToggle={() => { sound.toggleMusic(); memoryCardToast.notify(); }}
-          />
+          {/* No MUSIC row: the Sound Select deck in the page header owns play
+              state now, and two controls for one preference is one too many.
+              The credit below stays regardless — it is a licence term. */}
           <OptionRow
             label="Sound FX"
             on={sound.enabled}

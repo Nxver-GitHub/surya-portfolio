@@ -64,9 +64,10 @@ ffmpeg -i "source.ogg" -vn -c:a aac -b:a 96k -ar 44100 -ac 2 \
 Then add it to `musicPlaylist` in `content/music.ts`.
 
 - **Keep it light.** Every track ships in the repository and over the wire.
-- **Mix it low.** The player applies a 0.5 resting gain so the music sits under
-  the synthesized menu tones; master accordingly rather than relying on that
-  gain to rescue a hot file.
+- **Mix it low.** The player's resting gain is the MID notch of the Sound
+  Select level (`src/lib/music-volume.ts` — LO/MID/HI, spaced by ear and
+  capped well under unity) so the music sits under the synthesized menu tones.
+  Master accordingly rather than relying on that gain to rescue a hot file.
 - **Ship only what you have the rights to ship.** This repository and the
   deployed site are both public. Original work or an explicitly licensed track
   only, and record the licence here and in `content/music.ts`.

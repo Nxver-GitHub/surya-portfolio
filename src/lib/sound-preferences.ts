@@ -100,3 +100,14 @@ export function createPreferenceStore(
     },
   };
 }
+
+// ── App-wide singletons ─────────────────────────────────────────────────────
+// One store per preference for the whole app, so the SoundProvider and the
+// Sound Select strip write through the same object and see each other's
+// notifications. Constructing them at module scope is SSR-safe: nothing here
+// touches `window` until read/write/subscribe is actually called.
+
+/** Menu tones. */
+export const sfxPreference = createPreferenceStore(SFX_STORAGE_KEY);
+/** Menu playlist. */
+export const musicPreference = createPreferenceStore(MUSIC_STORAGE_KEY);
