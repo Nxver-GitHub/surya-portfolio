@@ -3,15 +3,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useSound } from "@/components/sound/SoundProvider";
 import { pavilions } from "../../../content/pavilions";
 
 export function CircuitMap() {
   const [selectedId, setSelectedId] = useState("cafe");
   const [lockedNotice, setLockedNotice] = useState(false);
   const controls = useRef<(HTMLAnchorElement | HTMLButtonElement | null)[]>([]);
+  const { tick } = useSound();
   const selected = pavilions.find((p) => p.id === selectedId) ?? pavilions[0];
 
+  // Focus and mouseEnter both land here, so the tick belongs to the SELECTION
+  // CHANGE, not to the pointer: re-entering the destination you are already on
+  // — or clicking it, which fires focus after mouseEnter — stays silent.
   function select(id: string) {
+    if (id !== selectedId) tick();
     setSelectedId(id);
     setLockedNotice(false);
   }
@@ -44,7 +50,9 @@ export function CircuitMap() {
             const style = { "--node-x": `${x}%`, "--node-y": `${y}%` } as CSSProperties;
             const label = <><span className="map-node-name">{p.name}</span><span className="map-node-glyph" aria-hidden="true">{p.glyph}</span>{p.status === "locked" && <span className="map-node-status">Locked</span>}<span className="map-cursor" aria-hidden="true" /></>;
             const common = {
-              className, style, "data-sfx": "move",
+              // Hover/focus already ticks via select(); the click is the
+              // outcome — crossing into the destination, or being refused.
+              className, style, "data-sfx": p.status === "open" ? "enter" : "locked",
               onFocus: () => select(p.id), onMouseEnter: () => select(p.id),
               onKeyDown: (event: KeyboardEvent) => move(event, index),
               "aria-label": `${p.name}: ${p.caption}${p.status === "locked" ? " — locked" : ""}`,
@@ -67,14 +75,14 @@ export function CircuitMap() {
           <p>{lockedNotice ? "This pavilion is not open yet. Choose another destination." : selected.caption}</p>
         </div>
         {selected.status === "open" ? (
-          <Link className="map-enter" href={`/${selected.slug}`} data-sfx="confirm"
+          <Link className="map-enter" href={`/${selected.slug}`} data-sfx="enter"
             transitionTypes={["nav-forward"]} aria-label={`Enter ${selected.name}`}>Enter <span aria-hidden="true">▸</span></Link>
         ) : <span className="map-unavailable">Locked</span>}
       </div>
 
       <nav className="map-mobile-directory" aria-label="All destinations">
         {pavilions.map((p) => p.status === "open" ? (
-          <Link key={p.id} href={`/${p.slug}`} data-sfx="confirm" transitionTypes={["nav-forward"]}>
+          <Link key={p.id} href={`/${p.slug}`} data-sfx="enter" transitionTypes={["nav-forward"]}>
             <span>{p.glyph}</span>{p.name}<span aria-hidden="true">▸</span>
           </Link>
         ) : <span key={p.id} className="directory-locked"><span>{p.glyph}</span>{p.name}<small>Locked</small></span>)}

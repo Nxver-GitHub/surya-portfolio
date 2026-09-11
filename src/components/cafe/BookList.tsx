@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useSound } from "@/components/sound/SoundProvider";
 import {
   bookTypeLabel,
   menuBooks,
@@ -20,12 +21,21 @@ interface BookListProps {
  */
 export function BookList({ selectedId, onSelect }: BookListProps) {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const { tick } = useSound();
+
+  // One tick per book actually entered — arrowing along the shelf ticks per
+  // book, re-picking the open one is silent. Throttled inside useSound, so
+  // holding an arrow key never stacks the blips into a buzz.
+  const choose = (book: MenuBook) => {
+    if (book.id !== selectedId) tick();
+    onSelect(book);
+  };
 
   const focusTab = (index: number) => {
     const clamped = (index + menuBooks.length) % menuBooks.length;
     const book = menuBooks[clamped];
     tabRefs.current[clamped]?.focus();
-    onSelect(book);
+    choose(book);
   };
 
   const onKeyDown = (event: React.KeyboardEvent, index: number) => {
@@ -72,8 +82,7 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
             aria-selected={isActive}
             aria-controls={`book-panel-${book.id}`}
             tabIndex={isActive ? 0 : -1}
-            data-sfx="move"
-            onClick={() => onSelect(book)}
+            onClick={() => choose(book)}
             onKeyDown={(event) => onKeyDown(event, index)}
             className={`${
               isActive ? "plate-hot" : "plate"
