@@ -1,4 +1,18 @@
-export type GlyphKind = "car" | "flag" | "lock" | "badge" | "signal";
+export type GlyphKind =
+  | "car"
+  | "flag"
+  | "lock"
+  | "badge"
+  | "signal"
+  /** Transport marks for the Sound Select deck: bare triangles and bars, cut
+   *  the way a console deck stencilled them. Drawn rather than typed so they
+   *  render identically everywhere — Pixelify Sans has no ▸ ❚ ■ to fall back
+   *  on, and an emoji is never an option in this system. */
+  | "play"
+  | "pause"
+  | "stop"
+  | "next"
+  | "prev";
 
 interface GlyphProps {
   kind: GlyphKind;
@@ -49,6 +63,26 @@ export function Glyph({ kind, size = "1em", className }: GlyphProps) {
         <>
           <path d="M12 2 L20 5 V11 Q20 18 12 22 Q4 18 4 11 V5 Z" />
           <path d="M12 6 L13.6 9.4 L17.3 9.8 L14.5 12.3 L15.3 16 L12 14 L8.7 16 L9.5 12.3 L6.7 9.8 L10.4 9.4 Z" fill="var(--color-asphalt)" />
+        </>
+      ) : null}
+      {kind === "play" ? <path d="M7 4 L20 12 L7 20 Z" /> : null}
+      {kind === "pause" ? (
+        <>
+          <rect x="6.5" y="4" width="4" height="16" />
+          <rect x="13.5" y="4" width="4" height="16" />
+        </>
+      ) : null}
+      {kind === "stop" ? <rect x="5" y="5" width="14" height="14" /> : null}
+      {kind === "next" ? (
+        <>
+          <path d="M4 5 L14 12 L4 19 Z" />
+          <rect x="16" y="5" width="3.5" height="14" />
+        </>
+      ) : null}
+      {kind === "prev" ? (
+        <>
+          <rect x="4.5" y="5" width="3.5" height="14" />
+          <path d="M20 5 L10 12 L20 19 Z" />
         </>
       ) : null}
       {kind === "signal" ? (

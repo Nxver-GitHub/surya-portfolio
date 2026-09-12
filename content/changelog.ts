@@ -12,6 +12,28 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    version: "1.8",
+    date: "September 2026",
+    changes: [
+      "Sound Select: a music deck on the bottom of every screen — three PS1-era jungle tracks by elevchyt, press play",
+      "Menu tones now tick on every cursor move; locked doors buzz",
+      "Leave the World Map idle and the intro montage takes over",
+      "Options changes save to Memory Card (1) — do not remove",
+      "CRT: new Full setting with scanlines and grille; Subtle stays the default",
+    ],
+  },
+  {
+    version: "1.7",
+    date: "September 2026",
+    changes: [
+      "New pavilion: Special Stage — go-to-market engineering case studies, run as a rally",
+      "Reason Codes: the thesis stage above the Special Stage",
+      "Original-console redesign: midnight navy, stamped steel, and the SP enamel mark across the whole frontend",
+      "Driver card rebuilt; the intro clock now keeps real time",
+      "Accessibility pass across every pavilion",
+    ],
+  },
+  {
     version: "1.6",
     date: "August 2026",
     changes: [

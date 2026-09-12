@@ -4,6 +4,8 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Glyph } from "@/components/gt/Glyph";
 import { useSound } from "@/components/sound/SoundProvider";
 import { useCrtMode } from "@/components/crt/CrtLayer";
+import { MemoryCardToast } from "@/components/toast/MemoryCardToast";
+import { useMemoryCardToast } from "@/components/toast/useMemoryCardToast";
 
 /** One GT options row: label left, ON/OFF state chip right; click flips. */
 function OptionRow({
@@ -37,6 +39,38 @@ function OptionRow({
   );
 }
 
+/** CRT's row is a three-state cycler (Off → Subtle → Full), not a toggle:
+ * label left, state chip right showing the current tier; click advances. */
+function CycleRow({
+  label,
+  value,
+  onCycle,
+}: {
+  label: string;
+  value: string;
+  onCycle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onCycle}
+      data-sfx="confirm"
+      className="flex min-h-11 w-full items-center justify-between gap-6 px-3 py-2 text-left outline-none hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-gt-bright"
+    >
+      <span className="ts-hard font-display text-xs font-bold tracking-[0.2em] text-chrome uppercase">
+        {label}
+      </span>
+      <span
+        className={`${
+          value === "off" ? "plate ts-hard text-silver" : "plate-hot text-asphalt"
+        } px-2 py-0.5 font-display text-xs font-black tracking-widest uppercase`}
+      >
+        {value === "off" ? "Off" : value === "subtle" ? "Subtle" : "Full"}
+      </span>
+    </button>
+  );
+}
+
 /**
  * The corner OPTIONS plate — a miniature GT2 options screen. Replaces the
  * former pile of per-setting chips (Sound, CRT) with one trigger that drops a
@@ -53,6 +87,10 @@ export function OptionsMenu() {
   const panelId = useId();
   const sound = useSound();
   const crt = useCrtMode();
+  // Kept as a thin wrap around the existing onToggle handlers below — two
+  // other PRs touch this file in parallel, so this is deliberately additive
+  // rather than a restructure. See MemoryCardToast / useMemoryCardToast.
+  const memoryCardToast = useMemoryCardToast();
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false);
@@ -106,10 +144,24 @@ export function OptionsMenu() {
           <p className="border-b border-steel px-3 py-1.5 font-display text-xs font-black tracking-[0.28em] text-gt-bright uppercase">
             Options
           </p>
-          <OptionRow label="Sound" on={sound.enabled} onToggle={sound.toggle} />
-          <OptionRow label="CRT FX" on={crt.on} onToggle={crt.toggle} />
+          {/* No MUSIC row and no music credit: the Sound Select bar along the
+              bottom edge owns play state, and carries the CC BY 4.0 attribution
+              in its own caption and popup. One visible source for each — two
+              controls for one preference is one too many, and a licence notice
+              repeated in two places is a licence notice nobody reads. */}
+          <OptionRow
+            label="Sound FX"
+            on={sound.enabled}
+            onToggle={() => { sound.toggle(); memoryCardToast.notify(); }}
+          />
+          <CycleRow
+            label="CRT FX"
+            value={crt.mode}
+            onCycle={() => { crt.cycle(); memoryCardToast.notify(); }}
+          />
         </div>
       ) : null}
+      <MemoryCardToast visible={memoryCardToast.visible} />
     </div>
   );
 }

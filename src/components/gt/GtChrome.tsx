@@ -46,6 +46,10 @@ export function GtTitle({
  * Every interior screen's top strip: the system mark, then the way back out.
  * Composed rather than left to each page so the mark can't be forgotten on a
  * pavilion added later — it's chrome that has to be everywhere or nowhere.
+ *
+ * The music deck is the same kind of chrome but is deliberately NOT here: it
+ * lives on its own fixed bar along the bottom edge, mounted once in the root
+ * layout, so it never competes with what a screen is trying to say.
  */
 export function GtBackHeader({
   href,

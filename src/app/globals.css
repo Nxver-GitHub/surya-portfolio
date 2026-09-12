@@ -322,6 +322,31 @@ body {
   animation: locked-shake var(--duration-slide) var(--ease-mech);
 }
 
+/* Selected map destination: a hard 1Hz blink on the triangular pointer
+   cursor, using the same hard-steps idiom as .cafe-caret-blink above rather
+   than a smooth fade. Unselected nodes are left alone — DESIGN.md's
+   restraint favors one deliberate blink over seven quiet nodes pulsing. */
+@keyframes map-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.map-node-selected .map-cursor {
+  animation: map-cursor-blink 1s step-end infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-node-selected .map-cursor {
+    animation: none;
+  }
+}
+
 /* ── Signature intro (BootSequence) ──────────────────────────────────────
    GT2 boot-to-menu homage: a studio monogram under a spotlight, a hard-cut
    heritage montage on a fixed ~165ms beat grid, then the title. All motion is
@@ -645,6 +670,84 @@ body {
   }
 }
 
+/* ── CRT "full" tier (prototype level 2) ──────────────────────────────────
+   [data-crt="full"] only. The subtle rules above are untouched byte-for-byte
+   (they are the owner-locked default) — full is layered on: tighter, more
+   visible scanlines and a stronger phosphor grille on the same .crt-fx-tex
+   node, a deeper vignette on the same .crt-fx-vig node, a slightly brighter
+   rolling band via the shared --crt-band token, and one new bloom layer.
+   AA check (WCAG relative luminance, ink #d6d9e0 on asphalt #0b101b, base
+   contrast ~13.5:1): the darkest single-layer darkening here (scanline
+   alpha 0.16, a multiply-by-0.84 on both fg/bg) leaves contrast ~11.6:1;
+   the deepened corner vignette (alpha 0.34, corners only, where body copy
+   does not sit inside the padded 1600px shell) leaves ~9.5:1 worst case;
+   the brightened band (additive white, alpha 0.05) leaves ~7.2:1. All stay
+   well clear of the 4.5:1 AA floor even stacked. No transforms on page
+   content — only these fixed overlay layers change. */
+:root[data-crt="full"] {
+  --crt-band: 0.05;
+}
+
+@layer components {
+  /* Bloom: a faint screen-blend glow near the lamp-glare corner, echoing a
+     tube's brightest point flaring slightly. Hidden outside full mode. Skip
+     entirely rather than let it wash out text — kept low and off-center. */
+  .crt-fx-bloom {
+    display: none;
+  }
+
+  :root[data-crt="full"] .crt-fx-tex {
+    background-image:
+      repeating-linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.16) 0px,
+        rgba(0, 0, 0, 0.16) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 70, 70, 0.05) 0px,
+        rgba(255, 70, 70, 0.05) 1px,
+        rgba(70, 255, 110, 0.05) 1px,
+        rgba(70, 255, 110, 0.05) 2px,
+        rgba(90, 110, 255, 0.05) 2px,
+        rgba(90, 110, 255, 0.05) 3px
+      );
+  }
+
+  :root[data-crt="full"] .crt-fx-vig {
+    background:
+      radial-gradient(
+        ellipse 128% 104% at 50% 46%,
+        transparent 46%,
+        rgba(0, 0, 0, 0.34) 100%
+      ),
+      linear-gradient(
+        115deg,
+        rgba(255, 255, 255, var(--crt-glare)) 0%,
+        transparent 24%
+      ),
+      radial-gradient(
+        ellipse 55% 20% at 30% 4%,
+        rgba(255, 255, 255, calc(var(--crt-glare) * 0.8)),
+        transparent 70%
+      );
+  }
+
+  :root[data-crt="full"] .crt-fx-bloom {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 60% 46% at 30% 6%,
+      rgba(255, 255, 255, 0.06),
+      transparent 72%
+    );
+    mix-blend-mode: screen;
+  }
+}
+
 /* ── GT2 screen wipe (View Transitions; see PageWipe.tsx) ─────────────────
    Hard 200ms straight-line slide with mechanical easing — the GT2 menu
    screen change. Forward wipes left; back (lozenge) wipes right. */
@@ -739,6 +842,53 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .gt-checker {
+    animation: none;
+  }
+}
+
+/* ── Attract mode (AttractMode.tsx) ───────────────────────────────────────
+   Idle-loop reel on the World Map: a hard, mechanical fade in only.
+   Dismissal is instant — the component simply unmounts on any input — so
+   there is no exit animation to define. useIdleTimer never arms the
+   countdown under reduced motion, so this query is a second safety net
+   rather than the primary guard. */
+@keyframes attract-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.attract-mode {
+  animation: attract-fade-in var(--duration-panel) var(--ease-mech) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .attract-mode {
+    animation: none;
+  }
+}
+
+/* ── Memory-card save toast (MemoryCardToast.tsx) ─────────────────────────
+   Hard mechanical fade-in on show; hides with a hard cut (the panel simply
+   unmounts), so again there is no exit animation. Unlike attract mode, the
+   toast must stay functional under reduced motion — only the fade is
+   skipped, per the acceptance criteria. */
+@keyframes memory-card-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.memory-card-toast-panel {
+  animation: memory-card-toast-in var(--duration-snap) var(--ease-mech) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .memory-card-toast-panel {
     animation: none;
   }
 }

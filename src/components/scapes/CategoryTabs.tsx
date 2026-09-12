@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useSound } from "@/components/sound/SoundProvider";
 import type { CategoryMeta, PhotoCategory } from "../../../content/photos";
 
 interface CategoryTabsProps {
@@ -20,11 +21,19 @@ export function CategoryTabs({
   onSelect,
 }: CategoryTabsProps) {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const { tick } = useSound();
+
+  // Tick on the category actually changing, not on every press: re-selecting
+  // the open tab stays silent.
+  const choose = (id: PhotoCategory) => {
+    if (id !== active) tick();
+    onSelect(id);
+  };
 
   const focusTab = (index: number) => {
     const next = (index + categories.length) % categories.length;
     tabRefs.current[next]?.focus();
-    onSelect(categories[next].id);
+    choose(categories[next].id);
   };
 
   const onKeyDown = (event: React.KeyboardEvent, index: number) => {
@@ -72,8 +81,7 @@ export function CategoryTabs({
             aria-selected={isActive}
             aria-controls={`scapes-panel-${category.id}`}
             tabIndex={isActive ? 0 : -1}
-            data-sfx="move"
-            onClick={() => onSelect(category.id)}
+            onClick={() => choose(category.id)}
             onKeyDown={(event) => onKeyDown(event, index)}
             className={`${
               isActive ? "plate-hot" : "plate ts-hard"
