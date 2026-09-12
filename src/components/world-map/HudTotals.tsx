@@ -21,9 +21,12 @@ const SEGMENTS: readonly { label: string; value: number; href: string }[] = [
   { label: "Licenses", value: licenses.length, href: "/license-center" },
 ];
 
+/* Hidden on phones: the row wraps there, and a wrapped line begins with the
+   divider of the segment that moved down — a dot dangling in front of nothing.
+   Spacing alone separates the counts at that width. */
 function Divider() {
   return (
-    <span aria-hidden="true" className="text-steel">
+    <span aria-hidden="true" className="text-steel max-sm:hidden">
       ·
     </span>
   );
@@ -40,7 +43,7 @@ export function HudTotals() {
         </div>
         <div
           aria-label="Portfolio totals"
-          className="order-1 flex w-full flex-wrap items-center justify-center gap-x-2.5 gap-y-1 font-display text-xs font-bold tracking-[0.14em] whitespace-nowrap uppercase sm:order-2 sm:w-auto sm:flex-1 sm:gap-x-4"
+          className="order-1 flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-1 font-display text-xs font-bold tracking-[0.14em] whitespace-nowrap uppercase sm:order-2 sm:w-auto sm:flex-1 sm:gap-x-4"
         >
           {SEGMENTS.map((s, i) => (
             <span key={s.label} className="flex items-center gap-x-2.5 sm:gap-x-4">
@@ -62,12 +65,17 @@ export function HudTotals() {
               </Link>
             </span>
           ))}
-          <Divider />
-          <span className="ts-hard inline-flex items-baseline gap-1.5 text-silver">
-            <span className="text-gt-bright tabular-nums">
-              {openCount}/{pavilions.length}
+          {/* Wrapped with its own divider, exactly like the segments above:
+              a bare Divider here stayed behind on the previous line when the
+              row wrapped on a phone, leaving a "·" dangling off the end. */}
+          <span className="flex items-center gap-x-2.5 sm:gap-x-4">
+            <Divider />
+            <span className="ts-hard inline-flex items-baseline gap-1.5 text-silver">
+              <span className="text-gt-bright tabular-nums">
+                {openCount}/{pavilions.length}
+              </span>
+              Open
             </span>
-            Open
           </span>
         </div>
         <p className="ts-hard order-3 font-display text-xs font-bold tracking-[0.14em] text-silver uppercase">
