@@ -41,6 +41,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import {
+  MAX_TOTAL_CONTENT_CHARS,
+  normalizeAssistantContent,
+  normalizeUserContent,
+  toAlternatingConversation,
+  trimToCharBudget,
+  type ConversationTurn,
+} from "@/lib/conversation";
 import { resolveLocalCommand, type LocalCommandResult } from "./localCommands";
 import { routeAdminInput } from "./adminSuperset";
 import { themedErrorLine } from "./errorMapping";
@@ -103,6 +111,58 @@ function messageText(message: UIMessage): string {
     .map((part) => (part.type === "text" ? part.text : ""))
     .join("")
     .replaceAll("**", "");
+}
+
+/**
+ * The HMAC the server issued for a finished reply, read back off the message's
+ * metadata. Narrowed defensively: `useChat` is untyped for metadata here, and a
+ * reply that streamed before signing was enabled simply has none.
+ */
+function turnSignature(message: UIMessage): string | undefined {
+  const metadata: unknown = message.metadata;
+  if (typeof metadata !== "object" || metadata === null) return undefined;
+  const value = (metadata as { turnSignature?: unknown }).turnSignature;
+  return typeof value === "string" && /^[0-9a-f]{64}$/.test(value)
+    ? value
+    : undefined;
+}
+
+/**
+ * Flatten the AI-SDK UI messages into exactly what /api/cafe-terminal accepts.
+ * Only user/assistant text turns cross the wire — no system prompt, no extra
+ * keys — and the result CONFORMS to the route's transcript contract: strictly
+ * alternating, within the total character budget.
+ *
+ * The conforming step is not cosmetic. `useChat` keeps a user message in its
+ * history when the turn FAILS (a 429, a dropped stream), so the next send would
+ * otherwise carry two user turns in a row and the route would reject every
+ * request for the rest of the session. See lib/conversation.ts.
+ *
+ * Each assistant turn also carries the signature the server attached to it.
+ * Content goes through the SHARED normalizer, because the signature covers the
+ * normalized bytes exactly — a local `.slice(0, 2400)` here would silently
+ * invalidate every reply over the cap and lose the conversation's memory.
+ */
+function toRequestMessages(uiMessages: readonly UIMessage[]): ConversationTurn[] {
+  const history = uiMessages.flatMap<ConversationTurn>((message) =>
+    message.role === "user"
+      ? [{ role: "user", content: normalizeUserContent(messageText(message)) }]
+      : message.role === "assistant"
+        ? [
+            {
+              role: "assistant",
+              content: normalizeAssistantContent(messageText(message)),
+              signature: turnSignature(message),
+            },
+          ]
+        : [],
+  );
+  return trimToCharBudget(
+    toAlternatingConversation(
+      history.filter((message) => message.content.length > 0),
+    ),
+    MAX_TOTAL_CONTENT_CHARS,
+  );
 }
 
 /**
@@ -212,20 +272,7 @@ export function useTerminalChat({
       new DefaultChatTransport({
         api: API_PATH,
         prepareSendMessagesRequest: ({ messages: uiMessages }) => ({
-          body: {
-            messages: uiMessages
-              .filter((m) => m.role === "user" || m.role === "assistant")
-              .map((m) => ({
-                role: m.role,
-                // Mirror the route's per-role caps (user 500 / assistant
-                // 2400) so an unusually long reply can never poison the next
-                // turn's validation.
-                content: messageText(m)
-                  .trim()
-                  .slice(0, m.role === "assistant" ? 2400 : 500),
-              }))
-              .filter((m) => m.content.length > 0),
-          },
+          body: { messages: toRequestMessages(uiMessages) },
         }),
       }),
     [],

@@ -32,6 +32,11 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+# Wrangler's local secrets file — same class as .env, different filename, so the
+# patterns above do not catch it (`wrangler dev` reads GROQ/Upstash/admin keys
+# from here)
+.dev.vars
+.dev.vars.*
 
 # Secrets / credentials, belt-and-suspenders
 *.pem

@@ -23,6 +23,12 @@ import { z } from "zod";
 import { KNOWN_ROUTES } from "@/lib/routes";
 import { recordPageView } from "@/lib/events";
 import { extractClientIp } from "@/app/api/cafe-terminal/route";
+import { errorMessage } from "@/lib/logging";
+import {
+  MAX_TINY_BODY_BYTES,
+  hasTrustedOrigin,
+  readCappedJson,
+} from "@/lib/requestGuards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,24 +73,32 @@ export async function POST(request: Request): Promise<Response> {
   // No telemetry backend configured → quietly accept and drop. Never an error.
   if (!url || !token) return new Response(null, NO_CONTENT);
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return new Response(null, NO_CONTENT);
-  }
-  const parsed = parseBeaconBody(raw);
-  if (!parsed.ok) return new Response(null, NO_CONTENT);
+  // Same-origin guard. Another site posting here can only inflate our own
+  // page-view counts, so the answer stays a silent 204 — same as every other
+  // rejection on this route. (Fail open on a MISSING Origin, per requestGuards;
+  // sendBeacon from our own pages always sends one.)
+  if (!hasTrustedOrigin(request)) return new Response(null, NO_CONTENT);
 
-  // Rate limit — FAIL OPEN. A limiter error must not drop the browsing request.
+  // Rate limit BEFORE the body is read — FAIL OPEN. A limiter error must not
+  // drop the browsing request, but a flood must not be parsed for free either.
   const ip = extractClientIp((name) => request.headers.get(name));
   try {
     const res = await getBeaconLimiter(url, token).limit(ip);
     if (!res.success) return new Response(null, NO_CONTENT); // over cap → drop
   } catch (error) {
     // Fail open: proceed to record despite the limiter backend being down.
-    console.error("[beacon] rate-limit backend error (failing open)", error);
+    // Message only — the error object carries the Upstash URL and token header.
+    console.error(
+      "[beacon] rate-limit backend error (failing open)",
+      errorMessage(error),
+    );
   }
+
+  // A `{ route }` beacon is a few dozen bytes; 8 KB is a generous ceiling.
+  const body = await readCappedJson(request, MAX_TINY_BODY_BYTES);
+  if (!body.ok) return new Response(null, NO_CONTENT);
+  const parsed = parseBeaconBody(body.value);
+  if (!parsed.ok) return new Response(null, NO_CONTENT);
 
   void recordPageView(parsed.route);
   return new Response(null, NO_CONTENT);

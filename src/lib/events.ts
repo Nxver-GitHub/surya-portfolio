@@ -21,6 +21,7 @@
  */
 
 import { Redis } from "@upstash/redis";
+import { errorMessage } from "@/lib/logging";
 
 /** Ring-buffer key holding recent guest questions (newest at head via LPUSH). */
 export const RING_KEY = "guest-questions";
@@ -167,7 +168,10 @@ export async function recordChatQuestion(
     if (!client) return;
     await writeChatQuestion(client, question, source);
   } catch (error) {
-    console.error("[events] recordChatQuestion failed", error);
+    // Message only. An Upstash failure object serializes the REST URL and the
+    // auth-token header, which Worker observability retains — and both callers
+    // of this helper are public, unauthenticated routes.
+    console.error("[events] recordChatQuestion failed", errorMessage(error));
   }
 }
 
@@ -181,6 +185,7 @@ export async function recordPageView(route: string): Promise<void> {
     if (!client) return;
     await writePageView(client, route);
   } catch (error) {
-    console.error("[events] recordPageView failed", error);
+    // Message only — same reason as above.
+    console.error("[events] recordPageView failed", errorMessage(error));
   }
 }
