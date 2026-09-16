@@ -95,3 +95,7 @@ assets-src/cars/incoming/*
 assets-src/cafe/incoming/**
 !assets-src/cafe/incoming/*/
 !assets-src/cafe/incoming/*/source.txt
+
+# Local design-review screenshots kept out of this public repo.
+mobile-pace-notes.png
+*-notes.png

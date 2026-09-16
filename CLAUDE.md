@@ -23,7 +23,7 @@ The `Docs/` folder is **local-only and gitignored** — this repo is public, so 
 
 ## Stack (decided — do not substitute)
 
-- **Next.js (App Router) + TypeScript**, deployed on Vercel
+- **Next.js (App Router) + TypeScript**, deployed to **Cloudflare Workers** via the OpenNext adapter (migrated off Vercel 2026-09-16)
 - **React Three Fiber + drei** for all 3D scenes (never vanilla Three.js glue)
 - **Tailwind v4** with design tokens as CSS custom properties (colors, type scale, spacing, easing) — the racing aesthetic is expressed via tokens, never one-off CSS values
 - **Content:** typed TS data files in a `content/` directory (e.g., `seasons.ts`, `cars.ts`, `missions.ts`, `licenses.ts`, `menu-books.ts`, `photos.ts`). No CMS, no backend — the site is read-mostly static.
@@ -75,13 +75,13 @@ Each pavilion is a route under `app/` with a shared shell (section title, conten
 
 ### Security & performance
 
-- No secrets in the repo — Vercel environment variables only.
+- No secrets in the repo — Cloudflare Worker secrets only (`wrangler secret put`). The gitignored `.env.local` holds local copies; `.dev.vars` is also ignored.
 - Plan for CSP early: no inline scripts/styles that would block strict CSP.
 - Optimize Core Web Vitals; lazy-load Three.js scenes; code-split per pavilion.
 
 ## Git workflow
 
-- `main` is always deployable and mirrors Vercel production. **Never commit directly to `main`** — no agent edits `main`.
+- `main` is always deployable and **auto-deploys to Cloudflare production** via Workers Builds — a merge ships in ~80s, so the CI gate is the only thing between a merge and a live site. **Never commit directly to `main`** — no agent edits `main`.
 - Feature branches per 1–2 user stories: `feature/sprint-01-shell-career`, `feature/garage-basic`, etc.
 - Flow: feature branch → PR → review → merge. Before coding, fetch and rebase/merge `origin/main` into the feature branch.
 - Parallel agent work uses git worktrees under `.worktrees/` (gitignored): `git worktree add .worktrees/feature-garage -b feature/garage main`.
