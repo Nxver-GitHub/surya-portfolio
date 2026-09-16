@@ -15,17 +15,17 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          # No "packageManager" field is pinned in package.json yet; pin the
-          # major version to match the pnpm used locally (10.x) so CI installs
-          # stay consistent with contributors' lockfile. Update this — and add
-          # a "packageManager" field to package.json — if the team standardizes
-          # on corepack-managed versions later.
-          version: 10
+        # No version pinned here on purpose: package.json's "packageManager"
+        # field is the single source of truth, and pnpm/action-setup reads it.
+        # Pinning in both places lets them drift apart silently.
 
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
+          # Matches the NODE_VERSION build variable in Cloudflare Workers
+          # Builds, which deploys what this job validated. package.json's
+          # "engines" allows >=24, so a newer local Node is fine; the shipped
+          # artifact is built on this one.
           node-version: 24
           cache: pnpm
 
