@@ -31,21 +31,49 @@ import { SITE_HOST } from "@/lib/site";
  *
  * A literal `"null"` origin (sandboxed iframe, some redirect chains) fails to
  * parse and is rejected — that is the intent.
+ *
+ * SCHEME — production accepts `https:` only. Host matching alone trusted
+ * `http://suryapugaz.com` as readily as the real one; HSTS and the apex 308s
+ * make that unreachable through a browser, but the guard should not depend on
+ * another layer for a check it can make itself. Two documented exceptions keep
+ * real work possible:
+ *   - a loopback origin (`localhost`, `127.0.0.0/8`, `[::1]`) is always allowed
+ *     over http — that is `next dev` and `opennextjs-cloudflare preview`.
+ *   - outside a production build, any http origin is allowed, so `next dev`
+ *     reached from a phone on the LAN (`http://192.168.x.x:3000`) still works.
+ *     `allowInsecure` is a parameter rather than a read of NODE_ENV inside the
+ *     branch so the production posture is directly testable.
  */
 export function isTrustedOrigin(
   originHeader: string | null,
   hostHeader: string | null,
+  allowInsecure: boolean = process.env.NODE_ENV !== "production",
 ): boolean {
   if (!originHeader || !originHeader.trim()) return true;
-  let originHost: string;
+  let origin: URL;
   try {
-    originHost = new URL(originHeader.trim()).host.toLowerCase();
+    origin = new URL(originHeader.trim());
   } catch {
     return false;
   }
+  const originHost = origin.host.toLowerCase();
   if (!originHost) return false;
+  const protocol = origin.protocol.toLowerCase();
+  if (protocol !== "https:") {
+    if (protocol !== "http:") return false;
+    if (!allowInsecure && !isLoopbackHostname(origin.hostname)) return false;
+  }
   if (hostHeader && originHost === hostHeader.trim().toLowerCase()) return true;
   return originHost === SITE_HOST;
+}
+
+/** Whether a URL hostname names this machine. `URL.hostname` keeps IPv6 in its
+ * bracketed form, hence both spellings of the loopback address. */
+function isLoopbackHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  if (host === "localhost" || host.endsWith(".localhost")) return true;
+  if (host === "[::1]" || host === "::1") return true;
+  return /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host);
 }
 
 /** {@link isTrustedOrigin} applied to a real Request. */

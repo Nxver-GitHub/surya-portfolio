@@ -90,6 +90,57 @@ describe("requestGuards — origin (CSRF)", () => {
     expect(isTrustedOrigin("   ", "suryapugaz.com")).toBe(true);
   });
 
+  /**
+   * Round-2 scheme pin. `http://suryapugaz.com` was trusted exactly as readily
+   * as the https origin — mooted in practice by HSTS and the apex 308s, but the
+   * guard should not lean on another layer for a check it can make itself.
+   * `false` here is the PRODUCTION posture (allowInsecure off).
+   */
+  it("rejects a plain-http origin on the real site host in production", () => {
+    expect(isTrustedOrigin("http://suryapugaz.com", "suryapugaz.com", false)).toBe(
+      false,
+    );
+    expect(isTrustedOrigin(`http://${SITE_HOST}`, "internal-proxy", false)).toBe(
+      false,
+    );
+  });
+
+  it("still accepts the https origin in production", () => {
+    expect(
+      isTrustedOrigin("https://suryapugaz.com", "suryapugaz.com", false),
+    ).toBe(true);
+  });
+
+  it("rejects non-http(s) schemes outright", () => {
+    expect(isTrustedOrigin("ftp://suryapugaz.com", "suryapugaz.com")).toBe(false);
+    expect(
+      isTrustedOrigin("javascript:alert(1)", "suryapugaz.com", false),
+    ).toBe(false);
+  });
+
+  /** `next dev` and `opennextjs-cloudflare preview` both serve plain http on a
+   * loopback host; those must keep working even under the production posture. */
+  it("always allows a loopback origin over http", () => {
+    expect(isTrustedOrigin("http://localhost:3000", "localhost:3000", false)).toBe(
+      true,
+    );
+    expect(
+      isTrustedOrigin("http://127.0.0.1:8787", "127.0.0.1:8787", false),
+    ).toBe(true);
+    expect(isTrustedOrigin("http://[::1]:3000", "[::1]:3000", false)).toBe(true);
+  });
+
+  /** `next dev` opened from a phone on the LAN is plain http on a private IP.
+   * Allowed in a dev build only — never in production. */
+  it("allows a LAN dev origin only when insecure origins are permitted", () => {
+    expect(
+      isTrustedOrigin("http://192.168.1.24:3000", "192.168.1.24:3000", true),
+    ).toBe(true);
+    expect(
+      isTrustedOrigin("http://192.168.1.24:3000", "192.168.1.24:3000", false),
+    ).toBe(false);
+  });
+
   it("reads both headers off a real Request", () => {
     expect(
       hasTrustedOrigin(
