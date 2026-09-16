@@ -22,7 +22,7 @@ import {
   type QuestionEntry,
 } from "@/lib/events";
 import { KNOWN_ROUTES } from "@/lib/routes";
-import { getBuildSha } from "@/lib/buildInfo";
+import { getBuildSha, getPlatform } from "@/lib/buildInfo";
 import { errorMessage } from "@/lib/logging";
 
 export const runtime = "nodejs";
@@ -59,6 +59,8 @@ export const adminDataResponseSchema = z.object({
     sha: z.string(),
     deployedAt: z.string(),
     node: z.string(),
+    /** Which runtime served this request — see lib/buildInfo. */
+    platform: z.string(),
   }),
 });
 
@@ -112,6 +114,7 @@ export async function GET(request: Request): Promise<Response> {
     sha: await getBuildSha(),
     deployedAt: DEPLOYED_AT,
     node: process.version,
+    platform: await getPlatform(),
   };
 
   if (!client) {

@@ -38,14 +38,15 @@ export const OWNER_NAME = "Surya Pugazhenthi";
  * persona block plus this digest, so the whole system prompt stays comfortably
  * bounded. Truncation happens on entry boundaries — never mid-entry.
  *
- * Sized to fit ALL of today's content (~11.5k chars ≈ 3.5k tokens — cheap even
- * on free tiers) with headroom. A 6k cap silently dropped the whole CAREER
- * block, so the model answered career questions from scraps in other blocks
- * and guessed wrong about role tenure. Raised from 12k when the GTME block
- * landed, for the same reason: a silent drop of a whole block is the failure
- * mode this cap must never cause.
+ * Sized to fit ALL of today's content (~14k chars ≈ 4k tokens — cheap even on
+ * free tiers) with headroom. A 6k cap silently dropped the whole CAREER block,
+ * so the model answered career questions from scraps in other blocks and
+ * guessed wrong about role tenure. Raised from 12k when the GTME block landed,
+ * and from 14k when the Cloudflare migration licence entry pushed the digest 20
+ * characters past it: a silent drop of a whole block is the failure mode this
+ * cap must never cause.
  */
-export const DIGEST_CHAR_CAP = 14_000;
+export const DIGEST_CHAR_CAP = 16_000;
 
 /** Collapse whitespace so multi-line content copy serializes to one tidy line. */
 function oneLine(text: string): string {
