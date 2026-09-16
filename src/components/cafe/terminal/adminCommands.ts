@@ -68,7 +68,7 @@ export function adminHelpLines(): readonly TerminalLine[] {
     "ADMIN COMMANDS",
     "  logs      recent questions, guest + admin (newest first)",
     "  stats     views by route + chats/day, incl. admin chats (7d)",
-    "  sysinfo   build sha, deploy time, runtime",
+    "  sysinfo   build sha, deploy time, platform, runtime",
     "  uptime    time since last deploy",
     "  logout    end the admin session",
     "",
@@ -199,6 +199,7 @@ export function formatSysinfo(
     "SYSTEM INFO",
     `  build sha    ${sha}`,
     `  deployed at  ${sysinfo.deployedAt}`,
+    `  platform     ${sysinfo.platform}`,
     `  node         ${sysinfo.node}`,
     "  framework    Next.js (App Router)",
   ]);

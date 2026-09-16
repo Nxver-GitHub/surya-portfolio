@@ -36,6 +36,7 @@ const SAMPLE: AdminDataResponse = {
     sha: "abcdef1234567890",
     deployedAt: "2026-07-15T00:00:00.000Z",
     node: "v20.11.0",
+    platform: "Cloudflare Workers (OpenNext)",
   },
 };
 
@@ -149,6 +150,12 @@ describe("formatStats / formatSysinfo / formatUptime", () => {
     expect(body).not.toContain("abcdef1234567890"); // never the full sha
     expect(body).toContain("v20.11.0");
     expect(body).toContain("Next.js");
+  });
+
+  it("sysinfo reports the runtime platform", () => {
+    const body = texts(formatSysinfo(SAMPLE.sysinfo)).join("\n");
+    expect(body).toContain("platform");
+    expect(body).toContain("Cloudflare Workers (OpenNext)");
   });
 
   it("uptime reports elapsed time since deployedAt", () => {

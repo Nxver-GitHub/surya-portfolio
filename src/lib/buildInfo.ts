@@ -65,6 +65,40 @@ export async function readCloudflareVersionId(): Promise<string | undefined> {
   }
 }
 
+/** What `sysinfo` reports when the request is served by the OpenNext Worker. */
+export const PLATFORM_WORKERS = "Cloudflare Workers (OpenNext)";
+
+/** What it reports anywhere else — local `next dev`, `next start`, tests. */
+export const PLATFORM_NODE = "Node.js (non-Workers runtime)";
+
+/** Name the runtime from the detection flag. Pure, so it is unit-tested. */
+export function resolvePlatform(onWorkers: boolean): string {
+  return onWorkers ? PLATFORM_WORKERS : PLATFORM_NODE;
+}
+
+/**
+ * True when this request is being served by the Worker on Cloudflare.
+ *
+ * Detected by whether `getCloudflareContext()` resolves at all — NOT by the
+ * presence of any one binding — so removing or renaming a binding can never
+ * make production misreport itself as local. Same dynamic, `require`-free
+ * import as {@link readCloudflareVersionId}, for the same bundling reason.
+ */
+export async function isCloudflareWorkers(): Promise<boolean> {
+  try {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    await getCloudflareContext({ async: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Resolve the runtime name from the ambient platform. */
+export async function getPlatform(): Promise<string> {
+  return resolvePlatform(await isCloudflareWorkers());
+}
+
 /** Resolve the build identifier from the ambient platform. */
 export async function getBuildSha(): Promise<string> {
   return resolveBuildSha({

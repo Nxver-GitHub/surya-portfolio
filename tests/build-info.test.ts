@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { SHA_FALLBACK, resolveBuildSha } from "@/lib/buildInfo";
+import {
+  PLATFORM_NODE,
+  PLATFORM_WORKERS,
+  SHA_FALLBACK,
+  resolveBuildSha,
+  resolvePlatform,
+} from "@/lib/buildInfo";
 
 describe("buildInfo — resolveBuildSha", () => {
   it("prefers an explicit override over every platform value", () => {
@@ -52,5 +58,16 @@ describe("buildInfo — resolveBuildSha", () => {
 
   it("trims surrounding whitespace off the chosen value", () => {
     expect(resolveBuildSha({ vercelGitSha: "  def5678\n" })).toBe("def5678");
+  });
+});
+
+describe("buildInfo — resolvePlatform", () => {
+  it("names the Worker runtime when running on Cloudflare", () => {
+    expect(resolvePlatform(true)).toBe(PLATFORM_WORKERS);
+    expect(resolvePlatform(true)).toContain("OpenNext");
+  });
+
+  it("falls back to the Node runtime name off-Workers", () => {
+    expect(resolvePlatform(false)).toBe(PLATFORM_NODE);
   });
 });

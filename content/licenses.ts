@@ -126,6 +126,14 @@ export const licenses: readonly License[] = [
         missionId: "cruzhacks-2025",
         careerEventId: "benefitfinder-cruzhacks",
       },
+      {
+        id: "a-cloudflare-migration",
+        name: "Engine swap under green",
+        summary:
+          "Migrated this live Next.js site from Vercel to Cloudflare Workers via OpenNext with zero downtime, rebuilding the edge layer — HSTS, a TLS 1.3 floor, rate limiting on the admin login, WAF rules, and the 308 redirect map across two zones — behind a verified DNS-level rollback and a CI gate that builds the real Worker.",
+        grade: "gold",
+        carId: "racing-portfolio",
+      },
     ],
   },
   {
