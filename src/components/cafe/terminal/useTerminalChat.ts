@@ -41,6 +41,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
+import {
+  MAX_TOTAL_CONTENT_CHARS,
+  toAlternatingConversation,
+  trimToCharBudget,
+  type ConversationTurn,
+} from "@/lib/conversation";
 import { resolveLocalCommand, type LocalCommandResult } from "./localCommands";
 import { routeAdminInput } from "./adminSuperset";
 import { themedErrorLine } from "./errorMapping";
@@ -103,6 +109,41 @@ function messageText(message: UIMessage): string {
     .map((part) => (part.type === "text" ? part.text : ""))
     .join("")
     .replaceAll("**", "");
+}
+
+/**
+ * Flatten the AI-SDK UI messages into exactly what /api/cafe-terminal accepts.
+ * Only user/assistant text turns cross the wire — no system prompt, no extra
+ * keys — and the result CONFORMS to the route's transcript contract: strictly
+ * alternating, within the total character budget.
+ *
+ * The conforming step is not cosmetic. `useChat` keeps a user message in its
+ * history when the turn FAILS (a 429, a dropped stream), so the next send would
+ * otherwise carry two user turns in a row and the route would reject every
+ * request for the rest of the session. See lib/conversation.ts.
+ */
+function toRequestMessages(uiMessages: readonly UIMessage[]): ConversationTurn[] {
+  const history = uiMessages.flatMap<ConversationTurn>((message) =>
+    message.role === "user" || message.role === "assistant"
+      ? [
+          {
+            role: message.role,
+            // Mirror the route's per-role caps (user 500 / assistant 2400) so
+            // an unusually long reply can never poison the next turn's
+            // validation.
+            content: messageText(message)
+              .trim()
+              .slice(0, message.role === "assistant" ? 2400 : 500),
+          },
+        ]
+      : [],
+  );
+  return trimToCharBudget(
+    toAlternatingConversation(
+      history.filter((message) => message.content.length > 0),
+    ),
+    MAX_TOTAL_CONTENT_CHARS,
+  );
 }
 
 /**
@@ -212,20 +253,7 @@ export function useTerminalChat({
       new DefaultChatTransport({
         api: API_PATH,
         prepareSendMessagesRequest: ({ messages: uiMessages }) => ({
-          body: {
-            messages: uiMessages
-              .filter((m) => m.role === "user" || m.role === "assistant")
-              .map((m) => ({
-                role: m.role,
-                // Mirror the route's per-role caps (user 500 / assistant
-                // 2400) so an unusually long reply can never poison the next
-                // turn's validation.
-                content: messageText(m)
-                  .trim()
-                  .slice(0, m.role === "assistant" ? 2400 : 500),
-              }))
-              .filter((m) => m.content.length > 0),
-          },
+          body: { messages: toRequestMessages(uiMessages) },
         }),
       }),
     [],

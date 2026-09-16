@@ -6,8 +6,11 @@
  *   - Env gate: if the admin secret/hash (or the Upstash creds the limiter
  *     needs) are absent, the route returns 503 ADMIN_NOT_CONFIGURED — NEVER a
  *     bypass. Absent config can only lock you out, never let you in.
+ *   - Same-origin guard and a hard body-size cap; no cross-site page can post a
+ *     login attempt, and no caller can make us buffer an unbounded body.
  *   - Per-IP rate limit, FAIL CLOSED, stricter than guest chat (5 / hour). Runs
- *     BEFORE the CPU-bound scrypt so a flood can't burn the function.
+ *     BEFORE the body is read and before the CPU-bound scrypt, so a flood can't
+ *     burn the function on parsing either.
  *   - scrypt + timingSafeEqual verification (see lib/adminAuth). On failure an
  *     opaque 401 with the same code regardless of why; the verify path runs the
  *     same scrypt cost for wrong and malformed inputs.
@@ -27,6 +30,12 @@ import {
   mintSessionToken,
 } from "@/lib/adminSession";
 import { extractClientIp, retryAfterSeconds } from "@/app/api/cafe-terminal/route";
+import { errorMessage } from "@/lib/logging";
+import {
+  MAX_TINY_BODY_BYTES,
+  hasTrustedOrigin,
+  readCappedJson,
+} from "@/lib/requestGuards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,18 +134,15 @@ export async function POST(request: Request): Promise<Response> {
     return json({ error: "ADMIN_NOT_CONFIGURED" }, 503);
   }
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return json({ error: "BAD_REQUEST" }, 400);
-  }
-  const parsed = parseLoginBody(raw);
-  if (!parsed.ok) {
-    return json({ error: "BAD_REQUEST" }, 400);
+  // Same-origin guard: nothing on another site has any business posting a login
+  // attempt here. See lib/requestGuards for the missing-Origin policy.
+  if (!hasTrustedOrigin(request)) {
+    return json({ error: "FORBIDDEN" }, 403);
   }
 
-  // Rate limit BEFORE the expensive scrypt — fail CLOSED on any backend error.
+  // Rate limit BEFORE the body is read and before the expensive scrypt — fail
+  // CLOSED on any backend error. Reading first meant a flood of unbounded
+  // bodies was buffered and parsed before the 5/hour cap could shed any of it.
   const ip = extractClientIp((name) => request.headers.get(name));
   try {
     const limiters = getLoginLimiters(
@@ -157,8 +163,21 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
   } catch (error) {
-    console.error("[admin-login] rate-limit backend error", error);
+    // Message only — an Upstash error object carries the REST URL and token
+    // header, which Worker observability would retain. Same rule everywhere.
+    console.error("[admin-login] rate-limit backend error", errorMessage(error));
     return json({ error: "SYSTEM_BUSY" }, 503);
+  }
+
+  // Body last, under a hard byte cap: the passphrase is ≤256 chars, so anything
+  // approaching 8 KB is abuse, not a login.
+  const body = await readCappedJson(request, MAX_TINY_BODY_BYTES);
+  if (!body.ok) {
+    return json({ error: "BAD_REQUEST" }, 400);
+  }
+  const parsed = parseLoginBody(body.value);
+  if (!parsed.ok) {
+    return json({ error: "BAD_REQUEST" }, 400);
   }
 
   // Verify — constant-time, opaque failure.

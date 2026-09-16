@@ -23,6 +23,7 @@ import {
 } from "@/lib/events";
 import { KNOWN_ROUTES } from "@/lib/routes";
 import { getBuildSha } from "@/lib/buildInfo";
+import { errorMessage } from "@/lib/logging";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -168,7 +169,9 @@ export async function GET(request: Request): Promise<Response> {
     };
     return json(payload, 200);
   } catch (error) {
-    console.error("[admin-data] read error", error);
+    // Message only — an Upstash error object carries the REST URL and the auth
+    // header, which Worker observability would retain. See lib/logging.
+    console.error("[admin-data] read error", errorMessage(error));
     return json({ error: "SYSTEM_BUSY" }, 503);
   }
 }
