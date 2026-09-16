@@ -129,19 +129,31 @@ export const IP_FALLBACK = "unknown";
  * fallback. Pure — takes a header getter so tests can drive it without a real
  * Request.
  *
- * Trust boundary: on Vercel (this app's only deployment target), the platform
- * sets/normalizes `x-forwarded-for` before the function sees it, so the first
- * entry is the real client IP and cannot be spoofed by the caller. If this route
- * is ever self-hosted behind a proxy that passes client XFF through unmodified,
- * a caller could forge this header to dodge the per-IP limit — they would still
- * be caught by the global/day limit, but the per-IP guard would weaken. Keep it
- * on a trusted edge.
+ * Trust boundary: each supported platform normalizes one header before the
+ * handler sees it, so the value there is the real client IP and cannot be
+ * spoofed by the caller. The order below is most-trusted-first, so whichever
+ * platform is serving, its own header wins:
+ *
+ *   - `cf-connecting-ip` — set by Cloudflare on every request, and Cloudflare
+ *     strips any inbound copy a client tries to send, so it is unforgeable
+ *     there. Absent entirely on Vercel.
+ *   - `x-real-ip` — platform-set on Vercel and never client-appended. NOT set
+ *     by Cloudflare, which passes unknown request headers straight through:
+ *     checking it first would have let a caller on Workers forge an arbitrary
+ *     IP per request and walk straight past the per-IP limit on
+ *     /api/admin/login. Hence Cloudflare's header is checked ahead of it.
+ *   - `x-forwarded-for` — first entry, as a last resort.
+ *
+ * If this route is ever self-hosted behind a proxy that passes these through
+ * unmodified, a caller could forge them to dodge the per-IP limit — they would
+ * still be caught by the global/day limit, but the per-IP guard would weaken.
+ * Keep it on a trusted edge.
  */
 export function extractClientIp(
   getHeader: (name: string) => string | null,
 ): string {
-  // x-real-ip first: on Vercel it is platform-set and never client-appended,
-  // so it stays trustworthy even if XFF handling ever changes upstream.
+  const cf = getHeader("cf-connecting-ip");
+  if (cf && cf.trim()) return cf.trim();
   const real = getHeader("x-real-ip");
   if (real && real.trim()) return real.trim();
   const xff = getHeader("x-forwarded-for");

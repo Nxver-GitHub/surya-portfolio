@@ -1,5 +1,3 @@
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { SoundProvider } from "@/components/sound/SoundProvider";
 import { SoundBar } from "@/components/sound/SoundBar";
@@ -60,8 +58,6 @@ export default function RootLayout({
         </SoundProvider>
         <CrtLayer />
         <PageViewBeacon />
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );

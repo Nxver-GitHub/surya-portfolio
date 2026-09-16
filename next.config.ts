@@ -7,6 +7,40 @@ import { dirname } from "node:path";
 // Node version, both locally and on Vercel.
 const projectRoot = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * The site's Content-Security-Policy. Deliberately `'self'`-only: no external
+ * script, style, font or connect origins, which is why Cloudflare Web Analytics
+ * was rejected during migration planning (it would force `script-src` open).
+ *
+ * `'unsafe-inline'` on script-src is required by Next's inline bootstrap, and
+ * `'wasm-unsafe-eval'` by the Draco/meshopt decoders in the R3F scenes.
+ * `blob:` on worker-src/connect-src covers those same decoders' workers.
+ *
+ * Keep this byte-for-byte when editing — it is asserted in tests.
+ */
+const CONTENT_SECURITY_POLICY =
+  "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob:; worker-src 'self' blob:; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
+
+/**
+ * Security headers for every route.
+ *
+ * These lived in `vercel.json` until the Cloudflare migration. Cloudflare
+ * ignores that file entirely, so leaving them there would have shipped the site
+ * unprotected the moment traffic moved. In Next's own config they travel with
+ * the app and apply identically on Vercel and on Workers — which also means
+ * they stay correct during the overlap when both platforms serve traffic.
+ */
+const SECURITY_HEADERS = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Content-Security-Policy", value: CONTENT_SECURITY_POLICY },
+];
+
 const nextConfig: NextConfig = {
   // Pin the Turbopack workspace root to this repo. Without it, a stray
   // lockfile in a parent directory makes Next infer that parent as the root
@@ -14,6 +48,9 @@ const nextConfig: NextConfig = {
   // resolves to the same path and changes nothing there.
   turbopack: {
     root: projectRoot,
+  },
+  async headers() {
+    return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
   },
   // The GT2 screen-wipe between pavilions needs no config as of Next 16.3:
   // "View transitions work in the App Router with no configuration."
