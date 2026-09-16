@@ -40,3 +40,11 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # The real production build. `next build` alone can pass while the
+      # OpenNext adapter fails, and `main` auto-deploys to Cloudflare — so a
+      # Worker-specific break would otherwise reach production undetected.
+      # Must stay AFTER Lint: this writes .open-next/, and the flat ESLint
+      # config does not read .gitignore, so linting afterwards would walk it.
+      - name: Build Worker (OpenNext)
+        run: pnpm exec opennextjs-cloudflare build
