@@ -30,8 +30,21 @@ const CONTENT_SECURITY_POLICY =
  * the app and apply identically on Vercel and on Workers — which also means
  * they stay correct during the overlap when both platforms serve traffic.
  */
-const SECURITY_HEADERS = [
+export const SECURITY_HEADERS = [
   { key: "X-Content-Type-Options", value: "nosniff" },
+  // HSTS. Vercel injected this automatically; Cloudflare does not, so the
+  // migration silently dropped it and production has been serving without it.
+  // Two years, and `includeSubDomains` is safe because every www/long/http
+  // variant already 308s to the apex over HTTPS — no subdomain serves plain
+  // HTTP.
+  //
+  // Deliberately NO `preload`: submission to the browser preload list is a
+  // one-way door (removal takes months and ships with browser releases) and the
+  // owner has not opted into it. Do not add it without that decision.
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains",
+  },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
