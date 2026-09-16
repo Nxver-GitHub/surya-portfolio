@@ -191,9 +191,70 @@ describe("cafe-terminal route — client IP extraction", () => {
   });
 
   it("uses the safe fallback for an empty forwarded header", () => {
+    expect(extractClientIp(headers({ "x-real-ip": "" }))).toBe(IP_FALLBACK);
     expect(extractClientIp(headers({ "x-forwarded-for": "" }))).toBe(
       IP_FALLBACK,
     );
+  });
+
+  // Cloudflare sets cf-connecting-ip on every request and strips any inbound
+  // copy, so it is the only unforgeable source once the site runs on Workers.
+  it("prefers cf-connecting-ip over every other header", () => {
+    const ip = extractClientIp(
+      headers({
+        "cf-connecting-ip": "203.0.113.42",
+        "x-real-ip": "198.51.100.1",
+        "x-forwarded-for": "192.0.2.1, 70.41.3.18",
+      }),
+    );
+    expect(ip).toBe("203.0.113.42");
+  });
+
+  it("trims whitespace around cf-connecting-ip", () => {
+    expect(
+      extractClientIp(headers({ "cf-connecting-ip": "  203.0.113.43  " })),
+    ).toBe("203.0.113.43");
+  });
+
+  /**
+   * The regression this ordering exists to prevent. Cloudflare passes unknown
+   * request headers straight through, so a caller on Workers can send any
+   * x-real-ip they like. If x-real-ip were still checked first, every forged
+   * value would key a fresh rate-limit bucket and the per-IP cap on
+   * /api/admin/login would be trivially bypassable. Keying on Cloudflare's own
+   * header instead means the attacker stays in one bucket.
+   */
+  it("ignores a forged x-real-ip when Cloudflare reports the real client", () => {
+    const forged = (attempt: number) =>
+      extractClientIp(
+        headers({
+          "cf-connecting-ip": "203.0.113.99",
+          "x-real-ip": `10.0.0.${attempt}`,
+        }),
+      );
+    expect([forged(1), forged(2), forged(3)]).toEqual([
+      "203.0.113.99",
+      "203.0.113.99",
+      "203.0.113.99",
+    ]);
+  });
+
+  // Vercel never sets cf-connecting-ip, so the pre-migration path is untouched
+  // and the header order is safe to ship while both platforms serve traffic.
+  it("still uses x-real-ip when cf-connecting-ip is absent (Vercel)", () => {
+    expect(
+      extractClientIp(
+        headers({ "x-real-ip": "192.0.2.9", "x-forwarded-for": "198.51.100.7" }),
+      ),
+    ).toBe("192.0.2.9");
+  });
+
+  it("falls through an empty cf-connecting-ip to the next header", () => {
+    expect(
+      extractClientIp(
+        headers({ "cf-connecting-ip": "   ", "x-real-ip": "192.0.2.9" }),
+      ),
+    ).toBe("192.0.2.9");
   });
 });
 

@@ -22,6 +22,7 @@ import {
   type QuestionEntry,
 } from "@/lib/events";
 import { KNOWN_ROUTES } from "@/lib/routes";
+import { getBuildSha } from "@/lib/buildInfo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -107,7 +108,7 @@ export async function GET(request: Request): Promise<Response> {
 
   const client = getEventsRedis();
   const sysinfo = {
-    sha: process.env.VERCEL_GIT_COMMIT_SHA ?? "dev",
+    sha: await getBuildSha(),
     deployedAt: DEPLOYED_AT,
     node: process.version,
   };

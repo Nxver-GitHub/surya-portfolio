@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "surya-site",
+  "main": ".open-next/worker.js",
+  // workerd 1.20260915.x is what `wrangler` installs here; keep this date at or
+  // below that build or the runtime refuses to start.
+  "compatibility_date": "2026-09-15",
+  // nodejs_compat: node:crypto (scrypt/createHmac/timingSafeEqual/randomBytes)
+  //   in the admin auth path, plus node:fs during the OG-image prerender.
+  // global_fetch_strictly_public: the adapter's own default — outbound fetch()
+  //   resolves over the public internet instead of looping back into this
+  //   Worker. Upstash and Groq are both external HTTPS, so this is what we want.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Replaces VERCEL_GIT_COMMIT_SHA, which /api/admin/data reports as sysinfo.sha.
+  // Gives { id, tag, timestamp }; see src/app/api/admin/data/route.ts.
+  "version_metadata": {
+    "binding": "CF_VERSION_METADATA"
+  },
+  // next/image optimization (7 components; ~46 source images under public/).
+  // Billed as Images "unique transformations": 5,000/month free, each source+
+  // params pair counted once per calendar month, and overflow returns a 9422
+  // error rather than a charge. This site is an order of magnitude under that.
+  "images": {
+    "binding": "IMAGES"
+  },
+  // Phase 3 reads CPU time off /api/admin/login from these logs to settle the
+  // Free-vs-Paid plan question.
+  "observability": {
+    "enabled": true
+  }
+  // Deliberately omitted: NEXT_INC_CACHE_R2_BUCKET and WORKER_SELF_REFERENCE.
+  // Those back OpenNext's incremental cache, and this app has no ISR at all —
+  // no revalidate, no unstable_cache, no revalidatePath/Tag. Pages are either
+  // fully static or force-dynamic, so there is no cache to persist.
+}
