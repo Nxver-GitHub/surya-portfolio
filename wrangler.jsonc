@@ -15,6 +15,16 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  // No *.workers.dev URL for this Worker. That subdomain is account-level, so
+  // every Worker here would be served from `<name>.citationai.workers.dev` —
+  // the account's namespace is named for a different project, and this site
+  // should not be reachable under it. It is also a crawlable duplicate of the
+  // portfolio: robots.txt says `Allow: /`, and the canonical tag pointing at
+  // suryapugaz.com is only a hint to crawlers, not a directive.
+  // The Worker is reached through its custom domain instead.
+  // Renaming the ACCOUNT subdomain is not an alternative — it would change the
+  // URL of the other Worker in this account.
+  "workers_dev": false,
   // Replaces VERCEL_GIT_COMMIT_SHA, which /api/admin/data reports as sysinfo.sha.
   // Gives { id, tag, timestamp }; see src/app/api/admin/data/route.ts.
   "version_metadata": {
@@ -27,8 +37,16 @@
   "images": {
     "binding": "IMAGES"
   },
-  // Phase 3 reads CPU time off /api/admin/login from these logs to settle the
-  // Free-vs-Paid plan question.
+  // The apex is served by this Worker. `custom_domain` makes Cloudflare manage
+  // the DNS record and issue the certificate for it.
+  //
+  // Only the apex. `www` and the `*` wildcard are deliberately NOT routed here:
+  // they are proxied placeholder records answered by a Single Redirect rule that
+  // 308s them to the apex, which costs no Worker invocation. That rule excludes
+  // the apex itself — matching it would redirect suryapugaz.com to itself
+  // forever. suryapugazhenthi.com is handled the same way in its own zone.
+  "routes": [{ "pattern": "suryapugaz.com", "custom_domain": true }],
+  // Observability logs; also how CPU time per request is inspected.
   "observability": {
     "enabled": true
   }
