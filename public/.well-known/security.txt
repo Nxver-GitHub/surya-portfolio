@@ -1,4 +1,5 @@
 Contact: https://suryapugaz.com/lobby
-Expires: 2027-09-16T00:00:00.000Z
+# Bump Expires (and see tests/security-txt.test.ts) before this date
+Expires: 2027-09-01T00:00:00.000Z
 Preferred-Languages: en
 Canonical: https://suryapugaz.com/.well-known/security.txt

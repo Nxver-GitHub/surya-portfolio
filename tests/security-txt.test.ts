@@ -37,12 +37,30 @@ describe("public/.well-known/security.txt", () => {
     expect(fields.Contact?.[0]).toMatch(/^https:\/\//);
   });
 
+  /**
+   * Deliberately time-bomb: this assertion is meant to start FAILING once
+   * Expires passes, so CI catches a stale security.txt instead of it silently
+   * lapsing. When this test starts failing, bump Expires in security.txt (and
+   * its `# Bump Expires...` comment line) to a new future date — do not loosen
+   * this assertion instead.
+   */
   it("has an Expires field in the future, as a valid ISO 8601 timestamp", () => {
     const expires = fields.Expires?.[0];
     expect(expires).toBeTruthy();
     const parsed = new Date(expires as string);
     expect(Number.isNaN(parsed.getTime())).toBe(false);
     expect(parsed.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("tolerates RFC 9116 '#' comment lines (e.g. the Expires reminder) without parsing them as fields", () => {
+    expect(
+      contents.split("\n").some((line) => line.trim().startsWith("#")),
+    ).toBe(true);
+    // Exactly the four real fields — a comment line must never be picked up
+    // as (or merged into) a field itself.
+    expect(Object.keys(fields).sort()).toEqual(
+      ["Canonical", "Contact", "Expires", "Preferred-Languages"].sort(),
+    );
   });
 
   it("declares English as a preferred language", () => {
