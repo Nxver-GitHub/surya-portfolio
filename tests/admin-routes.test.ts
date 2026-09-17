@@ -4,12 +4,23 @@ import {
   loginConfigured,
   parseLoginBody,
 } from "../src/app/api/admin/login/route";
+import { POST as logoutPOST } from "../src/app/api/admin/logout/route";
 import { parseBeaconBody } from "../src/app/api/beacon/route";
 import {
   parseQuestionEntry,
   toCount,
 } from "../src/app/api/admin/data/route";
 import { isKnownRoute, normalizePathname } from "../src/lib/routes";
+
+function logoutRequest(originHeader: string | null): Request {
+  const headers = new Headers();
+  if (originHeader !== null) headers.set("origin", originHeader);
+  headers.set("host", "suryapugaz.com");
+  return new Request("https://suryapugaz.com/api/admin/logout", {
+    method: "POST",
+    headers,
+  });
+}
 
 describe("admin login — request schema", () => {
   it("accepts a valid passphrase", () => {
@@ -56,6 +67,21 @@ describe("admin login — env gate", () => {
         UPSTASH_REDIS_REST_TOKEN: "t",
       }),
     ).toBe(true);
+  });
+});
+
+describe("admin logout — Clear-Site-Data", () => {
+  it("sends Clear-Site-Data: \"cookies\" only, on the success path", async () => {
+    const res = await logoutPOST(logoutRequest("https://suryapugaz.com"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("clear-site-data")).toBe('"cookies"');
+    expect(res.headers.get("set-cookie")).toBeTruthy();
+  });
+
+  it("omits Clear-Site-Data on the 403 (untrusted-origin) path", async () => {
+    const res = await logoutPOST(logoutRequest("https://evil.test"));
+    expect(res.status).toBe(403);
+    expect(res.headers.get("clear-site-data")).toBeNull();
   });
 });
 

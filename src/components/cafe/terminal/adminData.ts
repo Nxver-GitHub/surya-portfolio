@@ -13,20 +13,15 @@
  */
 
 import type { AdminDataResponse } from "@/app/api/admin/data/route";
+import { fetchAdminEndpoint, type FetchLike } from "./adminFetch";
 
 export const ADMIN_DATA_PATH = "/api/admin/data";
 
-export type { AdminDataResponse };
-
-/** Minimal fetch shape so tests can inject a mock without a DOM. */
-export type FetchLike = (
-  input: string,
-  init?: RequestInit,
-) => Promise<Response>;
+export type { AdminDataResponse, FetchLike };
 
 export type AdminDataFetch =
   | { readonly ok: true; readonly data: AdminDataResponse }
-  | { readonly ok: false; readonly reason: "expired" | "error" };
+  | { readonly ok: false; readonly reason: "expired" | "error" | "access_required" };
 
 /** Structural boundary check for the untrusted response. Not a re-declaration
  * of the server schema — just enough shape validation to fail safe before the
@@ -45,23 +40,30 @@ export function isAdminDataResponse(value: unknown): value is AdminDataResponse 
 
 /**
  * Fetch the admin telemetry. A 401 means the 24h session expired mid-use →
- * `expired` (the caller drops to the login line). Anything else non-200, a
- * malformed body, or a network failure → `error`. Never throws.
+ * `expired` (the caller drops to the login line). Cloudflare Access blocking
+ * the request (see adminFetch.ts) → `access_required` (the caller stays put
+ * and tells the visitor to authenticate with Access in another tab).
+ * Anything else non-200, a malformed body, or a network failure → `error`.
+ * Never throws.
  */
 export async function fetchAdminData(
   fetchImpl: FetchLike = fetch,
 ): Promise<AdminDataFetch> {
-  let response: Response;
-  try {
-    response = await fetchImpl(ADMIN_DATA_PATH, {
+  const outcome = await fetchAdminEndpoint(
+    ADMIN_DATA_PATH,
+    {
       method: "GET",
       credentials: "same-origin",
       headers: { accept: "application/json" },
-    });
-  } catch {
-    return { ok: false, reason: "error" };
+    },
+    fetchImpl,
+  );
+  if (outcome.kind === "network_error") return { ok: false, reason: "error" };
+  if (outcome.kind === "access_required") {
+    return { ok: false, reason: "access_required" };
   }
 
+  const response = outcome.response;
   if (response.status === 401) return { ok: false, reason: "expired" };
   if (response.status !== 200) return { ok: false, reason: "error" };
 

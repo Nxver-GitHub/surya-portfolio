@@ -20,6 +20,31 @@ function fakeResponse(
   });
 }
 
+/**
+ * Build a fake "opaque redirect" response — what `fetch` returns for a
+ * `redirect: "manual"` request whose target redirected cross-origin (the
+ * Cloudflare Access login flow). The real `Response` constructor can't
+ * produce one (`type` is a read-only getter defaulting to "default"), so this
+ * is a plain object satisfying the minimal shape adminFetch.ts reads.
+ */
+function fakeOpaqueRedirect(): Response {
+  return {
+    type: "opaqueredirect",
+    status: 0,
+    ok: false,
+    headers: new Headers(),
+  } as unknown as Response;
+}
+
+/** A fake 200 response whose body is HTML (Access's own login page slipping
+ * through as a "successful" response instead of a real redirect). */
+function fakeHtmlResponse(): Response {
+  return new Response("<html>sign in with Access</html>", {
+    status: 200,
+    headers: { "content-type": "text/html" },
+  });
+}
+
 describe("requestAdminLogin — status → outcome (mock fetch)", () => {
   it("POSTs the passphrase to the auth route with same-origin credentials", async () => {
     const fetchImpl = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () => fakeResponse(200, { ok: true }));
@@ -31,6 +56,9 @@ describe("requestAdminLogin — status → outcome (mock fetch)", () => {
     expect(init?.method).toBe("POST");
     expect(init?.credentials).toBe("same-origin");
     expect(init?.body).toBe(JSON.stringify({ passphrase: "s3cret" }));
+    // Always manual — see adminFetch.ts. A caller-followed redirect to
+    // Access's cross-origin login page is exactly what this must avoid.
+    expect(init?.redirect).toBe("manual");
   });
 
   it("200 -> granted", async () => {
@@ -75,6 +103,16 @@ describe("requestAdminLogin — status → outcome (mock fetch)", () => {
     });
     expect(result).toEqual({ outcome: "error" });
   });
+
+  it("opaque redirect (Cloudflare Access) -> access_required, not denied", async () => {
+    const result = await requestAdminLogin("pw", async () => fakeOpaqueRedirect());
+    expect(result).toEqual({ outcome: "access_required" });
+  });
+
+  it("a 200 with an HTML body (Access login page slipping through) -> access_required", async () => {
+    const result = await requestAdminLogin("pw", async () => fakeHtmlResponse());
+    expect(result).toEqual({ outcome: "access_required" });
+  });
 });
 
 describe("requestAdminLogout", () => {
@@ -83,7 +121,11 @@ describe("requestAdminLogout", () => {
     await requestAdminLogout(fetchImpl);
     expect(fetchImpl).toHaveBeenCalledWith(
       "/api/admin/logout",
-      expect.objectContaining({ method: "POST", credentials: "same-origin" }),
+      expect.objectContaining({
+        method: "POST",
+        credentials: "same-origin",
+        redirect: "manual",
+      }),
     );
 
     // A throwing fetch must not reject.
@@ -96,8 +138,10 @@ describe("requestAdminLogout", () => {
 });
 
 describe("adminLoginTransition — outcome → state + lines", () => {
+  const ORIGIN = "https://suryapugaz.com";
+
   function transition(result: AdminLoginResult) {
-    return adminLoginTransition(result);
+    return adminLoginTransition(result, ORIGIN);
   }
 
   it("granted -> admin console", () => {
@@ -133,5 +177,25 @@ describe("adminLoginTransition — outcome → state + lines", () => {
     const t = transition({ outcome: "error" });
     expect(t.next).toBe("password");
     expect(t.lines[0].tone).toBe("error");
+  });
+
+  it("access_required -> stays on password prompt, with the Access sign-in message (site origin, not hardcoded)", () => {
+    const t = transition({ outcome: "access_required" });
+    expect(t.next).toBe("password");
+    expect(t.lines[0].tone).toBe("error");
+    expect(t.lines[0].text).toBe(
+      "Access session missing or expired. Open https://suryapugaz.com/api/admin/data in a new tab, sign in, then retry.",
+    );
+    expect(t.lines[1].text).toBe("password:");
+  });
+
+  it("access_required uses the passed-in origin, not a hardcoded host", () => {
+    const t = adminLoginTransition(
+      { outcome: "access_required" },
+      "https://preview.example.workers.dev",
+    );
+    expect(t.lines[0].text).toContain(
+      "https://preview.example.workers.dev/api/admin/data",
+    );
   });
 });
