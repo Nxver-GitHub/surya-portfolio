@@ -123,6 +123,20 @@ function json(body: unknown, status: number, headers?: HeadersInit): Response {
   });
 }
 
+/** Reason a login attempt failed — the only two cases that get logged. */
+export type AuthFailureReason = "bad_passphrase" | "rate_limited";
+
+/**
+ * Emit the ONE structured, greppable log line a Cloudflare Workers
+ * Observability alert matches on a failed admin login. Fixed `[admin-login]`
+ * prefix + a JSON object with exactly `ip` and `reason` — deliberately no
+ * parameter for the candidate passphrase, its length, or the stored hash, so
+ * there is nothing here that could ever leak one into logs.
+ */
+export function logAuthFailure(ip: string, reason: AuthFailureReason): void {
+  console.warn("[admin-login] auth_failed", JSON.stringify({ ip, reason }));
+}
+
 export async function POST(request: Request): Promise<Response> {
   const env: LoginEnv = {
     ADMIN_PASSPHRASE_SCRYPT: process.env.ADMIN_PASSPHRASE_SCRYPT,
@@ -156,6 +170,7 @@ export async function POST(request: Request): Promise<Response> {
     if (!ipRes.success || !globalRes.success) {
       const reset = Math.max(ipRes.reset, globalRes.reset);
       const retry = retryAfterSeconds(reset);
+      logAuthFailure(ip, "rate_limited");
       return json(
         { error: "RATE_LIMITED", retryAfterSeconds: retry },
         429,
@@ -186,6 +201,7 @@ export async function POST(request: Request): Promise<Response> {
     env.ADMIN_PASSPHRASE_SCRYPT,
   );
   if (!ok) {
+    logAuthFailure(ip, "bad_passphrase");
     return json({ error: "INVALID_CREDENTIALS" }, 401);
   }
 
