@@ -54,7 +54,13 @@ async function readStdin() {
 /** Prompt for a line with terminal echo suppressed (nothing is shown as typed). */
 function promptHidden(question) {
   return new Promise((resolve) => {
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    // historySize: 0 — never buffer the passphrase into readline's in-memory
+    // input history, even transiently.
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      historySize: 0,
+    });
     const output = rl.output;
     let muted = false;
     const realWrite = output.write.bind(output);

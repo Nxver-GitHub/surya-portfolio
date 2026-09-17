@@ -1,10 +1,19 @@
 /**
- * hash-admin-passphrase — generate the ADMIN_PASSPHRASE_SCRYPT value locally.
+ * hash-admin-passphrase — LEGACY. Generates the OLD `salt:hash` shape (Node's
+ * scrypt defaults, N=2^14/r=8/p=1). Kept only so an existing
+ * ADMIN_PASSPHRASE_SCRYPT value minted with this script keeps verifying —
+ * `src/lib/adminAuth.ts` still accepts that shape via LEGACY_SCRYPT_PARAMS.
+ *
+ * For a NEW hash, use `pnpm hash-passphrase` (scripts/hash-passphrase.mjs)
+ * instead — it mints the current `<N>:<r>:<p>:<salt>:<hash>` format at
+ * adminAuth's stronger SCRYPT_PARAMS cost. Do not use this script for a new
+ * passphrase unless you specifically need the legacy shape.
  *
  * The admin passphrase is NEVER stored anywhere in plaintext. This script reads
  * a passphrase from you interactively (echo suppressed), derives a scrypt digest
  * with a fresh random salt, and prints ONLY `salt:hash` (both hex) — the exact
- * string to paste into the ADMIN_PASSPHRASE_SCRYPT env var (Vercel / .env.local).
+ * string to store as the ADMIN_PASSPHRASE_SCRYPT secret (`wrangler secret put
+ * ADMIN_PASSPHRASE_SCRYPT`; `.dev.vars` holds the local copy for `wrangler dev`).
  *
  * The plaintext is never logged, never written to disk, and never echoed.
  *
