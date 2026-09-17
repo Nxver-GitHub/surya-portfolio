@@ -54,7 +54,38 @@ export const SECURITY_HEADERS = [
   { key: "Content-Security-Policy", value: CONTENT_SECURITY_POLICY },
 ];
 
+/**
+ * The commit sha for this build, from whichever CI source set it. Checked in
+ * this order: an explicit override, then Workers Builds' own build-container
+ * variable, then Vercel's. Left undefined (never `""`) when none is set, e.g.
+ * local dev — see `resolveBuildSha` in `src/lib/buildInfo.ts`, which this
+ * value feeds as the `explicit` source.
+ */
+const gitCommitSha =
+  process.env.GIT_COMMIT_SHA ||
+  process.env.WORKERS_CI_COMMIT_SHA ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  undefined;
+
+/**
+ * Values baked into the bundle at build time via Next's `env` config (see
+ * https://nextjs.org/docs/app/api-reference/config/next-config-js/env —
+ * webpack/Turbopack DefinePlugin-style literal replacement, evaluated once
+ * here at config load, not at request time).
+ *
+ * `BUILD_TIME` exists because on Cloudflare Workers a module-load timestamp
+ * is isolate-start time, not deploy time — isolates restart independently of
+ * deploys, often on the very request that reads it, which is why the admin
+ * `sysinfo`/`uptime` commands were reporting "just now" no matter how long
+ * the build had actually been live. Baking it at build time fixes that.
+ */
+const buildTimeEnv: NextConfig["env"] = {
+  BUILD_TIME: new Date().toISOString(),
+  ...(gitCommitSha ? { GIT_COMMIT_SHA: gitCommitSha } : {}),
+};
+
 const nextConfig: NextConfig = {
+  env: buildTimeEnv,
   // Pin the Turbopack workspace root to this repo. Without it, a stray
   // lockfile in a parent directory makes Next infer that parent as the root
   // (breaking file tracing). On Vercel the repo is already the root, so this

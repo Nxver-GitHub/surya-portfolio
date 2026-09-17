@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MAX_PASSPHRASE_CHARS,
   loginConfigured,
@@ -7,7 +7,9 @@ import {
 import { POST as logoutPOST } from "../src/app/api/admin/logout/route";
 import { parseBeaconBody } from "../src/app/api/beacon/route";
 import {
+  isValidIsoTimestamp,
   parseQuestionEntry,
+  resolveDeployedAt,
   toCount,
 } from "../src/app/api/admin/data/route";
 import { isKnownRoute, normalizePathname } from "../src/lib/routes";
@@ -149,5 +151,39 @@ describe("admin data — parsing helpers", () => {
     expect(toCount("7")).toBe(7);
     expect(toCount(null)).toBe(0);
     expect(toCount("nope")).toBe(0);
+  });
+});
+
+describe("admin data — sysinfo deployedAt (BUILD_TIME on Workers)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("treats a real ISO timestamp as valid, and blank/garbage/undefined as not", () => {
+    expect(isValidIsoTimestamp("2026-07-15T00:00:00.000Z")).toBe(true);
+    expect(isValidIsoTimestamp("")).toBe(false);
+    expect(isValidIsoTimestamp("not a date")).toBe(false);
+    expect(isValidIsoTimestamp(undefined)).toBe(false);
+  });
+
+  // BUILD_TIME is baked in at build time via next.config.ts's `env` block
+  // specifically so Workers, whose isolates restart independently of (and
+  // often exactly at) request time, can report a real deploy time instead of
+  // "just now" — see the comment on DEPLOYED_AT in route.ts.
+  it("reports BUILD_TIME when it is set to a valid timestamp", () => {
+    vi.stubEnv("BUILD_TIME", "2026-07-15T00:00:00.000Z");
+    expect(resolveDeployedAt()).toBe("2026-07-15T00:00:00.000Z");
+  });
+
+  it("falls back to the module-load time when BUILD_TIME is unset", () => {
+    // The local-dev case: no CI ever set the variable.
+    expect(isValidIsoTimestamp(process.env.BUILD_TIME)).toBe(false);
+    expect(() => new Date(resolveDeployedAt()).toISOString()).not.toThrow();
+  });
+
+  it("falls back to the module-load time when BUILD_TIME is invalid", () => {
+    vi.stubEnv("BUILD_TIME", "not-a-real-timestamp");
+    expect(resolveDeployedAt()).not.toBe("not-a-real-timestamp");
+    expect(() => new Date(resolveDeployedAt()).toISOString()).not.toThrow();
   });
 });

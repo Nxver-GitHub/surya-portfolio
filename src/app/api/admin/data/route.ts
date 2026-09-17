@@ -31,8 +31,27 @@ export const dynamic = "force-dynamic";
 /** How many days of rollup the dashboard shows. */
 export const ROLLUP_DAYS = 7;
 
-/** Build-time constant — the moment this bundle was built (≈ deploy time). */
+/**
+ * Fallback "deployed at" — this module's own load time. On Node/Vercel that
+ * is a reasonable proxy for deploy time, but on Cloudflare Workers isolates
+ * restart independently of (and often exactly at) request time, so this
+ * value alone reports "just deployed" and 00h00m uptime regardless of how
+ * long the build has actually been live. `BUILD_TIME` (baked into the bundle
+ * at build time via `next.config.ts`'s `env` block) is preferred whenever
+ * it's a valid timestamp; this is only the local-dev / no-CI-variable case.
+ */
 const DEPLOYED_AT = new Date().toISOString();
+
+/** True when `value` parses as a real point in time (not `""`/`undefined`/garbage). */
+export function isValidIsoTimestamp(value: string | undefined): value is string {
+  return typeof value === "string" && value.length > 0 && !Number.isNaN(Date.parse(value));
+}
+
+/** Resolve the reported deploy time: build-time value first, else module-load time. */
+export function resolveDeployedAt(): string {
+  const buildTime = process.env.BUILD_TIME;
+  return isValidIsoTimestamp(buildTime) ? buildTime : DEPLOYED_AT;
+}
 
 /* ────────────────────────────── response shape ─────────────────────────── */
 
@@ -112,7 +131,7 @@ export async function GET(request: Request): Promise<Response> {
   const client = getEventsRedis();
   const sysinfo = {
     sha: await getBuildSha(),
-    deployedAt: DEPLOYED_AT,
+    deployedAt: resolveDeployedAt(),
     node: process.version,
     platform: await getPlatform(),
   };
