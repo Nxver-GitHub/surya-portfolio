@@ -174,14 +174,38 @@ describe("fetchAdminData (mock fetch)", () => {
     });
   }
 
-  it("GETs the data route same-origin and returns the typed payload", async () => {
+  it("GETs the data route same-origin (manual redirect) and returns the typed payload", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse(200, SAMPLE));
     const res = await fetchAdminData(fetchImpl);
     expect(fetchImpl).toHaveBeenCalledWith(
       ADMIN_DATA_PATH,
-      expect.objectContaining({ method: "GET", credentials: "same-origin" }),
+      expect.objectContaining({
+        method: "GET",
+        credentials: "same-origin",
+        redirect: "manual",
+      }),
     );
     expect(res).toEqual({ ok: true, data: SAMPLE });
+  });
+
+  it("opaque redirect (Cloudflare Access) -> access_required, not a generic error", async () => {
+    const opaqueRedirect = {
+      type: "opaqueredirect",
+      status: 0,
+      ok: false,
+      headers: new Headers(),
+    } as unknown as Response;
+    const res = await fetchAdminData(async () => opaqueRedirect);
+    expect(res).toEqual({ ok: false, reason: "access_required" });
+  });
+
+  it("a 200 with an HTML body (Access login page slipping through) -> access_required", async () => {
+    const htmlResponse = new Response("<html>sign in</html>", {
+      status: 200,
+      headers: { "content-type": "text/html" },
+    });
+    const res = await fetchAdminData(async () => htmlResponse);
+    expect(res).toEqual({ ok: false, reason: "access_required" });
   });
 
   it("401 -> expired (session dropped mid-use)", async () => {

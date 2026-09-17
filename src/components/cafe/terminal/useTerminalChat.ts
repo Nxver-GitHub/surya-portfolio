@@ -59,6 +59,7 @@ import {
   requestAdminLogout,
 } from "./adminLogin";
 import { fetchAdminData } from "./adminData";
+import { accessRequiredMessage } from "./adminFetch";
 import {
   formatLogs,
   formatStats,
@@ -352,6 +353,13 @@ export function useTerminalChat({
                 makeLine("error", "session expired — please log in again."),
                 makeLine("system", LOGIN_PROMPT),
               ]);
+            } else if (res.reason === "access_required") {
+              // Cloudflare Access blocked the request (see adminFetch.ts) —
+              // the app-level session may still be fine, so stay in the admin
+              // console rather than dropping to the login line.
+              appendSessionLines([
+                makeLine("error", accessRequiredMessage(window.location.origin)),
+              ]);
             } else {
               appendSessionLines([
                 makeLine("error", "DATA LINK DOWN — telemetry unavailable."),
@@ -494,7 +502,7 @@ export function useTerminalChat({
           makeLine("system", "verifying credentials…"),
         ]);
         void requestAdminLogin(input).then((result) => {
-          const transition = adminLoginTransition(result);
+          const transition = adminLoginTransition(result, window.location.origin);
           appendSessionLines(transition.lines);
           if (transition.next !== "password") {
             patchTerminalSession({ login: transition.next });
