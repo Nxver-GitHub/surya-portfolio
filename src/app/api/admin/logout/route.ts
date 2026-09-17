@@ -9,6 +9,13 @@
  * the way in but a cross-site POST still reaches this handler, which is enough
  * for any page to force-logout the owner mid-session. No body is read here, so
  * there is nothing to cap.
+ *
+ * On success only, the response also carries `Clear-Site-Data: "cookies"`.
+ * Deliberately scoped to "cookies" alone — NOT "storage" and NOT "*". This site
+ * keeps visitor preferences in localStorage (CRT mode, sound/BGM prefs, and the
+ * café terminal's own session — see src/components/cafe/terminal/terminalSession.ts)
+ * that belong to the browser, not the admin session, and must survive an admin
+ * logout. Clearing "storage" or "*" would wipe them for no security benefit.
  */
 
 import { buildClearCookie } from "@/lib/adminSession";
@@ -29,6 +36,8 @@ export async function POST(request: Request): Promise<Response> {
     headers: {
       "content-type": "application/json",
       "set-cookie": buildClearCookie(),
+      // "cookies" only — see the header comment above for why not "storage"/"*".
+      "clear-site-data": '"cookies"',
     },
   });
 }
