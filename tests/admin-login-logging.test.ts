@@ -31,15 +31,37 @@ vi.mock("@upstash/ratelimit", () => {
   return { Ratelimit };
 });
 
+/** Forces one specific verifyPassphraseGuarded outcome when set; otherwise
+ * falls through to the real implementation. Lets the "busy" 503 path be
+ * tested deterministically without racing real concurrent scrypt calls. */
+const verifyOverride = vi.hoisted(() => ({
+  outcome: null as "match" | "no_match" | "busy" | null,
+}));
+
+vi.mock("../src/lib/adminAuth", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../src/lib/adminAuth")>();
+  return {
+    ...actual,
+    verifyPassphraseGuarded: vi.fn(
+      async (candidate: string, stored: string | undefined) => {
+        if (verifyOverride.outcome) return verifyOverride.outcome;
+        return actual.verifyPassphraseGuarded(candidate, stored);
+      },
+    ),
+  };
+});
+
 import { formatStoredHash } from "../src/lib/adminAuth";
 import { logAuthFailure, POST } from "../src/app/api/admin/login/route";
 
 const PASSPHRASE = "s3cret-test-passphrase-do-not-log-me";
 const CLIENT_IP = "203.0.113.7";
 
-// Tiny cost params (not SCRYPT_PARAMS) — only the wiring is under test here,
-// not scrypt's cost; adminAuth.test.ts covers cost/format behavior.
-const TEST_PARAMS = { N: 16, r: 1, p: 1 };
+// In-range but cheap cost params (2^12 is adminAuth's MIN_N) — only the
+// wiring is under test here, not scrypt's cost; adminAuth.test.ts covers
+// cost/format/bounds behavior in depth.
+const TEST_PARAMS = { N: 2 ** 12, r: 1, p: 1 };
 const SALT = randomBytes(16);
 const HASH = scryptSync(PASSPHRASE, SALT, 64, {
   N: TEST_PARAMS.N,
@@ -73,6 +95,7 @@ describe("admin login — structured failed-login log line", () => {
   beforeEach(() => {
     limiterState.success = true;
     limiterState.reset = 0;
+    verifyOverride.outcome = null;
     process.env.ADMIN_PASSPHRASE_SCRYPT = STORED_HASH;
     process.env.ADMIN_SESSION_SECRET = "test-session-secret";
     process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
@@ -116,7 +139,7 @@ describe("admin login — structured failed-login log line", () => {
     expect(logged).not.toContain(STORED_HASH);
   });
 
-  it("logs rate_limited on a 429, never the candidate passphrase", async () => {
+  it("logs rate_limited (its own prefix, not auth_failed) on a 429, never the candidate passphrase", async () => {
     limiterState.success = false;
     limiterState.reset = Date.now() + 60_000;
 
@@ -124,7 +147,7 @@ describe("admin login — structured failed-login log line", () => {
     expect(res.status).toBe(429);
     expect(warnSpy).toHaveBeenCalledTimes(1);
     const [prefix, payload] = warnSpy.mock.calls[0];
-    expect(prefix).toBe("[admin-login] auth_failed");
+    expect(prefix).toBe("[admin-login] rate_limited");
     expect(JSON.parse(payload as string)).toEqual({
       ip: CLIENT_IP,
       reason: "rate_limited",
@@ -138,5 +161,46 @@ describe("admin login — structured failed-login log line", () => {
     const res = await POST(loginRequest(PASSPHRASE));
     expect(res.status).toBe(200);
     expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it("truncates a wildly oversized ip header to MAX_LOGGED_IP_CHARS in the log line", async () => {
+    const hugeIp = "9".repeat(500);
+    const request = new Request("https://suryapugaz.com/api/admin/login", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "https://suryapugaz.com",
+        host: "suryapugaz.com",
+        "cf-connecting-ip": hugeIp,
+      },
+      body: JSON.stringify({ passphrase: "definitely wrong" }),
+    });
+    const res = await POST(request);
+    expect(res.status).toBe(401);
+    const [, payload] = warnSpy.mock.calls[0];
+    const logged = JSON.parse(payload as string) as { ip: string };
+    expect(logged.ip.length).toBe(45);
+    expect(logged.ip).toBe("9".repeat(45));
+  });
+
+  it("maps a 'busy' verify outcome to 503 SYSTEM_BUSY without logging a failure", async () => {
+    verifyOverride.outcome = "busy";
+    const res = await POST(loginRequest(PASSPHRASE));
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ error: "SYSTEM_BUSY" });
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it("treats an unexpected verify rejection as an opaque 401, never a 500", async () => {
+    const { verifyPassphraseGuarded } = await import("../src/lib/adminAuth");
+    vi.mocked(verifyPassphraseGuarded).mockRejectedValueOnce(
+      new Error("unexpected"),
+    );
+    const res = await POST(loginRequest(PASSPHRASE));
+    expect(res.status).toBe(401);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    const [prefix, payload] = warnSpy.mock.calls[0];
+    expect(prefix).toBe("[admin-login] auth_failed");
+    expect(JSON.parse(payload as string).reason).toBe("bad_passphrase");
   });
 });
