@@ -5,7 +5,11 @@ import { IntroMonogram } from "./intro/IntroMonogram";
 import { IntroMontage } from "./intro/IntroMontage";
 import { IntroTitle } from "./intro/IntroTitle";
 
-const SESSION_KEY = "sr-boot-seen";
+/** sessionStorage key set once the visitor passes PRESS START. Exported so
+ * the presence socket (src/components/presence) can gate on the same fact
+ * without duplicating the string. */
+export const BOOT_SEEN_KEY = "sr-boot-seen";
+const SESSION_KEY = BOOT_SEEN_KEY;
 
 type Phase = "logo" | "montage" | "title" | "exit" | "done";
 
