@@ -56,16 +56,25 @@ export type Player = z.infer<typeof playerSchema>;
 
 export const clientMessageSchema = z.discriminatedUnion("t", [
   z.object({ t: z.literal("loc"), p: locationSchema }),
+  /** Heartbeat. No reply; it only proves the tab is still open so the room's
+   *  idle sweep leaves the socket alone. Sent every HEARTBEAT_MS. */
+  z.object({ t: z.literal("ping") }),
 ]);
 export type ClientMessage = z.infer<typeof clientMessageSchema>;
 
 /* ── Server → client ─────────────────────────────────────────────────── */
 
+const idSchema = playerSchema.shape.id;
+
 export const serverMessageSchema = z.discriminatedUnion("t", [
-  z.object({ t: z.literal("hello"), you: playerSchema, roster: z.array(playerSchema) }),
+  z.object({
+    t: z.literal("hello"),
+    you: playerSchema,
+    roster: z.array(playerSchema).max(64),
+  }),
   z.object({ t: z.literal("join"), p: playerSchema }),
-  z.object({ t: z.literal("leave"), id: z.string() }),
-  z.object({ t: z.literal("loc"), id: z.string(), p: locationSchema }),
+  z.object({ t: z.literal("leave"), id: idSchema }),
+  z.object({ t: z.literal("loc"), id: idSchema, p: locationSchema }),
   z.object({ t: z.literal("full") }),
 ]);
 export type ServerMessage = z.infer<typeof serverMessageSchema>;
@@ -82,7 +91,20 @@ export const PRESENCE_LIMITS = {
   maxFrameBytes: 4096,
   /** `loc` messages per socket per second; excess silently dropped. */
   locPerSecond: 1,
+  /** Any frames (valid or not) a socket may send per `frameWindowMs` before
+   *  the room closes it 1008. Generous for a real browser (≤ 1 loc/s plus a
+   *  heartbeat every few minutes), fatal for a flood. */
+  frameBurst: 20,
+  frameWindowMs: 10_000,
+  /** A socket silent for this long is swept on the next upgrade. Must exceed
+   *  HEARTBEAT_MS by a comfortable margin. */
+  idleMs: 10 * 60_000,
+  /** Hard ceiling on one socket's life; the client reconnects transparently. */
+  maxSessionMs: 8 * 60 * 60_000,
 } as const;
+
+/** Client heartbeat cadence — well inside `idleMs`. */
+export const HEARTBEAT_MS = 4 * 60_000;
 
 /** WebSocket close codes the room uses. */
 export const CLOSE_CODES = {

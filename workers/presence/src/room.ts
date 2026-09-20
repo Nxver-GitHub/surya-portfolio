@@ -19,14 +19,16 @@ import {
   type ServerMessage,
 } from "../../../src/lib/presence/protocol";
 import {
+  chargeFrame,
   countForIp,
   frameTooLarge,
+  ipBucket,
+  isStale,
   locAllowed,
   newAttachment,
   readFrame,
   toHex,
   toPlayer,
-  UNKNOWN_IP,
   withLocation,
   type PresenceAttachment,
 } from "./logic";
@@ -35,17 +37,25 @@ export interface Env {
   readonly ROOM: DurableObjectNamespace<PresenceRoom>;
   /** "1" only under `wrangler dev`; never defined in production. */
   readonly PRESENCE_DEV?: string;
+  /**
+   * Optional `wrangler secret`. When set, the per-IP cap hashes under this key
+   * instead of a per-boot random one, so the cap also holds across hibernation
+   * wakes. Without it the room still works; the idle sweep is the backstop.
+   */
+  readonly PRESENCE_IP_KEY?: string;
 }
 
 export class PresenceRoom extends DurableObject<Env> {
   /**
-   * HMAC key for the per-IP cap. Generated in memory when the object wakes and
-   * never persisted, so the cap holds for one lifetime and no address — raw or
-   * derived — outlives the process. After a hibernation wake the key is new, so
-   * sockets attached before the wake stop counting toward their address's cap;
-   * that is the deliberate trade for storing nothing (spec §5).
+   * HMAC key for the per-IP cap. `PRESENCE_IP_KEY` when the owner has set it;
+   * otherwise generated in memory on wake and never persisted, in which case
+   * sockets attached before a hibernation wake stop counting toward their
+   * address — the idle sweep in `fetch` bounds how long that can matter.
+   * Either way no address, raw or derived, is ever logged or stored (spec §5).
    */
-  readonly #ipKeyBytes = crypto.getRandomValues(new Uint8Array(32));
+  readonly #ipKeyBytes = this.env.PRESENCE_IP_KEY
+    ? new TextEncoder().encode(this.env.PRESENCE_IP_KEY)
+    : crypto.getRandomValues(new Uint8Array(32));
   #ipKey: Promise<CryptoKey> | null = null;
 
   /** Upgrade entry point. The Worker has already checked Origin and path. */
@@ -55,6 +65,7 @@ export class PresenceRoom extends DurableObject<Env> {
     }
 
     const ipHash = await this.#hashIp(request.headers.get("cf-connecting-ip"));
+    this.#sweepStale(Date.now());
     const sockets = this.ctx.getWebSockets();
     if (countForIp(this.#attachments(sockets), ipHash) >= PRESENCE_LIMITS.perIpCap) {
       return new Response("too many connections", { status: 429 });
@@ -75,6 +86,9 @@ export class PresenceRoom extends DurableObject<Env> {
     ws: WebSocket,
     message: string | ArrayBuffer,
   ): Promise<void> {
+    const attachment = this.#charge(ws);
+    if (attachment === null) return;
+
     if (typeof message !== "string" || frameTooLarge(message)) {
       this.#departAndClose(ws, "frame");
       return;
@@ -85,14 +99,45 @@ export class PresenceRoom extends DurableObject<Env> {
       this.#departAndClose(ws, "protocol");
       return;
     }
-    if (verdict.kind === "drop") return;
+    if (verdict.kind === "drop" || verdict.message.t === "ping") return;
+    this.#applyLocation(ws, attachment, verdict.message.p);
+  }
 
+  /**
+   * Charge the frame against the socket's flood budget and record activity,
+   * BEFORE the frame is looked at. Returns the updated attachment, or null when
+   * the socket was closed (flooding, or no attachment to charge).
+   */
+  #charge(ws: WebSocket): PresenceAttachment | null {
     const attachment = this.#attachmentOf(ws);
     if (attachment === null) {
       this.#departAndClose(ws, "state");
-      return;
+      return null;
     }
-    this.#applyLocation(ws, attachment, verdict.message.p);
+    const budget = chargeFrame(attachment, Date.now());
+    if (budget.kind === "flood") {
+      this.#departAndClose(ws, "flood");
+      return null;
+    }
+    ws.serializeAttachment(budget.attachment);
+    return budget.attachment;
+  }
+
+  /**
+   * Close sockets that stopped heartbeating or outlived the session ceiling.
+   * Runs on every upgrade, so a room filled by idle sockets frees itself the
+   * moment a real visitor arrives — no alarm, no storage.
+   */
+  #sweepStale(now: number): void {
+    let swept = 0;
+    for (const ws of this.ctx.getWebSockets()) {
+      const attachment = this.#attachmentOf(ws);
+      if (attachment === null || !isStale(attachment, now)) continue;
+      this.#depart(ws);
+      this.#close(ws, 1000, "idle");
+      swept += 1;
+    }
+    if (swept > 0) console.info(`presence: swept ${swept} idle socket(s)`);
   }
 
   override async webSocketClose(ws: WebSocket): Promise<void> {
@@ -208,7 +253,7 @@ export class PresenceRoom extends DurableObject<Env> {
     const signature = await crypto.subtle.sign(
       "HMAC",
       key,
-      new TextEncoder().encode(ip ?? UNKNOWN_IP),
+      new TextEncoder().encode(ipBucket(ip)),
     );
     return toHex(new Uint8Array(signature));
   }

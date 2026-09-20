@@ -222,4 +222,40 @@ describe("caps", () => {
     expect((await turnedAway.expect("full")).t).toBe("full");
     expect((await turnedAway.expectClosed()).code).toBe(CLOSE_CODES.full);
   }, 60_000);
+
+  it("accepts a ping heartbeat silently", async () => {
+    const a = await join();
+    const b = await join();
+    await Promise.all([a.me(), b.me()]);
+    a.send({ t: "ping" });
+    a.send({ t: "loc", p: "garage" });
+    expect((await b.expect("loc")).p).toBe("garage");
+    expect(a.closed).toBeNull();
+  });
+
+  it("closes 1008 a socket that floods frames of any kind", async () => {
+    const a = await join();
+    await a.me();
+    for (let i = 0; i <= PRESENCE_LIMITS.frameBurst; i += 1) a.send({ t: "ping" });
+    const closed = await a.expectClosed();
+    expect(closed.code).toBe(CLOSE_CODES.policy);
+    expect(closed.reason).toBe("flood");
+  });
+
+  it("counts every address in an IPv6 /64 against one cap", async () => {
+    const held = await Promise.all(
+      Array.from({ length: PRESENCE_LIMITS.perIpCap }, (_, i) =>
+        join({ ip: `2001:db8:feed:1::${i + 1}` }),
+      ),
+    );
+    await Promise.all(held.map((p) => p.me()));
+
+    const refused = await upgrade({ ip: "2001:db8:feed:1:dead:beef::1" });
+    expect(refused.status).toBe(429);
+
+    const other = await upgrade({ ip: "2001:db8:feed:2::1" });
+    expect(other.status).toBe(101);
+    other.webSocket?.accept();
+    other.webSocket?.close(1000, "done");
+  });
 });

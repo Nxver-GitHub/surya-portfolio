@@ -90,7 +90,14 @@ Two notes on the local toolchain:
 
 ## Owner-only setup
 
-An agent cannot do any of this; it is dashboard and account work. Source:
+An agent cannot do any of this; it is dashboard and account work.
+
+Abuse controls that exist at merge time, with no owner action: origin
+allowlist, room cap 64, 3 sockets per IPv4 address or IPv6 /64, 20 frames per
+10 s per socket (then close 1008), 1 accepted `loc` per second, 4 KB frames,
+an idle sweep on every upgrade (silent > 10 min or connected > 8 h → closed),
+and a browser heartbeat every 4 min. The WAF rule in step 3 sits in front of
+all of that. Source:
 `Docs/story-lobby-presence.md` §7 (local-only).
 
 1. **Workers Builds project.** Cloudflare → Workers → create a *second* Workers
@@ -104,13 +111,19 @@ An agent cannot do any of this; it is dashboard and account work. Source:
 3. **WAF rate-limiting rule** on `live.suryapugaz.com` for the upgrade path.
    This is also the still-open edge rate-limit TODO from the 2026-09-16 security
    audit, and can be done in the same sitting.
-4. **Site variable.** Set `NEXT_PUBLIC_PRESENCE_URL=wss://live.suryapugaz.com/room`
-   on the `surya-site` Worker — a plain var, not a secret. The site stays
-   keyless until then and behaves exactly as it does today, so this Worker can
-   ship before the client does.
+4. **Site build variable.** `NEXT_PUBLIC_PRESENCE_URL` is inlined into the
+   client bundle by `next build`, so a *runtime* Worker var would never reach
+   the browser. Set it as a **build variable** on the `surya-site` Workers
+   Builds project (Settings → Build → Variables and secrets):
+   `NEXT_PUBLIC_PRESENCE_URL=wss://live.suryapugaz.com/room`, then trigger a
+   build. Until then the site is keyless and behaves exactly as it does today,
+   so this Worker can ship before the client does.
+5. **Optional secret** `PRESENCE_IP_KEY` (`wrangler secret put PRESENCE_IP_KEY`
+   from `workers/presence`, any long random string). With it set, the per-IP
+   cap hashes under a stable key and so also holds across hibernation wakes.
+   Without it the room falls back to a per-boot random key and the idle sweep
+   is the backstop. Never logged, never used for anything but that HMAC.
 
-There are no secrets. Nothing to `wrangler secret put`.
-
-Suggested order: merge this Worker → owner steps 1–3 → merge the site client PR
-(which adds `wss://live.suryapugaz.com` to `connect-src` in the CSP) → owner
-step 4.
+Suggested order: merge this PR (it ships both halves; the site stays keyless)
+→ owner steps 1–3 and optionally 5 → owner step 4 → verify a build deployed by
+timestamp and that the lobby shows `ONLINE 1` in one tab.

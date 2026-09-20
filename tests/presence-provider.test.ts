@@ -13,6 +13,7 @@ import {
   CLOSE_CODES,
   type Player,
   type ServerMessage,
+  HEARTBEAT_MS,
 } from "@/lib/presence/protocol";
 import { usePresence } from "@/lib/presence/usePresence";
 import { PresenceProvider } from "@/components/presence/PresenceProvider";
@@ -121,6 +122,9 @@ describe("PresenceProvider", () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
+    // Backoff is jittered ±30%; pin Math.random at the midpoint so the delay
+    // assertions below are exact (spread factor = 1.0).
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
     mockPathname = "/";
     FakeWebSocket.reset();
     // @ts-expect-error - test double, not a full WebSocket implementation
@@ -130,6 +134,7 @@ describe("PresenceProvider", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     globalThis.WebSocket = originalWebSocket;
     vi.unstubAllEnvs();
     vi.useRealTimers();
@@ -294,14 +299,14 @@ describe("PresenceProvider", () => {
     expect(FakeWebSocket.instances).toHaveLength(countAfterGivingUp);
   });
 
-  it("resets the reconnect attempt counter after a successful reconnect", async () => {
+  it("resets the reconnect attempt counter only after a connection stays up", async () => {
     sessionStorage.setItem(BOOT_SEEN_KEY, "1");
     const { states } = await renderProvider();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
     });
 
-    // First connection fails, triggering one reconnect attempt.
+    // First connection fails, triggering one reconnect attempt (1s).
     const firstWs = FakeWebSocket.instances[0];
     await act(async () => {
       firstWs.simulateClose(1006);
@@ -309,28 +314,70 @@ describe("PresenceProvider", () => {
     });
     expect(FakeWebSocket.instances).toHaveLength(2);
 
-    // Second connection succeeds.
+    // Second connection says hello, then drops right away: a flap. The
+    // counter must NOT have reset, so the next delay is 2s, not 1s.
     const secondWs = latest(FakeWebSocket.instances);
     const you = makePlayer();
     await act(async () => {
       secondWs.simulateOpen();
-      secondWs.simulateMessage({
-        t: "hello",
-        you,
-        roster: [you],
-      } satisfies ServerMessage);
+      secondWs.simulateMessage({ t: "hello", you, roster: [you] } satisfies ServerMessage);
     });
     expect(latest(states).status).toBe("online");
-
-    // Now it drops again; the next backoff should restart at 1s, not 4s.
     await act(async () => {
       secondWs.simulateClose(1006);
-      await vi.advanceTimersByTimeAsync(999);
+      await vi.advanceTimersByTimeAsync(1999);
     });
     expect(FakeWebSocket.instances).toHaveLength(2);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1);
     });
     expect(FakeWebSocket.instances).toHaveLength(3);
+
+    // Third connection stays up past the stability window; the counter
+    // resets and the next drop backs off from 1s again.
+    const thirdWs = latest(FakeWebSocket.instances);
+    await act(async () => {
+      thirdWs.simulateOpen();
+      thirdWs.simulateMessage({ t: "hello", you, roster: [you] } satisfies ServerMessage);
+      await vi.advanceTimersByTimeAsync(60000);
+    });
+    await act(async () => {
+      thirdWs.simulateClose(1006);
+      await vi.advanceTimersByTimeAsync(999);
+    });
+    expect(FakeWebSocket.instances).toHaveLength(3);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1);
+    });
+    expect(FakeWebSocket.instances).toHaveLength(4);
+  });
+
+  it("heartbeats with a ping every HEARTBEAT_MS while online, and stops on close", async () => {
+    sessionStorage.setItem(BOOT_SEEN_KEY, "1");
+    await renderProvider();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    const ws = FakeWebSocket.instances[0];
+    const you = makePlayer();
+    await act(async () => {
+      ws.simulateOpen();
+      ws.simulateMessage({ t: "hello", you, roster: [you] } satisfies ServerMessage);
+    });
+    const pings = () => ws.sent.filter((f) => JSON.parse(f).t === "ping").length;
+    expect(pings()).toBe(0);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+    });
+    expect(pings()).toBe(1);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+    });
+    expect(pings()).toBe(2);
+    await act(async () => {
+      ws.simulateClose(1006);
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_MS);
+    });
+    expect(pings()).toBe(2);
   });
 });

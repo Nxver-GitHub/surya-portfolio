@@ -48,7 +48,18 @@ export interface PresenceAttachment {
   readonly joinedAt: number;
   /** Timestamp of the last accepted `loc`; 0 means "none yet". */
   readonly lastLocAt: number;
+  /** Timestamp of the last frame of any kind (the idle sweep reads this). */
+  readonly lastSeenAt: number;
+  /** Flood window: frames counted since `frameWindowAt`. */
+  readonly frameWindowAt: number;
+  readonly frameCount: number;
 }
+
+/** Verdict of the per-socket flood budget for one inbound frame. */
+export type FrameBudget =
+  | { readonly kind: "ok"; readonly attachment: PresenceAttachment }
+  /** Sustained excess — close 1008 regardless of frame content. */
+  | { readonly kind: "flood" };
 
 /** Outcome of validating one inbound text frame. */
 export type FrameVerdict =
@@ -103,6 +114,65 @@ function isStaleLocation(value: unknown): boolean {
   return frame.t === "loc" && typeof frame.p === "string";
 }
 
+/**
+ * Charge one inbound frame against the socket's flood window. Counted before
+ * the frame is parsed, so a flood of garbage costs the room one comparison
+ * per frame and then the socket. Valid frames are charged too: the room is one
+ * single-threaded object for the whole site, and its CPU is the resource.
+ */
+export function chargeFrame(
+  attachment: PresenceAttachment,
+  now: number,
+): FrameBudget {
+  const fresh = now - attachment.frameWindowAt >= PRESENCE_LIMITS.frameWindowMs;
+  const frameCount = fresh ? 1 : attachment.frameCount + 1;
+  if (frameCount > PRESENCE_LIMITS.frameBurst) return { kind: "flood" };
+  return {
+    kind: "ok",
+    attachment: {
+      ...attachment,
+      lastSeenAt: now,
+      frameWindowAt: fresh ? now : attachment.frameWindowAt,
+      frameCount,
+    },
+  };
+}
+
+/** True when the idle sweep should close this socket: silent past `idleMs`
+ *  (the browser heartbeats every HEARTBEAT_MS) or older than `maxSessionMs`. */
+export function isStale(attachment: PresenceAttachment, now: number): boolean {
+  return (
+    now - attachment.lastSeenAt > PRESENCE_LIMITS.idleMs ||
+    now - attachment.joinedAt > PRESENCE_LIMITS.maxSessionMs
+  );
+}
+
+/**
+ * The string the per-IP cap hashes. IPv4 is used whole. IPv6 is truncated to
+ * its /64 — a single host routinely holds a whole /64 and could otherwise
+ * source thousands of "different" addresses and fill the room under the cap.
+ * Anything unparseable falls into the shared UNKNOWN_IP bucket (fail closed).
+ */
+export function ipBucket(ip: string | null): string {
+  if (ip === null || ip.length === 0 || ip.length > 45) return UNKNOWN_IP;
+  if (!ip.includes(":")) return ip;
+  const hextets = expandIpv6(ip);
+  return hextets === null ? UNKNOWN_IP : hextets.slice(0, 4).join(":") + "::/64";
+}
+
+/** Expand `::` so the first four hextets are always addressable. */
+function expandIpv6(ip: string): readonly string[] | null {
+  const halves = ip.split("::");
+  if (halves.length > 2) return null;
+  const head = halves[0] === "" ? [] : halves[0].split(":");
+  const tail = halves.length === 2 && halves[1] !== "" ? halves[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  if (missing < 0 || (halves.length === 1 && missing !== 0)) return null;
+  const all = [...head, ...Array<string>(missing).fill("0"), ...tail];
+  if (!all.every((h) => /^[0-9a-fA-F]{1,4}$/.test(h))) return null;
+  return all.map((h) => h.toLowerCase().padStart(4, "0"));
+}
+
 /** Token bucket: one accepted `loc` per window per socket. */
 export function locAllowed(lastLocAt: number, now: number): boolean {
   return now - lastLocAt >= LOC_WINDOW_MS;
@@ -152,6 +222,9 @@ export function newAttachment(
     ipHash,
     joinedAt: now,
     lastLocAt: 0,
+    lastSeenAt: now,
+    frameWindowAt: now,
+    frameCount: 0,
   };
 }
 

@@ -21,6 +21,7 @@ import { locationFromPathname } from "@/lib/presence/locationFromPathname";
 import { OFFLINE_PRESENCE, type PresenceState } from "@/lib/presence/types";
 import {
   CLOSE_CODES,
+  HEARTBEAT_MS,
   PRESENCE_LIMITS,
   clientMessageSchema,
   serverMessageSchema,
@@ -28,10 +29,23 @@ import {
   type Player,
 } from "@/lib/presence/protocol";
 
-/** Reconnect policy: 1s → 2 → 4 → 8 → 16s, capped at 30s, 5 attempts max. */
+/**
+ * Reconnect policy: 1s → 2 → 4 → 8 → 16s, capped at 30s, 5 attempts max, each
+ * delay jittered ±30% so a room restart does not make every tab reconnect in
+ * the same millisecond. The attempt counter only resets after a connection has
+ * stayed up for STABLE_MS — an accept-then-drop flap must not buy unlimited
+ * retries.
+ */
 const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_CAP_MS = 30000;
+const RECONNECT_JITTER = 0.3;
+const STABLE_MS = 60000;
 const BOOT_POLL_MS = 1000;
+
+function jittered(delayMs: number): number {
+  const spread = 1 - RECONNECT_JITTER + Math.random() * 2 * RECONNECT_JITTER;
+  return Math.round(delayMs * spread);
+}
 
 type Action =
   | { type: "hello"; you: Player; roster: readonly Player[] }
@@ -87,6 +101,8 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
   const gaveUpRef = useRef(false);
   const helloReceivedRef = useRef(false);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stableTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const bootPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentLocRef = useRef<Location>(locationFromPathname(pathname ?? "/"));
@@ -149,7 +165,31 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    function clearSessionTimers() {
+      if (stableTimerRef.current) {
+        clearTimeout(stableTimerRef.current);
+        stableTimerRef.current = null;
+      }
+      if (heartbeatRef.current) {
+        clearInterval(heartbeatRef.current);
+        heartbeatRef.current = null;
+      }
+    }
+
+    /** Heartbeat so the room's idle sweep leaves this socket alone. */
+    function startHeartbeat(ws: WebSocket) {
+      heartbeatRef.current = setInterval(() => {
+        if (wsRef.current !== ws || ws.readyState !== WebSocket.OPEN) return;
+        try {
+          ws.send(JSON.stringify({ t: "ping" }));
+        } catch {
+          /* the close handler will follow up */
+        }
+      }, HEARTBEAT_MS);
+    }
+
     function scheduleReconnect() {
+      clearSessionTimers();
       if (gaveUpRef.current || !mountedRef.current) return;
       if (attemptRef.current >= MAX_RECONNECT_ATTEMPTS) {
         gaveUpRef.current = true;
@@ -157,9 +197,8 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       attemptRef.current += 1;
-      const delay = Math.min(
-        1000 * 2 ** (attemptRef.current - 1),
-        RECONNECT_CAP_MS,
+      const delay = jittered(
+        Math.min(1000 * 2 ** (attemptRef.current - 1), RECONNECT_CAP_MS),
       );
       dispatch({ type: "disconnected", status: "connecting" });
       reconnectTimerRef.current = setTimeout(() => {
@@ -198,7 +237,11 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         switch (msg.t) {
           case "hello":
             helloReceivedRef.current = true;
-            attemptRef.current = 0;
+            stableTimerRef.current = setTimeout(() => {
+              stableTimerRef.current = null;
+              attemptRef.current = 0;
+            }, STABLE_MS);
+            startHeartbeat(ws);
             dispatch({ type: "hello", you: msg.you, roster: msg.roster });
             sendLoc(currentLocRef.current);
             break;
@@ -227,6 +270,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         if (wsRef.current === ws) wsRef.current = null;
         if (!mountedRef.current) return;
         if (event.code === CLOSE_CODES.full) {
+          clearSessionTimers();
           gaveUpRef.current = true;
           dispatch({ type: "disconnected", status: "offline" });
           return;
@@ -262,6 +306,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         bootPollRef.current = null;
       }
       clearReconnectTimer();
+      clearSessionTimers();
       if (locThrottleTimerRef.current) {
         clearTimeout(locThrottleTimerRef.current);
         locThrottleTimerRef.current = null;
