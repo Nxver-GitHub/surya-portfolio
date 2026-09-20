@@ -65,6 +65,9 @@ export class PresenceRoom extends DurableObject<Env> {
     }
 
     const ipHash = await this.#hashIp(request.headers.get("cf-connecting-ip"));
+    // Everything from here to acceptWebSocket is synchronous. A Durable Object
+    // runs one event at a time, so two concurrent upgrades cannot both read
+    // the roster before either is admitted — the caps are exact.
     this.#sweepStale(Date.now());
     const sockets = this.ctx.getWebSockets();
     if (countForIp(this.#attachments(sockets), ipHash) >= PRESENCE_LIMITS.perIpCap) {
@@ -140,8 +143,15 @@ export class PresenceRoom extends DurableObject<Env> {
     if (swept > 0) console.info(`presence: swept ${swept} idle socket(s)`);
   }
 
-  override async webSocketClose(ws: WebSocket): Promise<void> {
+  override async webSocketClose(
+    ws: WebSocket,
+    code: number,
+    reason: string,
+  ): Promise<void> {
     this.#depart(ws);
+    // Complete the closing handshake so the socket leaves getWebSockets()
+    // promptly instead of lingering as a phantom in the next hello roster.
+    this.#close(ws, code === 1005 ? 1000 : code, reason);
   }
 
   override async webSocketError(ws: WebSocket): Promise<void> {

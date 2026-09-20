@@ -13,12 +13,15 @@
  */
 
 import { usePresence } from "@/lib/presence/usePresence";
+import type { Location } from "@/lib/presence/protocol";
 import { pavilions } from "../../../content/pavilions";
 import { PlayerPlate } from "./PlayerPlate";
 
-const pavilionNameBySlug = new Map(pavilions.map((p) => [p.slug, p.name]));
+const pavilionNameBySlug: ReadonlyMap<string, string> = new Map(
+  pavilions.map((p) => [p.slug, p.name]),
+);
 
-function locationDescription(location: string): string {
+function locationDescription(location: Location): string {
   if (location === "map") return "On the world map";
   const name = pavilionNameBySlug.get(location) ?? location;
   return `Exploring ${name}`;

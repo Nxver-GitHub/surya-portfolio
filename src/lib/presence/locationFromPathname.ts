@@ -5,9 +5,9 @@
  */
 
 import { pavilions } from "../../../content/pavilions";
-import { LOCATION_MAP, type Location } from "./protocol";
+import { LOCATION_MAP, locationSchema, type Location } from "./protocol";
 
-const pavilionSlugs = new Set(pavilions.map((p) => p.slug));
+const pavilionSlugs: ReadonlySet<string> = new Set(pavilions.map((p) => p.slug));
 
 /**
  * Maps a pathname to a presence Location:
@@ -19,7 +19,8 @@ export function locationFromPathname(pathname: string): Location {
   const segments = pathname.split("/").filter(Boolean);
   const first = segments[0];
   if (first && pavilionSlugs.has(first)) {
-    return first as Location;
+    const parsed = locationSchema.safeParse(first);
+    if (parsed.success) return parsed.data;
   }
   return LOCATION_MAP;
 }
