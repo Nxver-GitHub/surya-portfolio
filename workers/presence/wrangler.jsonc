@@ -1,0 +1,41 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "surya-presence",
+  "main": "src/index.ts",
+  // Matches the root wrangler.jsonc. workerd 1.20260915.x is what `wrangler`
+  // installs in this repo; keep this date at or below that build.
+  "compatibility_date": "2026-09-15",
+  // nodejs_compat is not used by any code path here (the room is pure Web
+  // Crypto + WebSocket), but it is the account's house default and keeps this
+  // Worker's runtime shape identical to `surya-site` if a dependency ever
+  // reaches for a node builtin.
+  "compatibility_flags": ["nodejs_compat"],
+  // No *.workers.dev URL. That subdomain is account-level and the account is
+  // shared with an unrelated project, so this Worker would be served from
+  // someone else's namespace. It is reached through its custom domain only.
+  "workers_dev": false,
+  "durable_objects": {
+    "bindings": [{ "name": "ROOM", "class_name": "PresenceRoom" }]
+  },
+  // `new_classes`, deliberately NOT `new_sqlite_classes`.
+  //
+  // PresenceRoom is storage-free by design: the roster is derived entirely from
+  // `ctx.getWebSockets()` and each socket's hibernation attachment, so it is
+  // rebuilt for free when the object wakes. There is nothing to persist, nothing
+  // to migrate, nothing to retain, and no visitor data at rest — which is the
+  // point, because the room handles `cf-connecting-ip`. Giving the class a SQLite
+  // backend would create a durable surface that the privacy story does not want
+  // and that `test/no-storage.test.ts` asserts against.
+  //
+  // If a peak-online statistic is ever wanted, it belongs in the existing
+  // Upstash events pipeline on the site Worker, not here.
+  "migrations": [{ "tag": "v1", "new_classes": ["PresenceRoom"] }],
+  // Same zone as the apex. Cloudflare manages the DNS record and certificate.
+  "routes": [{ "pattern": "live.suryapugaz.com", "custom_domain": true }],
+  "observability": {
+    "enabled": true
+  }
+  // No secrets and no vars are required. PRESENCE_DEV is set only in
+  // `wrangler dev` (see README) to allow http://localhost origins; production
+  // must never define it.
+}
