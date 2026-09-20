@@ -1,6 +1,7 @@
 import type { LiveryId } from "../../../content/liveries";
 import type { LobbyRoom, StatusChip } from "../../../content/lobby";
 import { LiveryStripe } from "../livery/LiveryStripe";
+import { RoomOnlineChip } from "./RoomOnlineChip";
 
 interface RoomStatusPanelProps {
   room: LobbyRoom;
@@ -39,6 +40,7 @@ export function RoomStatusPanel({ room, chips, livery }: RoomStatusPanelProps) {
         </div>
 
         <ul className="flex flex-wrap gap-2" aria-label="Current status">
+          <RoomOnlineChip />
           {chips.map((chip) => (
             <li key={chip.label}>
               <span className="ts-hard inline-block border border-gt/60 bg-asphalt px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase">
