@@ -30,5 +30,9 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  // `workers/` is the presence Durable Object Worker: a separate pnpm workspace
+  // package compiled against @cloudflare/workers-types, with no DOM and no
+  // Next.js. Leaving it in this program would pull Workers globals into the
+  // site build. It has its own tsconfig and `pnpm --filter presence typecheck`.
+  "exclude": ["node_modules", "workers"]
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PresenceProvider } from "@/components/presence/PresenceProvider";
 import { SoundProvider } from "@/components/sound/SoundProvider";
 import { SoundBar } from "@/components/sound/SoundBar";
 import { PageWipe } from "@/components/gt/PageWipe";
@@ -45,16 +46,18 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <SoundProvider>
-          <PageWipe>{children}</PageWipe>
-          {/* The music deck: one fixed bar along the bottom edge of every
-              screen. Mounted here rather than composed into the page headers so
-              it is a constant of the console rather than a thing each route
-              remembers, and so it never crowds a screen's own title row. Body
-              reserves its height as padding, so nothing hides beneath it. */}
-          <SoundBar />
-          <OptionsMenu />
-          <ControllerMode />
-          <StewardsNotice />
+          <PresenceProvider>
+            <PageWipe>{children}</PageWipe>
+            {/* The music deck: one fixed bar along the bottom edge of every
+                screen. Mounted here rather than composed into the page headers so
+                it is a constant of the console rather than a thing each route
+                remembers, and so it never crowds a screen's own title row. Body
+                reserves its height as padding, so nothing hides beneath it. */}
+            <SoundBar />
+            <OptionsMenu />
+            <ControllerMode />
+            <StewardsNotice />
+          </PresenceProvider>
         </SoundProvider>
         <CrtLayer />
         <PageViewBeacon />

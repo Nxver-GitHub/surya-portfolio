@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, configDefaults } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
 /**
@@ -12,5 +12,12 @@ export default defineConfig({
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
+  },
+  test: {
+    // `workers/` is a separate pnpm workspace package (the presence Durable
+    // Object). Its tests run inside workerd via @cloudflare/vitest-pool-workers
+    // and import `cloudflare:test`, which does not exist in this node run —
+    // they belong to `pnpm --filter presence test`, not to this suite.
+    exclude: [...configDefaults.exclude, "workers/**"],
   },
 });

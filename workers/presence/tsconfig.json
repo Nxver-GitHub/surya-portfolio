@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["@cloudflare/workers-types/experimental"],
+    "strict": true,
+    "noEmit": true,
+    "noUncheckedIndexedAccess": false,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  // The Workers runtime has no DOM and no Next.js. This package is compiled on
+  // its own so the root Next build never pulls workers-types in (root
+  // tsconfig.json excludes "workers" for the same reason). The two files
+  // reached outside the package are the shared wire contract and the content
+  // types it imports — all pure TypeScript, no React, no Next.
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "vitest.config.ts",
+    "../../src/lib/presence/protocol.ts",
+    "../../content/pavilions.ts",
+    "../../content/liveries.ts"
+  ]
+}

@@ -1,5 +1,6 @@
 import type { PlayerCard } from "../../../content/lobby";
 import type { LiveryId } from "../../../content/liveries";
+import { LiveRacers } from "./LiveRacers";
 import { PlayerListCard } from "./PlayerListCard";
 
 interface PlayerListProps {
@@ -21,6 +22,8 @@ export function PlayerList({ players, livery }: PlayerListProps) {
         The communities and organizations on Surya&apos;s journey — where he
         is now, and where he came up.
       </p>
+
+      <LiveRacers />
 
       <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {players.map((player) => (

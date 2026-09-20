@@ -22,7 +22,7 @@ export interface Pavilion {
   glyph: string;
 }
 
-export const pavilions: readonly Pavilion[] = [
+export const pavilions = [
   // GT Café leads: the mobile list ranks by visitor intent (the start-here
   // plate above it points cold visitors at the Café's guided menus), while
   // the desktop map places nodes purely by coordinates.
@@ -106,6 +106,6 @@ export const pavilions: readonly Pavilion[] = [
     livery: "redbull",
     glyph: "OL",
   },
-] as const;
+] as const satisfies readonly Pavilion[];
 
 export const openCount = pavilions.filter((p) => p.status === "open").length;

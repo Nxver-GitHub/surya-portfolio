@@ -4,6 +4,7 @@ import { allEventSlugs } from "../../../content/career";
 import { missionById } from "../../../content/missions";
 import { licenses } from "../../../content/licenses";
 import { openCount, pavilions } from "../../../content/pavilions";
+import { HudOnline } from "./HudOnline";
 import { VersionLog } from "./VersionLog";
 
 /**
@@ -77,6 +78,7 @@ export function HudTotals() {
               Open
             </span>
           </span>
+          <HudOnline />
         </div>
         <p className="ts-hard order-3 font-display text-xs font-bold tracking-[0.14em] text-silver uppercase">
           © 2026 Surya Pugazhenthi
