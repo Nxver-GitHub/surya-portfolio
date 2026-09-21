@@ -60,12 +60,18 @@ function sortByCallsign(roster: readonly Player[]): Player[] {
 
 function reducer(state: PresenceState, action: Action): PresenceState {
   switch (action.type) {
-    case "hello":
+    case "hello": {
+      // The room sends the roster it had BEFORE admitting this socket, so
+      // `you` is not in it. The UI counts and lists everyone including you
+      // (a lone visitor must still see ONLINE 1), so merge you in here and
+      // tolerate a server that already included you.
+      const others = action.roster.filter((p) => p.id !== action.you.id);
       return {
         status: "online",
         you: action.you,
-        roster: sortByCallsign(action.roster),
+        roster: sortByCallsign([...others, action.you]),
       };
+    }
     case "join": {
       if (state.roster.some((p) => p.id === action.p.id)) return state;
       return { ...state, roster: sortByCallsign([...state.roster, action.p]) };
