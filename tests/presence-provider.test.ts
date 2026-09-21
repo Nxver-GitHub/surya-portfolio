@@ -352,6 +352,29 @@ describe("PresenceProvider", () => {
     expect(FakeWebSocket.instances).toHaveLength(4);
   });
 
+  it("includes you in the roster even when the hello roster omits you (production shape)", async () => {
+    sessionStorage.setItem(BOOT_SEEN_KEY, "1");
+    const { states } = await renderProvider();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    const ws = FakeWebSocket.instances[0];
+    const you = makePlayer({ id: "player-you", callsign: "RACER-0002" });
+    const other = makePlayer({ id: "player-other", callsign: "RACER-0001" });
+    await act(async () => {
+      ws.simulateOpen();
+      // The room computes the roster before admitting the new socket.
+      ws.simulateMessage({ t: "hello", you, roster: [other] } satisfies ServerMessage);
+    });
+    expect(latest(states).roster.map((p) => p.id)).toEqual(["player-other", "player-you"]);
+
+    // A lone visitor: empty roster from the room still yields ONLINE 1.
+    await act(async () => {
+      ws.simulateMessage({ t: "hello", you, roster: [] } satisfies ServerMessage);
+    });
+    expect(latest(states).roster.map((p) => p.id)).toEqual(["player-you"]);
+  });
+
   it("heartbeats with a ping every HEARTBEAT_MS while online, and stops on close", async () => {
     sessionStorage.setItem(BOOT_SEEN_KEY, "1");
     await renderProvider();
