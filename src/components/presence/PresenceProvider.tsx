@@ -52,6 +52,9 @@ type Action =
   | { type: "join"; p: Player }
   | { type: "leave"; id: string }
   | { type: "loc"; id: string; p: Location }
+  /** Our own accepted loc: the room broadcasts loc to everyone EXCEPT the
+   *  sender, so the sender applies it locally. */
+  | { type: "self-loc"; p: Location }
   | { type: "disconnected"; status: "connecting" | "offline" };
 
 function sortByCallsign(roster: readonly Player[]): Player[] {
@@ -89,6 +92,17 @@ function reducer(state: PresenceState, action: Action): PresenceState {
             ? { ...state.you, location: action.p }
             : state.you,
       };
+    case "self-loc": {
+      if (!state.you) return state;
+      const id = state.you.id;
+      return {
+        ...state,
+        you: { ...state.you, location: action.p },
+        roster: state.roster.map((p) =>
+          p.id === id ? { ...p, location: action.p } : p,
+        ),
+      };
+    }
     case "disconnected":
       return { status: action.status, you: null, roster: [] };
     default:
@@ -133,6 +147,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       try {
         currentWs.send(JSON.stringify(parsed.data));
         lastLocSentAtRef.current = Date.now();
+        dispatch({ type: "self-loc", p: value });
       } catch {
         /* socket rejected the send; the close handler will follow up */
       }

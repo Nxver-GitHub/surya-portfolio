@@ -375,6 +375,26 @@ describe("PresenceProvider", () => {
     expect(latest(states).roster.map((p) => p.id)).toEqual(["player-you"]);
   });
 
+  it("applies its own location locally, since the room never echoes it back", async () => {
+    sessionStorage.setItem(BOOT_SEEN_KEY, "1");
+    mockPathname = "/lobby";
+    const { states } = await renderProvider();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    const ws = FakeWebSocket.instances[0];
+    const you = makePlayer({ location: "map" });
+    await act(async () => {
+      ws.simulateOpen();
+      ws.simulateMessage({ t: "hello", you, roster: [] } satisfies ServerMessage);
+    });
+    // hello triggers a loc send for the current pathname; no server echo.
+    expect(ws.sent.map((f) => JSON.parse(f))).toContainEqual({ t: "loc", p: "lobby" });
+    const s = latest(states);
+    expect(s.you?.location).toBe("lobby");
+    expect(s.roster.find((p) => p.id === you.id)?.location).toBe("lobby");
+  });
+
   it("heartbeats with a ping every HEARTBEAT_MS while online, and stops on close", async () => {
     sessionStorage.setItem(BOOT_SEEN_KEY, "1");
     await renderProvider();
