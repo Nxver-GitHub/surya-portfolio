@@ -17,19 +17,20 @@
   "durable_objects": {
     "bindings": [{ "name": "ROOM", "class_name": "PresenceRoom" }]
   },
-  // `new_classes`, deliberately NOT `new_sqlite_classes`.
+  // `new_sqlite_classes` is the ONLY kind of Durable Object namespace Cloudflare
+  // still creates (the first deploy with `new_classes` was refused with error
+  // 10099 on 2026-09-21). The SQLite backend is dormant here, not used:
   //
   // PresenceRoom is storage-free by design: the roster is derived entirely from
   // `ctx.getWebSockets()` and each socket's hibernation attachment, so it is
   // rebuilt for free when the object wakes. There is nothing to persist, nothing
-  // to migrate, nothing to retain, and no visitor data at rest — which is the
-  // point, because the room handles `cf-connecting-ip`. Giving the class a SQLite
-  // backend would create a durable surface that the privacy story does not want
-  // and that `test/no-storage.test.ts` asserts against.
+  // to retain, and no visitor data at rest — which is the point, because the
+  // room handles `cf-connecting-ip`. `test/no-storage.test.ts` asserts that no
+  // `ctx.storage` call exists in the source, so the backend stays empty.
   //
   // If a peak-online statistic is ever wanted, it belongs in the existing
   // Upstash events pipeline on the site Worker, not here.
-  "migrations": [{ "tag": "v1", "new_classes": ["PresenceRoom"] }],
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PresenceRoom"] }],
   // Same zone as the apex. Cloudflare manages the DNS record and certificate.
   "routes": [{ "pattern": "live.suryapugaz.com", "custom_domain": true }],
   "observability": {

@@ -31,9 +31,11 @@ Server → client: `hello`, `join`, `leave`, `loc`, `full`.
 
 ## Why there is no storage
 
-`PresenceRoom` makes **no `ctx.storage` call anywhere**, and its migration uses
-`new_classes`, never `new_sqlite_classes`. Both halves of that rule are asserted
-by `test/no-storage.test.ts` against the source and the wrangler config.
+`PresenceRoom` makes **no `ctx.storage` call anywhere**; `test/no-storage.test.ts`
+asserts that against the source. The migration says `new_sqlite_classes` only
+because Cloudflare no longer creates key-value Durable Object namespaces at all
+(the first deploy with `new_classes` was refused, error 10099). The SQLite
+backend exists and stays empty.
 
 The roster is derived entirely from `ctx.getWebSockets()` and each socket's
 hibernation attachment, so it is rebuilt for free when the object wakes. There
