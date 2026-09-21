@@ -33,12 +33,14 @@ describe("storage ban", () => {
     expect(offenders.map(([name]) => name)).toEqual([]);
   });
 
-  it("declares no SQLite-backed migration", () => {
-    // Guards the other half of the same rule: the class must be introduced with
-    // `new_classes`, never `new_sqlite_classes`.
-    const config = wranglerConfig;
-    expect(config).toContain('"new_classes"');
-    expect(stripComments(config)).not.toContain("new_sqlite_classes");
+  it("declares the class once, as the platform-required SQLite kind", () => {
+    // Cloudflare no longer creates key-value DO namespaces (error 10099), so the
+    // migration MUST say `new_sqlite_classes`. The backend is dormant: the test
+    // above is what keeps it empty. Guard against a stray `new_classes` that
+    // would make the first deploy fail again.
+    const config = stripComments(wranglerConfig);
+    expect(config).toContain('"new_sqlite_classes": ["PresenceRoom"]');
+    expect(config).not.toMatch(/"new_classes"/);
   });
 });
 
