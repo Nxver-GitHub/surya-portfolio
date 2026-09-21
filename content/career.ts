@@ -338,11 +338,11 @@ export const seasons: readonly Season[] = [
         slug: "alphaforge-gtme",
         title: "AlphaForge",
         logo: "/logos/alphaforge.png",
-        org: "AlphaForge",
-        role: "GTM Engineer",
+        org: "AlphaForge (Clay's GTM engineering program)",
+        role: "GTM systems builder",
         dates: "Aug – Sep 2026",
         result:
-          "One continuous GTM engineering build against Stripe's startup partnerships audience: 2,932 companies scanned, 909 scored, 12 signed sends.",
+          "One continuous GTM engineering build against Stripe's startup partnerships audience: 2,932 companies scanned, 909 scored, 12 signed sends",
         story: {
           problem:
             "Some markets cannot be reached from the database. The buying signal is an absence, enrichment returns nothing, and the identity layer has to be built underneath the tools.",
