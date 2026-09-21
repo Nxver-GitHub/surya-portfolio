@@ -25,6 +25,7 @@ import { menuBooks } from "../../content/menu-books";
 import { joinControls, lobbyRoom, statusChips } from "../../content/lobby";
 import { proximize } from "../../content/proximize";
 import { caseStudies, specialStage, throughLine } from "../../content/gtme";
+import { credentialById } from "../../content/credentials";
 import { handCheck } from "../../content/gtme-handcheck";
 
 /** In-fiction name of the café's house terminal. GT-flavored, not a real OS. */
@@ -113,6 +114,15 @@ function gtmeBlock(): string {
       .join("; ");
     lines.push(
       `  * ${stage.chrome} — ${oneLine(stage.title)} (${stage.window}). ${headline}. Page: /special-stage/${stage.slug}`,
+    );
+  }
+  // "Is he actually certified in this?" is the question this block gets asked
+  // most. Facts come from content/credentials.ts so the date and URL can never
+  // drift from the plates the site renders.
+  const credential = credentialById.get("alphaforge-gtme");
+  if (credential) {
+    lines.push(
+      `- Credential: ${credential.issuer} ${credential.program}, ${credential.track} track, ${credential.cohort}, completed ${credential.completed}; credential id ${credential.credentialId}. Anyone can verify it on the issuer's page: ${credential.href}`,
     );
   }
   lines.push(

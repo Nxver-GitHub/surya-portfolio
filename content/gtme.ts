@@ -14,6 +14,11 @@
  * Provenance: "artifact" numbers are stated in the build files on disk;
  * "session" numbers come from the working session and its published posts.
  * The UI marks session numbers so a skeptical reader can tell them apart.
+ *
+ * The pavilion also carries a credential. `credentialId` points at an entry
+ * in content/credentials.ts rather than restating the issuer's dates or URL
+ * here, so the program behind this arc can be checked against the issuer.
+ * It is provenance chrome, filed with the rest of the sourcing, not a trophy.
  */
 
 export type StageSlug = "reason-codes" | "recon" | "pace-notes" | "the-stage";
@@ -119,6 +124,10 @@ export const specialStage = {
   ],
   provenanceNote:
     "Numbers marked with a dot come from the working session and its published posts. Unmarked numbers are stated in the build artifacts on disk, with file and line.",
+  /** Entry in content/credentials.ts backing the program this arc was built in */
+  credentialId: "alphaforge-gtme",
+  credentialNote:
+    "The arc above was built during this program. The plate carries the issuer's own credential id, so the claim can be checked against them and not only against me.",
   /** Every screen recording from the arc, listed once on the index */
   footage: [
     {

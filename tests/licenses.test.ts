@@ -18,16 +18,26 @@ const ALLOWED_GRADES: readonly LicenseGrade[] = [
 ];
 
 describe("license tiers", () => {
-  it("has exactly five tiers in the canonical B → A → IB → IA → S order", () => {
-    expect(licenses).toHaveLength(5);
+  it("has exactly six tiers in the canonical B → A → IB → IA → S → R order", () => {
+    expect(licenses).toHaveLength(6);
     expect(licenses.map((l) => l.id)).toEqual([
       "B",
       "A",
       "IB",
       "IA",
       "S",
+      "R",
     ]);
-    expect(licenseTierOrder).toEqual(["B", "A", "IB", "IA", "S"]);
+    expect(licenseTierOrder).toEqual(["B", "A", "IB", "IA", "S", "R"]);
+  });
+
+  it("gives every tier that claims a credential a non-empty credential id", () => {
+    for (const l of licenses) {
+      if (l.credentialId !== undefined) {
+        expect(typeof l.credentialId, l.id).toBe("string");
+        expect(l.credentialId.length, l.id).toBeGreaterThan(0);
+      }
+    }
   });
 
   it("has unique tier ids", () => {
@@ -109,10 +119,13 @@ describe("license evidence cross-links", () => {
 
   it("grounds every earned test in at least one piece of evidence", () => {
     // In-progress tiers may honestly carry no cross-refs; earned grades
-    // (gold/silver/bronze) must point at a real project, mission, or role.
+    // (gold/silver/bronze) must point at a real project, mission, role, or
+    // Special Stage case study.
     for (const t of allLicenseTests) {
       if (t.grade !== "inprogress") {
-        const evidenced = Boolean(t.carId || t.missionId || t.careerEventId);
+        const evidenced = Boolean(
+          t.carId || t.missionId || t.careerEventId || t.specialStageSlug,
+        );
         expect(evidenced, t.id).toBe(true);
       }
     }

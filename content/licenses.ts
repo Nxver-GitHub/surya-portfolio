@@ -1,24 +1,31 @@
 /**
  * License Center content: skills as GT2 license tiers, each backed by proof.
  *
- * Tiers run in GT order B → A → IB → IA → S. Every test's grade is an honest
- * self-assessment; evidence is a typed cross-reference into real Garage cars
- * (`carId`), Missions (`missionId`), or Career events (`careerEventId`). Those
- * ids MUST resolve against content/cars.ts, content/missions.ts, and
- * content/career.ts — the licenses.test.ts suite fails the build otherwise.
+ * The ladder runs in GT order B → A → IB → IA → S. Class R sits BESIDE that
+ * ladder rather than above it: it certifies a different discipline (GTM
+ * engineering), so nothing in B → S is a prerequisite for it and it is not
+ * the ladder's top rung.
+ *
+ * Every test's grade is an honest self-assessment; evidence is a typed
+ * cross-reference into real Garage cars (`carId`), Missions (`missionId`),
+ * Career events (`careerEventId`), or Special Stage case studies
+ * (`specialStageSlug`). Those ids MUST resolve against content/cars.ts,
+ * content/missions.ts, content/career.ts, and content/gtme.ts — the
+ * licenses.test.ts suite fails the build otherwise.
  *
  * Copy tone (per CLAUDE.md): the racing metaphor is chrome. `name` is a short
  * race-flavored label; `summary` states the real, factual accomplishment in
  * plain English. No invented orgs, dates, or outcomes.
  */
 
+import type { StageSlug } from "./gtme";
 import type { LiveryId } from "./liveries";
 
 /** GT2 license grades: enamel/metallic medal, or an honest in-progress state. */
 export type LicenseGrade = "gold" | "silver" | "bronze" | "inprogress";
 
 /** Canonical GT license order — do not reorder. */
-export type LicenseTierId = "B" | "A" | "IB" | "IA" | "S";
+export type LicenseTierId = "B" | "A" | "IB" | "IA" | "S" | "R";
 
 /**
  * One license test: a single competency, graded, with optional evidence
@@ -37,6 +44,8 @@ export interface LicenseTest {
   missionId?: string;
   /** Career event slug (content/career.ts) */
   careerEventId?: string;
+  /** Special Stage case study slug (content/gtme.ts) */
+  specialStageSlug?: StageSlug;
 }
 
 /** A license tier: a themed group of tests. */
@@ -50,6 +59,8 @@ export interface License {
   summary: string;
   /** Livery-inspired accent for this tier's chrome (badge rim / stripe) */
   livery: LiveryId;
+  /** External credential backing this tier (content/credentials.ts) */
+  credentialId?: string;
   tests: readonly LicenseTest[];
 }
 
@@ -252,6 +263,49 @@ export const licenses: readonly License[] = [
       },
     ],
   },
+  {
+    id: "R",
+    name: "Rally License — GTM Engineering",
+    theme: "Go-to-market systems: signal detection, segmentation, and outbound",
+    summary:
+      "The rally license: building go-to-market systems for markets the standard tools cannot see, where the buying signal is an absence and the identity layer has to be built underneath the platform.",
+    livery: "subaru555",
+    credentialId: "alphaforge-gtme",
+    tests: [
+      {
+        id: "r-absence-detection",
+        name: "Recon in the dark",
+        summary:
+          "Ran a payment-processor detection scan across 2,932 YC companies, with cost and distribution predicted before the run and the result landing within five rows of the estimate — built on a four-state detection design so that \"we looked and found nothing\" never reads as \"this input is unset\".",
+        grade: "gold",
+        specialStageSlug: "recon",
+      },
+      {
+        id: "r-snapshot-memory",
+        name: "A clock for Clay",
+        summary:
+          "Built a Supabase snapshot layer that diffs each vendor fingerprint against its prior observation and posts classified change events back into the table, giving a platform that only knows what is true now the ability to answer what changed — with reason-code guards so a failed scan can never masquerade as a removal.",
+        grade: "gold",
+        specialStageSlug: "recon",
+      },
+      {
+        id: "r-segmentation-handcheck",
+        name: "Pace notes, hand-checked",
+        summary:
+          "Cut 909 scored accounts into segments and hand-checked 30 of them against the segment's own claim, then renamed the segment when the name asserted more than the scan had actually observed.",
+        grade: "silver",
+        specialStageSlug: "pace-notes",
+      },
+      {
+        id: "r-outbound-loop",
+        name: "Twelve signed sends",
+        summary:
+          "Sent 12 fully personalized, signed emails behind an Apps Script reply loop that finds a labelled thread, strips the quoted text, classifies it and lands it back in the table in under 60 seconds — with the manual reply join published as a known limitation rather than hidden.",
+        grade: "silver",
+        specialStageSlug: "the-stage",
+      },
+    ],
+  },
 ];
 
 /** Canonical tier order for iteration and validation. */
@@ -261,6 +315,7 @@ export const licenseTierOrder: readonly LicenseTierId[] = [
   "IB",
   "IA",
   "S",
+  "R",
 ] as const;
 
 export const licenseById: ReadonlyMap<LicenseTierId, License> = new Map(

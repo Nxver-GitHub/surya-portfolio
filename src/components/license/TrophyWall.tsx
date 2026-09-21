@@ -3,8 +3,11 @@ import { licenses, type License, type LicenseTest } from "../../../content/licen
 import { carById } from "../../../content/cars";
 import { missionById } from "../../../content/missions";
 import { findEvent } from "../../../content/career";
+import { caseStudyBySlug } from "../../../content/gtme";
+import { credentialById } from "../../../content/credentials";
 import { LicenseBadge } from "../gt/LicenseBadge";
 import { LiveryStripe } from "../livery/LiveryStripe";
+import { CredentialPlate } from "../rally/CredentialPlate";
 import { GradeChip } from "./GradeChip";
 
 /**
@@ -13,14 +16,26 @@ import { GradeChip } from "./GradeChip";
  * whole purpose is to springboard into the work that earned it. The page
  * exists to sell the projects, not to restate a resume — prose summaries
  * live only in tooltips.
+ *
+ * A tier may also carry an external credential (`credentialId`), which lands
+ * at the foot of its card as a rally competition plate plus a verify link out
+ * to the issuer's own page — the medals are self-assessed, the plate is not.
  */
 
-/** Resolve a test's primary evidence target: Garage first, then Career, then Missions. */
+/**
+ * Resolve a test's primary evidence target: Garage first, then Special Stage,
+ * then Career, then Missions.
+ */
 function evidenceTarget(
   test: LicenseTest,
 ): { href: string; label: string } | null {
   const car = test.carId ? carById.get(test.carId) : undefined;
   if (car) return { href: `/garage?car=${car.id}`, label: car.name };
+  const stage = test.specialStageSlug
+    ? caseStudyBySlug.get(test.specialStageSlug)
+    : undefined;
+  if (stage)
+    return { href: `/special-stage/${stage.slug}`, label: stage.title };
   const careerEvent = test.careerEventId ? findEvent(test.careerEventId) : null;
   if (careerEvent)
     return {
@@ -69,6 +84,10 @@ function MedalRow({ test }: { test: LicenseTest }) {
 
 /** One tier card on the wall: badge, name, theme, and its medal lines. */
 function TierCard({ license }: { license: License }) {
+  const credential = license.credentialId
+    ? credentialById.get(license.credentialId)
+    : undefined;
+
   return (
     <article
       aria-labelledby={`trophy-tier-${license.id}`}
@@ -95,6 +114,26 @@ function TierCard({ license }: { license: License }) {
             <MedalRow key={test.id} test={test} />
           ))}
         </ul>
+        {credential ? (
+          <div className="flex min-w-0 flex-col gap-2">
+            <p className="font-display text-xs tracking-[0.14em] text-silver uppercase">
+              Homologation
+            </p>
+            <CredentialPlate
+              credential={credential}
+              livery={license.livery}
+            />
+            <a
+              href={credential.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Verify the ${credential.program} ${credential.track} credential at ${credential.issuer}`}
+              className="self-start border border-transparent px-2 py-1.5 font-display text-xs font-semibold text-gt-bright uppercase outline-none transition-colors duration-(--duration-snap) ease-(--ease-mech) hover:border-steel hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-gt-bright"
+            >
+              Verify <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        ) : null}
       </div>
     </article>
   );
