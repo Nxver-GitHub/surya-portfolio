@@ -5,6 +5,23 @@
  * content and render as locked chips until those pavilions ship.
  */
 
+import { credentialById } from "./credentials";
+
+/**
+ * Resolve an external credential's verification URL. content/credentials.ts is
+ * the single source of truth for issuer, dates and links — an event links to a
+ * credential by id so this file never restates a URL that could drift. Throws
+ * at module load on an unknown id, so a typo fails the build, not a visitor's
+ * click.
+ */
+function credentialHref(id: string): string {
+  const credential = credentialById.get(id);
+  if (!credential) {
+    throw new Error(`career.ts: unknown credential id "${id}"`);
+  }
+  return credential.href;
+}
+
 export interface CareerEvent {
   slug: string;
   title: string;
@@ -321,11 +338,11 @@ export const seasons: readonly Season[] = [
         slug: "alphaforge-gtme",
         title: "AlphaForge",
         logo: "/logos/alphaforge.png",
-        org: "AlphaForge",
-        role: "GTM Engineer",
-        dates: "Aug 2026 – Present",
+        org: "AlphaForge (Clay's GTM engineering program)",
+        role: "GTM systems builder",
+        dates: "Aug – Sep 2026",
         result:
-          "One continuous GTM engineering build against Stripe's startup partnerships audience: 2,932 companies scanned, 909 scored, 12 signed sends.",
+          "One continuous GTM engineering build against Stripe's startup partnerships audience: 2,932 companies scanned, 909 scored, 12 signed sends",
         story: {
           problem:
             "Some markets cannot be reached from the database. The buying signal is an absence, enrichment returns nothing, and the identity layer has to be built underneath the tools.",
@@ -336,8 +353,14 @@ export const seasons: readonly Season[] = [
             "Sent 12 fully personalized, signed emails with an automated reply loop landing responses back in Clay in under 60 seconds.",
           ],
           results:
-            "The full arc, failures included, is documented stage by stage in the Special Stage pavilion.",
+            "Finished Cohort 3 of the program in September 2026. Clay Cohorts issues the diploma and hosts the verification page, so the credential can be checked at the source rather than taken on trust. The full arc, failures included, is documented stage by stage in the Special Stage pavilion.",
         },
+        links: [
+          {
+            label: "Verify credential",
+            href: credentialHref("alphaforge-gtme"),
+          },
+        ],
       },
       {
         slug: "project-silhouette",

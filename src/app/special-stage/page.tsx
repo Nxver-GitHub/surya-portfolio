@@ -7,10 +7,12 @@ import {
   throughLine,
   type CaseStudy,
 } from "../../../content/gtme";
+import { credentialById } from "../../../content/credentials";
 import type { LiveryId } from "../../../content/liveries";
 import { pavilions } from "../../../content/pavilions";
 import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
+import { CredentialPlate } from "@/components/rally/CredentialPlate";
 import { ProvenanceDot, ProvenanceLegend } from "@/components/rally/ProvenanceDot";
 import { SSDoorPlate, stageChromeParts } from "@/components/rally/SSDoorPlate";
 import { FootageStrip } from "@/components/rally/StageVideoPlate";
@@ -175,6 +177,8 @@ export default function SpecialStagePage() {
     .filter((stage): stage is CaseStudy => stage !== undefined);
   const thesis = stages.find((stage) => stage.slug === "reason-codes");
   const rallyStages = stages.filter((stage) => stage.slug !== "reason-codes");
+  /** Provenance chrome, not a trophy: the program this arc was built in. */
+  const credential = credentialById.get(specialStage.credentialId);
 
   return (
     <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="special-stage">
@@ -198,8 +202,55 @@ export default function SpecialStagePage() {
             ))}
           </div>
 
-          <div className="plate mt-5 max-w-fit px-4 py-3">
-            <ProvenanceLegend />
+          {/* Legend and credential are peers: one says how to trust the
+              numbers, the other says where the build happened. Split into two
+              columns only at lg, where both fit without either being squeezed
+              to a sliver; below that the legend alone wants the full measure,
+              so they stack. Explicit flex-1 rather than flex-wrap, because
+              their combined max-content always exceeds the container and wrap
+              would drop the credential onto its own row at every width. */}
+          <div className="mt-5 flex flex-col items-start gap-5 lg:flex-row lg:gap-6">
+            <div className="plate min-w-0 max-w-fit px-4 py-3 lg:flex-1">
+              <ProvenanceLegend />
+            </div>
+
+            {credential ? (
+              <div className="flex min-w-0 max-w-full flex-col items-start gap-2 lg:flex-1">
+                <p className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
+                  Homologation
+                </p>
+
+                <p className="max-w-[52ch] text-base text-ink leading-snug">
+                  {credential.program} · {credential.track}
+                </p>
+                <p className="max-w-[52ch] text-sm text-silver leading-snug">
+                  {credential.cohort} · Completed {credential.completed} · Issued
+                  by {credential.issuer}
+                </p>
+
+                {/* self-stretch so the plate reads as a long competition
+                    board here exactly as it does on the trophy wall, rather
+                    than shrinking to its text inside this items-start column. */}
+                <CredentialPlate
+                  credential={credential}
+                  className="mt-1 self-stretch"
+                />
+
+                <a
+                  href={credential.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-sfx="confirm"
+                  className="plate ts-hard mt-1 px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
+                >
+                  Verify →
+                </a>
+
+                <p className="mt-1 max-w-[52ch] text-base text-ink leading-snug">
+                  {specialStage.credentialNote}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
 

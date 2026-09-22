@@ -12,6 +12,15 @@ export interface ChangelogEntry {
 
 export const changelog: readonly ChangelogEntry[] = [
   {
+    version: "1.9",
+    date: "September 2026",
+    changes: [
+      "New Rally license tier in the License Center — the go-to-market engineering ladder",
+      "Special Stage: the AlphaForge credential is now verifiable, straight from Clay Cohorts' own page",
+      "Career: the AlphaForge stint is finished and closed out at September 2026",
+    ],
+  },
+  {
     version: "1.8",
     date: "September 2026",
     changes: [
