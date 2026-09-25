@@ -10,13 +10,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "zod": "4.5.4"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "0.22.0",
-    "@cloudflare/workers-types": "^5.20260920.1",
+    "@cloudflare/workers-types": "^5.20260922.1",
     "typescript": "^5",
     "vitest": "^4.1.11",
-    "wrangler": "^4.132.0"
+    "wrangler": "^4.136.3"
   }
 }
