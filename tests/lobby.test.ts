@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  emailMailto,
   joinControls,
   lobbyRoom,
   playerList,
@@ -7,8 +8,9 @@ import {
 } from "../content/lobby";
 import { findEvent } from "../content/career";
 
-const EXPECTED_JOIN_HREFS: Record<string, string> = {
-  email: "mailto:suryapugaz1629@gmail.com",
+const EXPECTED_JOIN_HREFS: Record<string, string | undefined> = {
+  email: undefined,
+  resume: "/resume/Surya_Pugazhenthi_Resume.pdf",
   calendly: "https://calendly.com/suryaoncall/surya-s-vc-scout-office-hours",
   github: "https://github.com/Nxver-GitHub",
   linkedin: "https://www.linkedin.com/in/surya-pugazhenthi",
@@ -32,11 +34,11 @@ describe("lobby status chips", () => {
 });
 
 describe("lobby join controls", () => {
-  it("has exactly five join controls", () => {
-    expect(joinControls).toHaveLength(5);
+  it("has exactly six join controls", () => {
+    expect(joinControls).toHaveLength(6);
   });
 
-  it("pins the exact five join channels and hrefs (regression)", () => {
+  it("pins the exact six join channels and hrefs (regression)", () => {
     expect(joinControls.map((c) => c.channel).sort()).toEqual(
       Object.keys(EXPECTED_JOIN_HREFS).sort(),
     );
@@ -51,15 +53,16 @@ describe("lobby join controls", () => {
     }
   });
 
-  it("uses the exact confirmed mailto address for email", () => {
+  it("builds the exact confirmed mailto address at call time only", () => {
     const email = joinControls.find((c) => c.channel === "email");
-    expect(email?.href).toBe("mailto:suryapugaz1629@gmail.com");
+    expect(email?.href).toBeUndefined();
+    expect(emailMailto()).toBe("mailto:suryapugaz1629@gmail.com");
   });
 
-  it("uses https for every non-email join control", () => {
+  it("uses https for every external join control", () => {
     for (const control of joinControls) {
-      if (control.channel === "email") continue;
-      expect(control.href.startsWith("https://"), control.channel).toBe(true);
+      if (control.channel === "email" || control.channel === "resume") continue;
+      expect(control.href?.startsWith("https://"), control.channel).toBe(true);
     }
   });
 });

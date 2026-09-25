@@ -12,7 +12,11 @@
  */
 
 import { cars } from "../../../../content/cars";
-import { joinControls, statusChips } from "../../../../content/lobby";
+import {
+  emailMailto,
+  joinControls,
+  statusChips,
+} from "../../../../content/lobby";
 import { PORTRAIT_ALT, PORTRAIT_SRC } from "./portrait";
 
 /** Outcome of resolving a line of input against the local command table. */
@@ -113,7 +117,9 @@ function projectsLines(): readonly string[] {
 function contactLines(): readonly string[] {
   const lines: string[] = ["REACH SURYA"];
   for (const control of joinControls) {
-    lines.push(`  ${control.label.padEnd(9)}${control.href}`);
+    const href = control.channel === "email" ? emailMailto() : control.href;
+    if (!href) continue;
+    lines.push(`  ${control.label.padEnd(9)}${href}`);
   }
   return lines;
 }

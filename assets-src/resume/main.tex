@@ -1,0 +1,215 @@
+%-------------------------
+% Resume in Latex
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+% pdfTeX-only ATS glyph map; skipped under XeTeX/Tectonic (site build)
+\ifdefined\pdfgentounicode\input{glyphtounicode}\fi
+
+
+%----------FONT OPTIONS----------
+% sans-serif
+% \usepackage[sfdefault]{FiraSans}
+% \usepackage[sfdefault]{roboto}
+% \usepackage[sfdefault]{noto-sans}
+% \usepackage[default]{sourcesanspro}
+
+% serif
+% \usepackage{CormorantGaramond}
+% \usepackage{charter}
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\ifdefined\pdfgentounicode\pdfgentounicode=1\fi
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING----------
+
+\begin{center}
+    \textbf{\Huge \scshape Surya Pugazhenthi} \\ \vspace{1pt}
+    \small \href{mailto:suryapugaz1629@gmail.com}{\underline{suryapugaz1629@gmail.com}} $|$
+    \href{https://suryapugaz.com}{\underline{suryapugaz.com}} $|$
+    \href{https://www.linkedin.com/in/surya-pugazhenthi/}{\underline{linkedin.com/in/surya-pugazhenthi}} $|$ \href{https://github.com/Nxver-GitHub}{\underline{github.com/Nxver-GitHub}}
+\end{center}
+
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {UC Santa Cruz}{Santa Cruz, CA}   {Bachelor's of Science in Computer Science }{Sep. 2024 -- June 2026}
+    \resumeSubheading
+      {Diablo Valley College}{Pleasant Hill, CA}
+      {Associate's of Science in Computer Science}{Aug. 2022 -- May 2024}
+  \resumeSubHeadingListEnd
+
+
+%-----------LEADERSHIP EXPERIENCE-----------
+\section{ Experience}
+  \resumeSubHeadingListStart
+
+    %-----------VENTURE SCOUT, LVLUP VENTURES-----------
+    \resumeSubheading
+      {Venture Scout}{Feb. 2026 -- Present}
+      {\href{https://www.lvlup.vc/}{LvlUp Ventures (Shopline-backed seed fund)}}{Remote}
+      \resumeItemListStart
+        \resumeItem{\textbf{Sourced and evaluated pre-seed and seed-stage founders} by attending demo days (Afore Capital Spring 2026 Showcase, PearX W26) and identifying high-signal builders across B2B software and AI infrastructure.}
+        \resumeItem{\textbf{Drafted personalized outreach emails} to 20+ founders, including Coverflow, Polarity, Hilt, Hexagon, and Clayzo. Converted 10 conversations into founder calls and secured 3 companies for potential investment.}
+      \resumeItemListEnd
+    
+    %-----------PRODUCT DEVELOPER, SLUGAI-----------
+    \resumeSubheading
+      {Product Developer}{Jan. 2025 -- Jun. 2025}
+      {\href{https://www.slugai.org/}{SlugAI, UC Santa Cruz}}{Santa Cruz, CA}
+      \resumeItemListStart
+        \resumeItem{Defined product vision and strategy for \href{https://calendarize.ratcliff.cc/}{\textbf{\textit{Calendarize}}} by conducting user interviews and market research. Authored comprehensive \textbf{PRD} and user story backlog.}
+\resumeItem{Implemented a \textbf{serverless analytics pipeline} (Next.js API route $\rightarrow$ PostHog) capturing \textbf{100\%} of user interactions. Synthesized insights into \textbf{retention and funnel dashboards} used in weekly prioritization.}
+\resumeItem{Coordinated \textbf{cross-functional team} across design, engineering, and marketing to \href{https://www.producthunt.com/products/calendarize}{\textbf{launch Calendarize on Product Hunt.}} Gathered feedback from early adopters to refine product positioning and roadmap.}
+  \resumeItemListEnd
+
+    %-----------PRODUCT DEVELOPMENT CLUB FOUNDER, DVC-----------
+    \resumeSubheading
+      {Club President/Founder}{Aug. 2023 -- Dec. 2023}
+      {\href{https://www.instagram.com/productdevclub/}{Product Development Club, Diablo Valley College}}{Pleasant Hill, CA}
+      \resumeItemListStart
+        \resumeItem{Founded the college's \textbf{first product-focused club} from scratch, building community around students learning to build and ship real projects. Grew to \textbf{30+ active members} in a semester.}
+      \resumeItemListEnd
+      
+% -----------Multiple Positions Heading-----------
+%    \resumeSubSubheading
+%     {Software Engineer I}{Oct 2014 - Sep 2016}
+%     \resumeItemListStart
+%        \resumeItem{Apache Beam}
+%          {Apache Beam is a unified model for defining both batch and streaming data-parallel processing pipelines}
+%     \resumeItemListEnd
+%    \resumeSubHeadingListEnd
+%-------------------------------------------
+
+  \resumeSubHeadingListEnd
+
+
+%-----------PROJECTS-----------
+\section{Projects}
+    \resumeSubHeadingListStart
+
+    \resumeProjectHeading
+  {\textbf{\href{https://github.com/Nxver-GitHub/Nodegent}{Nodegent}} $|$ \emph{\href{https://nodegent.app}{Live in Production at nodegent.app}}}{Jun. 2026}
+  \resumeItemListStart
+    \resumeItem{\textbf{Built and shipped a campus-aware AI assistant to production}, serving real UCSC students by answering course, housing, and registration queries through live institutional data retrieval.}
+    \resumeItem{Engineered \textbf{Canvas + Google API} integrations with a \textbf{Playwright}-based SSO flow, wiring \textbf{Clerk} auth and \textbf{Groq LLM} server-side inference for secure, low-latency responses.}
+    \resumeItem{Owned the full stack end to end across a 10-week sprint using \textbf{Next.js}, \textbf{TypeScript}, \textbf{Convex}, and \textbf{Vercel}, taking the product from zero to a live user base.}
+  \resumeItemListEnd
+
+    \resumeProjectHeading
+  {\textbf{\href{https://github.com/Nxver-GitHub/ef-marketing-agent-hack}{Credence}} $|$ \emph{\href{https://luma.com/dqvdp45m?tk=AAILl8}{Entrepreneur First Marketing Agents Hackathon}}}{Apr. 2026}
+  \resumeItemListStart
+    \resumeItem{Placed \textbf{3rd for Best Use of Apify API}; built a \textbf{B2B prospect intelligence platform} scoring trust and fit for professionals across all high-stakes industries using real-time web scraping and configurable signal weighting.}
+    \resumeItem{Architected full-stack pipeline using \textbf{React + Vite}, \textbf{Supabase} for real-time queries, and \textbf{Apify} to scrape and normalize prospect signals into a live scoring dashboard with connection graph visualization.}
+  \resumeItemListEnd
+  
+    \resumeProjectHeading
+          {\textbf{\href{https://github.com/Nxver-GitHub/TripWeaver}{TripWeaver} $|$ }\textit{\href{https://events.ycombinator.com/agenticpaymentshackathon}{Locus (Y Combinator FW25) Agentic Payments Hackathon}}} {Nov. 2025}
+          \resumeItemListStart
+          \resumeItem{\textbf{Won 2nd place and Stripe Prize Track}; built an autonomous business travel agent integrating \textbf{Stripe} and \textbf{x402 protocol} stablecoins for end-to-end trip booking and cross-border micropayments.}
+            \resumeItem{Tech Stack: \textbf{Claude Agent SDK}, \textbf{Stripe API}, \textbf{Vercel/Next.js}, \textbf{Kiwi Travel MCP}, \textbf{Coinbase}, \textbf{Locus Crypto Wallet}.}
+          \resumeItemListEnd
+    
+    \resumeSubHeadingListEnd
+
+ %
+%-----------PROGRAMMING SKILLS-----------
+\section{Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Technical}{: Python (pandas, scikit-learn, NumPy), TypeScript, JavaScript, SQL, FastAPI, Claude Agent SDK, Gemini API, Stripe API, Groq API, React, Vite, Next.js/Vercel, Convex, MongoDB, Supabase, Docker} \\ 
+     \textbf{Product \&\ Strategy}{: PRD/spec writing, UI/UX design, Agile development} \\
+     \textbf{Tools}{: Claude Code, Git, Cursor/VS Code, PostHog Analytics, Figma, MCP Servers} 
+}}
+ \end{itemize}
+
+
+%-------------------------------------------
+\end{document}

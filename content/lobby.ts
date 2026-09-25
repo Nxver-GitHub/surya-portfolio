@@ -5,6 +5,8 @@
  * as chrome ("Join via LinkedIn"), facts in plain English.
  */
 
+import { resume } from "./resume";
+
 export interface LobbyRoom {
   name: string;
   region: string;
@@ -14,12 +16,48 @@ export interface StatusChip {
   label: string;
 }
 
-export type JoinChannel = "email" | "calendly" | "github" | "linkedin" | "x";
+export type JoinChannel =
+  | "email"
+  | "calendly"
+  | "resume"
+  | "github"
+  | "linkedin"
+  | "x";
 
 export interface JoinControl {
   channel: JoinChannel;
   label: string;
-  href: string;
+  /**
+   * Destination. The email control carries NO href here on purpose: its
+   * mailto is assembled client-side from `emailAddress` (see EmailPlate), so
+   * the joined address never lands in server-rendered HTML.
+   */
+  href?: string;
+}
+
+/** Email kept as two halves so the joined address is not a literal anywhere. */
+export interface EmailAddress {
+  user: string;
+  domain: string;
+}
+
+export const emailAddress: EmailAddress = {
+  user: "suryapugaz1629",
+  domain: "gmail.com",
+};
+
+/**
+ * The joined mailto, built at call time. Server code (the café terminal's
+ * contact digest) and runtime allowlists use this; nothing pre-renders it
+ * into markup.
+ */
+export function emailMailto(): string {
+  return `mailto:${emailAddress.user}@${emailAddress.domain}`;
+}
+
+/** Every join control that has a static destination, with its href. */
+export function joinControlHrefs(): readonly string[] {
+  return joinControls.flatMap((c) => (c.href ? [c.href] : []));
 }
 
 export interface PlayerCard {
@@ -54,12 +92,16 @@ export const joinControls: readonly JoinControl[] = [
   {
     channel: "email",
     label: "Email",
-    href: "mailto:suryapugaz1629@gmail.com",
   },
   {
     channel: "calendly",
     label: "a call",
     href: "https://calendly.com/suryaoncall/surya-s-vc-scout-office-hours",
+  },
+  {
+    channel: "resume",
+    label: "Résumé",
+    href: resume.href,
   },
   {
     channel: "github",

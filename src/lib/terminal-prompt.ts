@@ -22,7 +22,12 @@ import { cars } from "../../content/cars";
 import { licenses } from "../../content/licenses";
 import { missionPacks } from "../../content/missions";
 import { menuBooks } from "../../content/menu-books";
-import { joinControls, lobbyRoom, statusChips } from "../../content/lobby";
+import {
+  emailMailto,
+  joinControls,
+  lobbyRoom,
+  statusChips,
+} from "../../content/lobby";
 import { proximize } from "../../content/proximize";
 import { caseStudies, specialStage, throughLine } from "../../content/gtme";
 import { credentialById } from "../../content/credentials";
@@ -229,7 +234,11 @@ function upcomingBlock(): string {
 /** Contact channels and current availability — the real links from lobby.ts. */
 function contactBlock(): string {
   const links = joinControls
-    .map((c) => `${c.label}: ${c.href}`)
+    .map((c) => {
+      const href = c.channel === "email" ? emailMailto() : c.href;
+      return href ? `${c.label}: ${href}` : null;
+    })
+    .filter((line): line is string => line !== null)
     .join(" | ");
   const availability = statusChips.map((s) => oneLine(s.label)).join("; ");
   const calendly = joinControls.find((c) => c.channel === "calendly");
