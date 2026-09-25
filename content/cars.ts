@@ -214,8 +214,9 @@ export const cars: readonly Car[] = [
   {
     id: "calendarize",
     name: "Calendarize",
+    chassis: "Lancia Delta HF Integrale Evo II",
     carClass: "Production Class",
-    status: "silhouette",
+    status: "hero",
     livery: "leyton",
     tagline: "AI-powered calendar tool, launched on Product Hunt.",
     performance: [
@@ -228,6 +229,15 @@ export const cars: readonly Car[] = [
     raced: "Jan – Jun 2025",
     links: [{ label: "Live demo", href: "https://calendarize.ratcliff.cc/" }],
     careerEventSlug: "slugai-calendarize",
+    modelPath: "/models/calendarize.glb",
+    modelCredit: {
+      title: "FREE Lancia Delta HF Integrale evo 2",
+      author: "TARANTULA",
+      source: "Sketchfab",
+      url: "https://sketchfab.com/3d-models/free-lancia-delta-hf-integrale-evo-2-85614131e0dc4613a948472aaa935fc7",
+      license: "CC BY 4.0",
+      licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+    },
   },
   {
     id: "clientsight",
