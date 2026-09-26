@@ -18,6 +18,8 @@ export default defineConfig({
     // Object). Its tests run inside workerd via @cloudflare/vitest-pool-workers
     // and import `cloudflare:test`, which does not exist in this node run —
     // they belong to `pnpm --filter presence test`, not to this suite.
-    exclude: [...configDefaults.exclude, "workers/**"],
+    // `e2e/**` is the Playwright suite (pnpm e2e); its specs use @playwright/test
+    // and would not run under vitest.
+    exclude: [...configDefaults.exclude, "workers/**", "e2e/**"],
   },
 });

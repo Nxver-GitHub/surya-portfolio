@@ -37,10 +37,11 @@ pnpm build        # production build (must pass before any PR)
 pnpm lint         # eslint
 pnpm test         # vitest unit tests
 pnpm test -- path/to/file.test.ts   # single test file
-pnpm exec playwright test           # e2e tests
+pnpm e2e          # Playwright e2e against a production build (run `pnpm build` first)
+pnpm e2e:ui       # same, in the Playwright UI
 ```
 
-Vitest and Playwright are not yet installed — add them with the first feature that needs tests.
+E2E specs live in `e2e/` and run headless Chromium against `next start` on port 3100 (`playwright.config.ts` boots it; set `E2E_BASE_URL` to target a running server instead). Vitest ignores `e2e/**`. CI runs the suite after `pnpm build` and uploads the HTML report on failure.
 
 ## Architecture
 
