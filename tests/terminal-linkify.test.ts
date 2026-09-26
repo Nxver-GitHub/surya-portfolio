@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { linkifySegments } from "../src/components/cafe/terminal/linkify";
-import { joinControls } from "../content/lobby";
+import { emailMailto, joinControlHrefs } from "../content/lobby";
+
+/** Every external contact target: the https join hrefs plus the runtime mailto. */
+const CONTACT_HREFS: readonly string[] = [
+  ...joinControlHrefs().filter((href) => href.startsWith("https://")),
+  emailMailto(),
+];
 import { proximize } from "../content/proximize";
 
 function reassemble(segments: readonly { text: string }[]): string {
@@ -27,14 +33,14 @@ describe("linkify — spec (allowlist only)", () => {
     expect(reassemble(segments)).toBe("check /career/16vc for details");
   });
 
-  it("links every real joinControls href from content/lobby.ts when embedded in text", () => {
-    for (const control of joinControls) {
-      const text = `contact me: ${control.href} thanks`;
+  it("links every real external contact href from content/lobby.ts when embedded in text", () => {
+    for (const href of CONTACT_HREFS) {
+      const text = `contact me: ${href} thanks`;
       const segments = linkifySegments(text);
       const linkSeg = segments.find(
-        (s) => s.type === "link" && s.href === control.href,
+        (s) => s.type === "link" && s.href === href,
       );
-      expect(linkSeg, `expected a link for ${control.href}`).toBeDefined();
+      expect(linkSeg, `expected a link for ${href}`).toBeDefined();
       expect(reassemble(segments)).toBe(text);
     }
   });
@@ -119,11 +125,11 @@ describe("linkify — proximize.net (allowlist widening)", () => {
   });
 
   it("still links every contact channel after the widening", () => {
-    for (const control of joinControls) {
-      const link = linkifySegments(`reach: ${control.href}`).find(
+    for (const href of CONTACT_HREFS) {
+      const link = linkifySegments(`reach: ${href}`).find(
         (s) => s.type === "link",
       );
-      expect(link?.href, control.href).toBe(control.href);
+      expect(link?.href, href).toBe(href);
     }
   });
 });

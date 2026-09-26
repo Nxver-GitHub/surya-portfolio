@@ -15,7 +15,7 @@
  * can never steer an href to a domain that isn't enumerated below.
  */
 
-import { joinControls } from "../../../../content/lobby";
+import { emailMailto, joinControlHrefs } from "../../../../content/lobby";
 import { proximize } from "../../../../content/proximize";
 
 /** One rendered run of a line: plain text, or an allowlisted link. */
@@ -52,7 +52,8 @@ const INTERNAL_ROOTS = [
  * the owner's own domain and the intended call-to-action.
  */
 const ALLOWED_HREFS: readonly string[] = [
-  ...joinControls.map((c) => c.href),
+  ...joinControlHrefs().filter((href) => href.startsWith("https://")),
+  emailMailto(),
   proximize.href,
 ];
 

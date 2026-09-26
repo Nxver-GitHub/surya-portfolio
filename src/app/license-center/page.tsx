@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
+import { DriverProfile } from "@/components/license/DriverProfile";
 import { TrophyWall } from "@/components/license/TrophyWall";
 
 export const metadata: Metadata = {
@@ -24,6 +25,8 @@ export default function LicenseCenterPage() {
             the machine, race, or role behind it.
           </p>
         </div>
+
+        <DriverProfile />
 
         <TrophyWall />
       </main>

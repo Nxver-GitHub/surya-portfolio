@@ -249,21 +249,21 @@ export const menuBooks: readonly MenuBook[] = [
     title: "The Quick Lap",
     audience: "For hiring managers short on time",
     blurb:
-      "One lap of the essentials: the flagship shipped product, the license board that maps skills to proof, and the résumé event that anchors the timeline.",
+      "One lap of the essentials: the one-page résumé, the flagship shipped product, and the license board that maps skills to proof.",
     tasks: [
+      {
+        id: "recruiter-license",
+        label: "Driver Profile — résumé",
+        description:
+          "The one-page résumé as a PDF, at the head of the License Center: skills as classes B through S below it, each test linked to the project, competition, or role that earned it.",
+        target: { kind: "license" },
+      },
       {
         id: "recruiter-nodegent",
         label: "Flagship — Nodegent",
         description:
           "The AI-powered UCSC student dashboard: a full production build that pulls a campus into one desktop.",
         target: { kind: "garage", carId: "nodegent" },
-      },
-      {
-        id: "recruiter-license",
-        label: "Skill board — full grid",
-        description:
-          "The License Center: skills as classes B through S, each test graded and linked to the project, competition, or role that earned it.",
-        target: { kind: "license" },
       },
       {
         id: "recruiter-career",
