@@ -1,0 +1,9 @@
+# Cloudflare Workers static-asset headers (not applied to Worker-rendered
+# responses — next.config.ts headers() covers those).
+#
+# Next's build output under /_next/static/ is content-hashed: a changed file
+# gets a new name, so a cached copy can never go stale. Without this rule
+# Workers serves every asset with `max-age=0, must-revalidate`, so each page
+# view re-validates the render-blocking CSS, every JS chunk, font and media file.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
