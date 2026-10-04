@@ -114,6 +114,7 @@ describe("routes — normalization", () => {
     expect(normalizePathname("/career")).toBe("/career");
     expect(normalizePathname("/")).toBe("/");
     expect(normalizePathname("/garage")).toBe("/garage");
+    expect(normalizePathname("/garage/nodegent")).toBe("/garage");
     expect(normalizePathname("/admin/data")).toBeNull();
   });
 });

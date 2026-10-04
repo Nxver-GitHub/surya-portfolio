@@ -21,6 +21,9 @@ import { ReasonCodeBoard } from "@/components/rally/ReasonCodeBoard";
 import { SectionFigure } from "@/components/rally/SectionFigure";
 import { StageVideoPlate } from "@/components/rally/StageVideoPlate";
 import { TimingBoard } from "@/components/rally/TimingBoard";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/jsonld";
+import { pageAlternates } from "@/lib/seo";
 
 const RALLY_LIVERY: LiveryId =
   pavilions.find((p) => p.slug === "special-stage")?.livery ?? "subaru555";
@@ -68,7 +71,7 @@ export async function generateMetadata({
   return {
     title: `${stage.title} — Special Stage — Surya Pugazhenthi`,
     description: summarize(stage.lede),
-    alternates: { canonical: `/special-stage/${slug}` },
+    alternates: pageAlternates(`/special-stage/${slug}`),
   };
 }
 
@@ -242,6 +245,12 @@ export default async function StagePage({ params }: StagePageProps) {
 
   return (
     <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="special-stage">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Special Stage", path: "/special-stage" },
+          { name: stage.title, path: `/special-stage/${stage.slug}` },
+        ])}
+      />
       <GtCrumb label={stage.chrome} />
 
       <GtBackHeader href="/special-stage" label="Special Stage" />

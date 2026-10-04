@@ -170,6 +170,10 @@ describe("menu books — task targets resolve against real content", () => {
       for (const t of b.tasks) {
         const href = taskHref(t.target);
         expect(href.startsWith("/"), `${b.id}/${t.id}: ${href}`).toBe(true);
+        // Garage tasks link the crawlable spec-sheet page, not the ?car= view.
+        if (t.target.kind === "garage") {
+          expect(href, `${b.id}/${t.id}`).toBe(`/garage/${t.target.carId}`);
+        }
       }
     }
   });

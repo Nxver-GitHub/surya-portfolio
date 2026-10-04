@@ -11,7 +11,7 @@
  * terminal, or fall through to the model.
  */
 
-import { cars } from "../../../../content/cars";
+import { carPath, cars } from "../../../../content/cars";
 import {
   emailMailto,
   joinControls,
@@ -107,6 +107,7 @@ function projectsLines(): readonly string[] {
     if (car.status === "locked") continue;
     const tag = car.tagline ? ` — ${car.tagline}` : "";
     lines.push(`  ${car.name}${tag}`);
+    lines.push(`    ${carPath(car.id)}`);
   }
   lines.push("");
   lines.push("Open the Garage (/garage) to inspect any of them in 3D.");

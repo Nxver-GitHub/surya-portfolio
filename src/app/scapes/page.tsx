@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { ScapesBrowser } from "@/components/scapes/ScapesBrowser";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/jsonld";
+import { pageAlternates } from "@/lib/seo";
 import { pavilions } from "../../../content/pavilions";
 
 export const metadata: Metadata = {
   title: "Scapes — Surya Pugazhenthi",
   description:
     "Photography and interests: nature, cars, and life on the road. A gallery of frames, some tied to the projects and events they sit alongside.",
-  alternates: { canonical: "/scapes" },
+  alternates: pageAlternates("/scapes"),
 };
 
 const scapesPavilion = pavilions.find((p) => p.slug === "scapes");
@@ -17,6 +20,7 @@ const livery = scapesPavilion?.livery ?? "leyton";
 export default function ScapesPage() {
   return (
     <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="scapes">
+      <JsonLd data={breadcrumbJsonLd([{ name: "Scapes", path: "/scapes" }])} />
       <GtCrumb label="Scapes" />
 
       <GtBackHeader href="/" label="World Map" />

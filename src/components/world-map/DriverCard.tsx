@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PERSON_ROLE, PERSON_SCHOOL_LINE } from "@/lib/identity";
 
 /**
  * GT-style driver license card — the one era-native home for a real face.
@@ -33,10 +34,10 @@ export function DriverCard() {
           Surya Pugazhenthi
         </span>
         <span className="driver-selector-role">
-          Builder · Venture Associate @ 16VC
+          {PERSON_ROLE}
         </span>
         <span className="driver-selector-role">
-          CS Alum @ UCSC
+          {PERSON_SCHOOL_LINE}
         </span>
       </span>
       <span className="driver-selector-arrow" aria-hidden="true">▸</span>

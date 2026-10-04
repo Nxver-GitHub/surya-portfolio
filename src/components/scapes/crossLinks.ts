@@ -1,5 +1,5 @@
 import type { Photo } from "../../../content/photos";
-import { carById } from "../../../content/cars";
+import { carById, carHref } from "../../../content/cars";
 import { missionById } from "../../../content/missions";
 import { findEvent } from "../../../content/career";
 
@@ -17,7 +17,7 @@ export interface CrossLink {
  * Resolve a photo's optional cross-refs into link chips. Only refs that
  * resolve to real content produce a chip — dangling ids are dropped, never
  * rendered as dead links. Href patterns mirror the rest of the site:
- *   car     → /garage?car=<id>
+ *   car     → /garage/<id> (its spec-sheet page)
  *   mission → /missions
  *   career  → /career/<slug>
  */
@@ -29,7 +29,7 @@ export function crossLinksForPhoto(photo: Readonly<Photo>): readonly CrossLink[]
     if (car) {
       links.push({
         key: `car-${car.id}`,
-        href: `/garage?car=${car.id}`,
+        href: carHref(car),
         label: car.name,
       });
     }
