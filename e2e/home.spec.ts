@@ -6,7 +6,7 @@ test.describe("world map", () => {
     const errors = watchConsoleErrors(page);
     await page.goto("/");
     await expectRendered(page);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/World Map/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Surya Pugazhenthi.*World Map/);
 
     // Desktop shows the circuit nodes; phones show the directory. Either way
     // every pavilion is reachable by link.
@@ -37,10 +37,19 @@ test.describe("world map", () => {
   });
 });
 
+/** A plain desktop Chrome UA: Playwright's headless one is (correctly) an agent. */
+const HUMAN_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36";
+
 test.describe("boot intro gate", () => {
-  test.use({ reducedMotion: "no-preference" });
+  test.use({ reducedMotion: "no-preference", userAgent: HUMAN_UA });
 
   test("holds on PRESS START until input, then once per session", async ({ page }) => {
+    // Automation sets navigator.webdriver, which routes agents past the intro.
+    // This test is about the human path, so present as a person.
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, "webdriver", { get: () => false });
+    });
     await page.goto("/");
     const dialog = page.getByRole("dialog", { name: /portfolio introduction/ });
     await expect(dialog).toBeVisible();

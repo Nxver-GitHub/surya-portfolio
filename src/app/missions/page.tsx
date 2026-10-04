@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { missionPacks, type Mission } from "../../../content/missions";
-import { carById } from "../../../content/cars";
+import { carById, carHref } from "../../../content/cars";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/jsonld";
+import { pageAlternates } from "@/lib/seo";
 import { pavilions } from "../../../content/pavilions";
 import type { LiveryId } from "../../../content/liveries";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
@@ -18,7 +21,7 @@ export const metadata: Metadata = {
   title: "Missions — Surya Pugazhenthi",
   description:
     "Hackathons and competitions: CruzHacks 2025, SlugAI Pitch Competition, Locus Agentic Payments, EF Marketing Agents — all podium finishes.",
-  alternates: { canonical: "/missions" },
+  alternates: pageAlternates("/missions"),
 };
 
 const STAMP_STYLES: Record<Mission["stamp"], string> = {
@@ -93,7 +96,7 @@ function MissionCard({ mission }: { mission: Mission }) {
         <div className="mt-auto flex flex-wrap gap-2 pt-1">
           {car ? (
             <Link
-              href={`/garage?car=${car.id}`}
+              href={carHref(car)}
               className="plate ts-hard inline-flex items-center gap-1.5 px-3 py-1.5 font-display text-xs font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
             >
               <Glyph kind="car" /> {car.name}
@@ -116,6 +119,7 @@ function MissionCard({ mission }: { mission: Mission }) {
 export default function MissionsPage() {
   return (
     <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="missions">
+      <JsonLd data={breadcrumbJsonLd([{ name: "Missions", path: "/missions" }])} />
       <GtCrumb label="Missions" />
 
       <GtBackHeader href="/" label="World Map" />

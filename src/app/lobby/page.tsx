@@ -3,6 +3,9 @@ import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { JoinControls } from "@/components/lobby/JoinControls";
 import { PlayerList } from "@/components/lobby/PlayerList";
 import { RoomStatusPanel } from "@/components/lobby/RoomStatusPanel";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/jsonld";
+import { pageAlternates } from "@/lib/seo";
 import { joinControls, lobbyRoom, playerList, statusChips } from "../../../content/lobby";
 import { pavilions } from "../../../content/pavilions";
 
@@ -10,7 +13,7 @@ export const metadata: Metadata = {
   title: "Online Lobby — Surya Pugazhenthi",
   description:
     "Contact Surya Pugazhenthi — email, book a call, GitHub, LinkedIn, and X — and see the communities on his journey, from 16VC today back through UCSC and DVC.",
-  alternates: { canonical: "/lobby" },
+  alternates: pageAlternates("/lobby"),
 };
 
 const lobbyPavilion = pavilions.find((p) => p.slug === "lobby");
@@ -19,6 +22,7 @@ const livery = lobbyPavilion?.livery ?? "redbull";
 export default function LobbyPage() {
   return (
     <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="lobby">
+      <JsonLd data={breadcrumbJsonLd([{ name: "Online Lobby", path: "/lobby" }])} />
       <GtCrumb label="Online Lobby" />
 
       <GtBackHeader href="/" label="World Map" />

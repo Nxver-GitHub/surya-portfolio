@@ -22,6 +22,7 @@
  * real scene at integration.
  */
 
+import { carById, carHref } from "./cars";
 import type { LicenseTierId } from "./licenses";
 import type { PhotoCategory } from "./photos";
 
@@ -302,10 +303,16 @@ export function bookTypeLabel(type: BookType): string {
   }
 }
 
+/** A garage task's link: the car's spec-sheet page when it has one. */
+function carHrefById(carId: string): string {
+  const car = carById.get(carId);
+  return car ? carHref(car) : `/garage?car=${carId}`;
+}
+
 /**
  * Resolve a task target to the visitor-facing route it links to.
  * Route conventions match the existing pavilions:
- *   garage → /garage?car=<id>, scapes → /scapes?cat=<cat>,
+ *   garage → /garage/<id>, scapes → /scapes?cat=<cat>,
  *   license → /license-center?tier=<id>, career → /career/<slug>,
  *   missions → /missions (list; optional id kept for future deep-links).
  */
@@ -314,7 +321,7 @@ export function taskHref(target: TaskTarget): string {
     case "career":
       return `/career/${target.eventSlug}`;
     case "garage":
-      return `/garage?car=${target.carId}`;
+      return carHrefById(target.carId);
     case "missions":
       return "/missions";
     case "scapes":

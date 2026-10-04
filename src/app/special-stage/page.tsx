@@ -16,6 +16,9 @@ import { CredentialPlate } from "@/components/rally/CredentialPlate";
 import { ProvenanceDot, ProvenanceLegend } from "@/components/rally/ProvenanceDot";
 import { SSDoorPlate, stageChromeParts } from "@/components/rally/SSDoorPlate";
 import { FootageStrip } from "@/components/rally/StageVideoPlate";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/jsonld";
+import { pageAlternates } from "@/lib/seo";
 
 /** The Special Stage pavilion's livery nod (blue/yellow WRC rally colours),
  * applied to card chrome only, like the other pavilions. */
@@ -26,7 +29,7 @@ export const metadata: Metadata = {
   title: "Special Stage — Surya Pugazhenthi",
   description:
     "GTM engineering case studies: the five reason codes for an empty cell, proven across detection, segmentation and outbound over 2,932 companies, with every number carrying its source and the failures reported alongside the wins.",
-  alternates: { canonical: "/special-stage" },
+  alternates: pageAlternates("/special-stage"),
 };
 
 function StageCard({ stage }: { stage: CaseStudy }) {
@@ -182,6 +185,7 @@ export default function SpecialStagePage() {
 
   return (
     <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="special-stage">
+      <JsonLd data={breadcrumbJsonLd([{ name: "Special Stage", path: "/special-stage" }])} />
       <GtCrumb label="Special Stage" />
 
       <GtBackHeader href="/" label="World Map" />

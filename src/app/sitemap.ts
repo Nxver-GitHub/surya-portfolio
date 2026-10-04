@@ -1,12 +1,17 @@
 import type { MetadataRoute } from "next";
 import { allEventSlugs } from "../../content/career";
 import { stageOrder } from "../../content/gtme";
+import { carPath, detailCars } from "../../content/cars";
 import { KNOWN_ROUTES } from "@/lib/routes";
 import { SITE_URL } from "@/lib/site";
 
 /**
- * Every static pavilion/home route plus each career/[slug] and
- * special-stage/[slug] deep link. KNOWN_ROUTES, allEventSlugs and stageOrder
+ * Every static pavilion/home route plus each garage/[slug], career/[slug] and
+ * special-stage/[slug] deep link.
+ *
+ * No `lastModified`: the content files carry human dates ("Apr 2026"), not
+ * edit timestamps, and a build-time stamp would claim every page changed on
+ * every deploy — search engines learn to ignore a lastmod that lies. KNOWN_ROUTES, allEventSlugs and stageOrder
  * are the same content-file sources the beacon and those routes already use,
  * so the sitemap can't drift from the actual route set.
  */
@@ -37,5 +42,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  return [...staticEntries, ...careerEntries, ...stageEntries];
+  const projectEntries: SitemapEntry[] = detailCars.map(
+    (car): SitemapEntry => ({
+      url: `${SITE_URL}${carPath(car.id)}`,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    }),
+  );
+
+  return [...staticEntries, ...projectEntries, ...careerEntries, ...stageEntries];
 }

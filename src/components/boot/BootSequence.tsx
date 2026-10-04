@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { IntroMonogram } from "./intro/IntroMonogram";
 import { IntroMontage } from "./intro/IntroMontage";
 import { IntroTitle } from "./intro/IntroTitle";
+import { isAutomatedVisitor } from "@/lib/agent-visitor";
 
 /** sessionStorage key set once the visitor passes PRESS START. Exported so
  * the presence socket (src/components/presence) can gate on the same fact
@@ -48,8 +49,10 @@ export function BootSequence() {
         "(prefers-reduced-motion: reduce)",
       ).matches;
       const seen = sessionStorage.getItem(SESSION_KEY);
+      // Agents go straight to content; the intro is for people.
+      const agent = isAutomatedVisitor(navigator);
       setCompact(window.innerWidth < 768);
-      setPhase(reducedMotion || seen ? "done" : "logo");
+      setPhase(reducedMotion || seen || agent ? "done" : "logo");
     });
     return () => cancelAnimationFrame(id);
   }, []);

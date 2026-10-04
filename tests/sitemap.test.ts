@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allEventSlugs } from "../content/career";
+import { detailCars } from "../content/cars";
 import { KNOWN_ROUTES } from "../src/lib/routes";
 import { SITE_URL } from "../src/lib/site";
 import sitemap from "../src/app/sitemap";
@@ -19,6 +20,13 @@ describe("sitemap", () => {
     for (const slug of allEventSlugs) {
       expect(urls).toContain(`${SITE_URL}/career/${slug}`);
     }
+  });
+
+  it("includes every project spec-sheet page, never the locked one", () => {
+    for (const car of detailCars) {
+      expect(urls).toContain(`${SITE_URL}/garage/${car.id}`);
+    }
+    expect(urls).not.toContain(`${SITE_URL}/garage/stealth`);
   });
 
   it("uses only absolute URLs built from SITE_URL", () => {

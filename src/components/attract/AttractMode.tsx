@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { IntroMontage } from "@/components/boot/intro/IntroMontage";
+import { isAutomatedVisitor } from "@/lib/agent-visitor";
 import { useIdleTimer } from "./useIdleTimer";
 
 /** 75s of no input on the World Map before the reel takes over. */
@@ -45,8 +46,14 @@ export function AttractMode() {
   const dismiss = useCallback(() => setActive(false), []);
   const loopMontage = useCallback(() => setLoopKey((k) => k + 1), []);
 
+  // An agent reading the page is "idle" by human standards; never cover the
+  // content with the reel for it. Read once on mount (client-only).
+  const [agent] = useState(
+    () => typeof navigator !== "undefined" && isAutomatedVisitor(navigator),
+  );
+
   // Idle detection is only armed while attract mode is NOT already showing.
-  useIdleTimer(IDLE_MS, activate, !active);
+  useIdleTimer(IDLE_MS, activate, !active && !agent);
 
   // While showing, ANY input dismisses immediately — no debounce, no
   // animation to wait out. Listens on window rather than the overlay so it

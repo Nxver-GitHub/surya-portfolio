@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { licenses, type License, type LicenseTest } from "../../../content/licenses";
-import { carById } from "../../../content/cars";
+import { carById, carHref } from "../../../content/cars";
 import { missionById } from "../../../content/missions";
 import { findEvent } from "../../../content/career";
 import { caseStudyBySlug } from "../../../content/gtme";
@@ -30,7 +30,7 @@ function evidenceTarget(
   test: LicenseTest,
 ): { href: string; label: string } | null {
   const car = test.carId ? carById.get(test.carId) : undefined;
-  if (car) return { href: `/garage?car=${car.id}`, label: car.name };
+  if (car) return { href: carHref(car), label: car.name };
   const stage = test.specialStageSlug
     ? caseStudyBySlug.get(test.specialStageSlug)
     : undefined;

@@ -3,17 +3,21 @@ import { Suspense } from "react";
 import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { CafeBrowser } from "@/components/cafe/CafeBrowser";
 import { CafeOriginNote } from "@/components/cafe/CafeOriginNote";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/jsonld";
+import { pageAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "GT Café — Surya Pugazhenthi",
   description:
     "Curated reading paths through Surya Pugazhenthi's portfolio: guided journeys for founders, VCs, and hiring managers, each linking to the projects, competitions, roles, and photography that matter most for them.",
-  alternates: { canonical: "/cafe" },
+  alternates: pageAlternates("/cafe"),
 };
 
 export default function CafePage() {
   return (
     <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="cafe">
+      <JsonLd data={breadcrumbJsonLd([{ name: "GT Café", path: "/cafe" }])} />
       <GtCrumb label="GT Café" />
 
       <GtBackHeader href="/" label="World Map" />
