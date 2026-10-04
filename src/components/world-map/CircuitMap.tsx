@@ -37,7 +37,7 @@ export function CircuitMap() {
     <section className="world-map" aria-label="World map destinations">
       <div className="world-map-landscape">
         <Image
-          src="/images/world-map-console.png"
+          src="/images/world-map-console.webp"
           alt="A low-polygon coastal racing circuit linking the portfolio pavilions, with a dirt spur leading to the GTM engineering Special Stage."
           fill priority sizes="(min-width: 1500px) 1440px, 100vw"
           className="world-map-art" unoptimized
