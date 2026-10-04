@@ -2,7 +2,7 @@
  * pages — the markdown alternate of every indexable page, keyed by site path.
  *
  * Served at `<path>.md` (home: `/index.md`) via the rewrite in next.config.ts
- * to app/md/[[...path]]/route.ts, and advertised from each page's <head> as
+ * to app/md/[...path]/route.ts, and advertised from each page's <head> as
  * <link rel="alternate" type="text/markdown">. Assistant agents read this in a
  * fraction of the tokens of the HTML, with no JS and no game chrome.
  */

@@ -36,10 +36,18 @@ export default function GaragePage() {
           </p>
         </div>
 
-        {/* Crawlable index of the per-project pages. The 3D browser below is
-            client-rendered, so without this list a crawler sees no project. */}
-        <nav aria-label="Project spec sheets" className="mt-4">
-          <ul className="flex list-none flex-wrap gap-2">
+        <Suspense fallback={null}>
+          <CarBrowser />
+        </Suspense>
+
+        {/* Crawlable index of the per-project pages. The 3D browser above is
+            client-rendered, so without this list a crawler sees no project.
+            It sits below the browser so the scene keeps its place on screen. */}
+        <nav aria-label="Project spec sheets" className="mt-6">
+          <h2 className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
+            Spec sheets
+          </h2>
+          <ul className="mt-2 flex list-none flex-wrap gap-2">
             {detailCars.map((car) => (
               <li key={car.id}>
                 <Link
@@ -52,10 +60,6 @@ export default function GaragePage() {
             ))}
           </ul>
         </nav>
-
-        <Suspense fallback={null}>
-          <CarBrowser />
-        </Suspense>
       </main>
     </div>
   );

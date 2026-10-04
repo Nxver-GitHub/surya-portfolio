@@ -145,7 +145,9 @@ export function breadcrumbJsonLd(trail: readonly Crumb[]): JsonLdObject {
 
 /** A Garage project as a creative work by the owner, with its visible facts. */
 export function projectJsonLd(car: Car): JsonLdObject {
-  const live = car.links?.find((l) => !l.href.includes("github.com"));
+  // Only a link labelled as the live product is the project's own site; a
+  // demo video or Devpost page is about the project, not the project itself.
+  const live = car.links?.find((l) => /^live\b/i.test(l.label));
   const repo = car.links?.find((l) => l.href.includes("github.com"));
   return {
     "@context": "https://schema.org",
@@ -158,14 +160,17 @@ export function projectJsonLd(car: Car): JsonLdObject {
     ...(car.drivetrain ? { keywords: car.drivetrain.join(", ") } : {}),
     ...(repo ? { codeRepository: repo.href } : {}),
     ...(live ? { sameAs: live.href } : {}),
+    author: { "@id": PERSON_ID },
     creativeWorkStatus: car.status === "hero" ? "Published" : "In development",
     ...(car.team
       ? {
-          contributor: car.team.map((m) => ({
-            "@type": "Person",
-            name: m.name,
-            roleName: m.role,
-          })),
+          // The owner is the same node as the site-wide Person, never a
+          // second, unlinked "Surya Pugazhenthi".
+          contributor: car.team.map((m) =>
+            m.name === PERSON_NAME
+              ? { "@id": PERSON_ID }
+              : { "@type": "Person", name: m.name, roleName: m.role },
+          ),
         }
       : {}),
   };

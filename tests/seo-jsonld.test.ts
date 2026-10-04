@@ -98,6 +98,14 @@ describe("project pages", () => {
     }
   });
 
+  it("link the owner as the site-wide Person, never a duplicate", () => {
+    const nodegent = detailCars.find((c) => c.id === "nodegent")!;
+    const ld = projectJsonLd(nodegent) as { contributor: Record<string, unknown>[]; sameAs?: string };
+    expect(ld.contributor).toContainEqual({ "@id": `${SITE_URL}/#person` });
+    expect(ld.contributor.some((c) => c.name === "Surya Pugazhenthi")).toBe(false);
+    expect(ld.sameAs).toBe("https://nodegent.app");
+  });
+
   it("lead with a plain-English summary built from rendered fields", () => {
     const nodegent = detailCars.find((c) => c.id === "nodegent")!;
     const lede = projectLede(nodegent);

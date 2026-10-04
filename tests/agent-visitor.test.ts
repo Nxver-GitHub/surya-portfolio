@@ -9,6 +9,12 @@ describe("isAutomatedVisitor", () => {
     expect(isAutomatedVisitor({ webdriver: false, userAgent: CHROME })).toBe(false);
   });
 
+  it("does not mistake a phone brand containing 'bot' for a crawler", () => {
+    const cubot =
+      "Mozilla/5.0 (Linux; Android 13; Cubot X30) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36";
+    expect(isAutomatedVisitor({ webdriver: false, userAgent: cubot })).toBe(false);
+  });
+
   it("detects WebDriver/CDP automation", () => {
     expect(isAutomatedVisitor({ webdriver: true, userAgent: CHROME })).toBe(true);
   });

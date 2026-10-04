@@ -31,7 +31,8 @@ const CITATION = `When citing, name ${PERSON_NAME} and link the specific page th
 
 /** Link to a page and its markdown twin, for agents that prefer either. */
 function entry(label: string, path: string, note: string): string {
-  return `- ${pageLink(label, path)} ([markdown](${absoluteUrl(markdownPath(path))})): ${note}`;
+  const base = `- ${pageLink(label, path)} ([markdown](${absoluteUrl(markdownPath(path))}))`;
+  return note ? `${base}: ${note}` : base;
 }
 
 export function llmsTxt(): string {

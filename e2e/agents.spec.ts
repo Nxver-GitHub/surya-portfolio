@@ -34,6 +34,7 @@ test.describe("project spec-sheet pages", () => {
   test("the locked project has no page", async ({ request }) => {
     expect((await request.get("/garage/stealth")).status()).toBe(404);
     expect((await request.get("/garage/stealth.md")).status()).toBe(404);
+    expect((await request.get("/api/beacon.md")).status()).toBe(404);
   });
 });
 

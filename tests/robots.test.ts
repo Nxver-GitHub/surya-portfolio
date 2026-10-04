@@ -11,9 +11,9 @@ describe("robots", () => {
     expect(rules?.allow).toBe("/");
   });
 
-  it("disallows the API routes", () => {
+  it("disallows the API routes and the internal markdown tree", () => {
     const rules = Array.isArray(result.rules) ? result.rules[0] : result.rules;
-    expect(rules?.disallow).toBe("/api/");
+    expect(rules?.disallow).toEqual(["/api/", "/md/"]);
   });
 
   it("names every AI crawler explicitly, allowed with /api/ still disallowed", () => {
@@ -24,7 +24,7 @@ describe("robots", () => {
       );
       expect(rule, bot).toBeDefined();
       expect(rule?.allow).toBe("/");
-      expect(rule?.disallow).toBe("/api/");
+      expect(rule?.disallow).toEqual(["/api/", "/md/"]);
     }
     expect(AI_CRAWLERS).toContain("GPTBot");
     expect(AI_CRAWLERS).toContain("ClaudeBot");
@@ -33,7 +33,7 @@ describe("robots", () => {
 
   it("every rule keeps the API routes disallowed", () => {
     const rules = Array.isArray(result.rules) ? result.rules : [result.rules];
-    for (const rule of rules) expect(rule.disallow).toBe("/api/");
+    for (const rule of rules) expect(rule.disallow).toContain("/api/");
   });
 
   it("points at the sitemap under SITE_URL", () => {

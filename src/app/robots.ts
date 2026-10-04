@@ -11,18 +11,24 @@ import { SITE_URL } from "@/lib/site";
  * rate-limited server-side, so this is politeness, not the protection).
  */
 
+/**
+ * /api/: server routes. /md/: the internal target of the `<page>.md` rewrite —
+ * crawlers should fetch the public `.md` URLs, not a duplicate tree.
+ */
+const DISALLOW = ["/api/", "/md/"];
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
-        disallow: "/api/",
+        disallow: DISALLOW,
       },
       {
         userAgent: [...AI_CRAWLERS],
         allow: "/",
-        disallow: "/api/",
+        disallow: DISALLOW,
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

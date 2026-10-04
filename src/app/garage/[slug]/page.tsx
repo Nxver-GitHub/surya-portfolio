@@ -74,7 +74,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               href={`/garage?car=${car.id}`}
               className="plate ts-hard px-3 py-1.5 font-display text-sm font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
             >
-              {car.status === "hero" ? "Inspect in 3D" : "View in the Garage"} ▸
+              {car.status === "hero" ? "Inspect in 3D" : "View in the Garage"}{" "}
+              <span aria-hidden="true">▸</span>
             </Link>
           </div>
         </div>
