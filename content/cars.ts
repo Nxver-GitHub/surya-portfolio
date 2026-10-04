@@ -326,6 +326,27 @@ export const cars: readonly Car[] = [
 ];
 
 export const carById = new Map(cars.map((c) => [c.id, c]));
+
+/**
+ * Cars that get their own /garage/<id> spec-sheet page: hero + silhouette.
+ * The locked stealth entry never gets a URL — a path would leak that it exists.
+ */
+export const detailCars: readonly Car[] = cars.filter(
+  (c) => c.status !== "locked",
+);
+
+/** The crawlable, server-rendered page for one project. */
+export function carPath(id: string): string {
+  return `/garage/${id}`;
+}
+
+/**
+ * Where a link to a car should go from elsewhere on the site: its spec-sheet
+ * page, or — for the locked entry, which has none — its bay in the 3D Garage.
+ */
+export function carHref(car: Car): string {
+  return car.status === "locked" ? `/garage?car=${car.id}` : carPath(car.id);
+}
 export const garageCarIds = new Set(
   cars.filter((c) => c.status !== "locked").map((c) => c.id),
 );

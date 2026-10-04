@@ -196,7 +196,7 @@ export function CarBrowser() {
 
       {/* Spec sheet */}
       <aside aria-label={`${selected.name} spec sheet`}>
-        <SpecSheet car={selected} />
+        <SpecSheet car={selected} showDetailLink={selected.status !== "locked"} />
       </aside>
     </div>
   );

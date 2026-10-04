@@ -7,6 +7,9 @@ import { EventBriefing } from "@/components/career/EventBriefing";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { CareerTitleBand } from "@/components/career/CareerTitleBand";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/jsonld";
+import { pageAlternates } from "@/lib/seo";
 
 interface EventPageProps {
   params: Promise<{ slug: string }>;
@@ -25,7 +28,7 @@ export async function generateMetadata({
   return {
     title: `${found.event.title} — Career — Surya Pugazhenthi`,
     description: `${found.event.role} at ${found.event.org} (${found.event.dates}): ${found.event.result}.`,
-    alternates: { canonical: `/career/${slug}` },
+    alternates: pageAlternates(`/career/${slug}`),
   };
 }
 
@@ -56,6 +59,12 @@ export default async function EventPage({ params }: EventPageProps) {
 
   return (
     <div className="console-page relative flex flex-1 flex-col px-5 py-6 md:px-10 md:py-8" data-pavilion="career">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Career", path: "/career" },
+          { name: event.title, path: `/career/${event.slug}` },
+        ])}
+      />
       <GtCrumb label={season.number} />
 
       <GtBackHeader href="/career" label="Career" />

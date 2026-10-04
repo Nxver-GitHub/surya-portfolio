@@ -96,6 +96,12 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/(.*)", headers: SECURITY_HEADERS }];
   },
+  // Markdown alternates for agents: `/garage/nodegent.md` → the prerendered
+  // document at `/md/garage/nodegent` (src/app/md/[...path]/route.ts). Home is
+  // `/index.md`.
+  async rewrites() {
+    return [{ source: "/:path*.md", destination: "/md/:path*" }];
+  },
   // The GT2 screen-wipe between pavilions needs no config as of Next 16.3:
   // "View transitions work in the App Router with no configuration."
   // `experimental.viewTransition` was removed when the feature went stable, so

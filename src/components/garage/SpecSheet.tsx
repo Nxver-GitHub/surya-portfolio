@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Car } from "../../../content/cars";
+import { carPath, type Car } from "../../../content/cars";
 import { MissionChip } from "../career/MissionChip";
 import { LiveryStripe } from "../livery/LiveryStripe";
 import { LicensesEarned } from "./LicensesEarned";
@@ -13,7 +13,14 @@ function SpecLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function SpecSheet({ car }: { car: Car }) {
+export function SpecSheet({
+  car,
+  showDetailLink = false,
+}: {
+  car: Car;
+  /** In the 3D browser, link out to the car's crawlable spec-sheet page. */
+  showDetailLink?: boolean;
+}) {
   if (car.status === "locked") {
     return (
       <div className="border border-steel bg-panel p-5 shadow-[2px_3px_0_rgba(0,0,0,0.7)]">
@@ -113,6 +120,14 @@ export function SpecSheet({ car }: { car: Car }) {
         ) : null}
 
         <div className="flex flex-wrap items-center gap-2 pt-1">
+          {showDetailLink ? (
+            <Link
+              href={carPath(car.id)}
+              className="plate ts-hard px-3 py-1.5 font-display text-sm font-bold tracking-widest text-gt-bright uppercase outline-none hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
+            >
+              Full spec sheet
+            </Link>
+          ) : null}
           {car.careerEventSlug ? (
             <Link
               href={`/career/${car.careerEventSlug}`}
