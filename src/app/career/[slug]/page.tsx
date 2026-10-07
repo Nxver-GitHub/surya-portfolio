@@ -8,6 +8,7 @@ import { OrgLogo } from "@/components/career/OrgLogo";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { CareerTitleBand } from "@/components/career/CareerTitleBand";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { careerLede } from "@/lib/career-lede";
 import { breadcrumbJsonLd } from "@/lib/jsonld";
 import { pageAlternates } from "@/lib/seo";
 
@@ -76,6 +77,10 @@ export default async function EventPage({ params }: EventPageProps) {
         >
           {event.title}
         </CareerTitleBand>
+
+        <p className="mt-6 max-w-[62ch] text-base text-ink leading-snug">
+          {careerLede(event)}
+        </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
           <div className="flex min-w-0 flex-col gap-6">

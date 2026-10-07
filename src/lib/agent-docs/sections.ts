@@ -24,6 +24,7 @@ import {
   PERSON_ROLE,
   PERSON_SUMMARY,
 } from "../identity";
+import { careerLede } from "../career-lede";
 import { absoluteUrl } from "../jsonld";
 import { blocks, bullets, facts, pageLink } from "./md";
 
@@ -50,8 +51,7 @@ export function careerMd(): string {
       const events = season.events
         .filter((e) => !e.locked)
         .map(
-          (e) =>
-            `- ${pageLink(e.title, `/career/${e.slug}`)}: ${e.role}, ${e.org} (${e.dates}). ${e.result}.`,
+          (e) => `- ${pageLink(e.title, `/career/${e.slug}`)}: ${careerLede(e)}`,
         );
       return blocks(`### ${season.number}: ${season.name} (${season.period})`, season.summary, events.join("\n"));
     })
@@ -64,6 +64,7 @@ export function careerEventMd(slug: string): string | null {
   const { season, event } = found;
   return blocks(
     `# ${event.title}`,
+    careerLede(event),
     facts([
       ["Organization", event.org],
       ["Role", event.role],
