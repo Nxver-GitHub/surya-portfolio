@@ -23,7 +23,12 @@ describe("career page ledes", () => {
   });
 
   it("uses the present tense only for stints still running", () => {
-    for (const e of events.filter((x) => !x.lede)) {
+    const templated = events.filter((x) => !x.lede);
+    // Both branches must actually be exercised, or this test is vacuous.
+    expect(templated.some((e) => /present/i.test(e.dates))).toBe(true);
+    expect(templated.some((e) => !/present/i.test(e.dates))).toBe(true);
+    expect(careerLede(findEvent("16vc")!.event)).toContain("serves as Venture Associate at 16VC (Jun 2026 – Present).");
+    for (const e of templated) {
       const current = /present/i.test(e.dates);
       expect(careerLede(e)).toContain(current ? " serves as " : " served as ");
     }
@@ -35,8 +40,14 @@ describe("career page ledes", () => {
       ["benefitfinder-cruzhacks", "credence-ef-hackathon", "slugspace", "tripweaver-locus"],
     );
     for (const e of overridden) {
+      const lede = e.lede!.toLowerCase();
       expect(e.lede).toContain(e.dates);
       expect(e.lede).not.toMatch(/served as/);
+      // Retyped facts can drift: if `role` or `org` is edited, the override
+      // must be edited with it.
+      expect(lede, `${e.slug} role`).toContain(e.role.toLowerCase());
+      const orgName = e.org.split(/[,(]/)[0].trim().toLowerCase();
+      expect(lede, `${e.slug} org`).toContain(orgName);
     }
   });
 

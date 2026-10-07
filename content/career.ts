@@ -39,7 +39,10 @@ export interface CareerEvent {
    * Answer-first opening sentence, used only where the generated one
    * ("… served as {role} at {org} ({dates}).") would misstate the event —
    * a hackathon reads as employment, a team project as solo. Must restate
-   * facts already on the page, and must include `dates`. See
+   * facts already on the page, include `dates`, `role` and the org's name
+   * (tests/career-lede.test.ts enforces all three), and stay plain prose: no
+   * links, markdown or instructions, since it is copied verbatim into the
+   * markdown twins and llms-full.txt that AI agents read. See
    * src/lib/career-lede.ts.
    */
   lede?: string;
