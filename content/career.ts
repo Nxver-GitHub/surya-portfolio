@@ -35,6 +35,14 @@ export interface CareerEvent {
   dates: string;
   /** Result — the headline outcome, one line */
   result: string;
+  /**
+   * Answer-first opening sentence, used only where the generated one
+   * ("… served as {role} at {org} ({dates}).") would misstate the event —
+   * a hackathon reads as employment, a team project as solo. Must restate
+   * facts already on the page, and must include `dates`. See
+   * src/lib/career-lede.ts.
+   */
+  lede?: string;
   /** Deep-dive story */
   story: {
     problem: string;
@@ -196,6 +204,8 @@ export const seasons: readonly Season[] = [
         role: "Full-stack builder",
         dates: "Apr 2025",
         result: "Best Beginner Hack; featured by Santa Cruz Works as 1 of 5 winning projects with startup potential",
+        lede:
+          "Surya Pugazhenthi competed at CruzHacks 2025 (Apr 2025) as a full-stack builder, shipping BenefitFinder.",
         story: {
           problem:
             "Students eligible for federal, state, and nonprofit aid routinely never find it — eligibility rules are scattered across dozens of programs.",
@@ -212,10 +222,12 @@ export const seasons: readonly Season[] = [
       {
         slug: "slugspace",
         title: "slugspace",
-        org: "Independent, UCSC",
+        org: "Google Developer Groups on Campus, UCSC",
         role: "Mobile developer",
         dates: "Oct 2024 – Apr 2025",
         result: "A React Native roommate-matching app for UCSC students",
+        lede:
+          "Surya Pugazhenthi built slugspace with a Google Developer Groups on Campus team at UCSC, as mobile developer (Oct 2024 – Apr 2025).",
         story: {
           problem:
             "UCSC students hunt for roommates through chaotic group chats and spreadsheets.",
@@ -235,6 +247,8 @@ export const seasons: readonly Season[] = [
         role: "Agent systems builder",
         dates: "Nov 2025",
         result: "2nd place overall + Stripe Prize Track",
+        lede:
+          "Surya Pugazhenthi competed at the Locus Agentic Payments Hackathon, run by Locus (Y Combinator FW25), in Nov 2025 as an agent systems builder, shipping TripWeaver.",
         story: {
           problem:
             "Business travel booking is a multi-step, multi-vendor workflow — a natural fit for an autonomous agent with real payment rails.",
@@ -293,6 +307,8 @@ export const seasons: readonly Season[] = [
         role: "Full-stack builder",
         dates: "Apr 2026",
         result: "3rd place, Best Use of Apify API",
+        lede:
+          "Surya Pugazhenthi competed at Entrepreneur First's Marketing Agents Hackathon (Apr 2026) as a full-stack builder, shipping Credence.",
         story: {
           problem:
             "High-stakes industries need to know which prospects to trust — signals are scattered across the live web.",

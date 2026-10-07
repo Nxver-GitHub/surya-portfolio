@@ -2,7 +2,7 @@ import type { Car } from "../../content/cars";
 import { PERSON_NAME } from "./identity";
 
 /** End a fragment with a full stop unless it already carries punctuation. */
-function sentence(text: string): string {
+export function sentence(text: string): string {
   return /[.!?…]$/.test(text) ? text : `${text}.`;
 }
 
