@@ -33,8 +33,12 @@ export function LicenseBadge({
           className="font-display leading-none font-black tracking-wide not-italic"
           style={{
             fontSize: size * 0.34,
-            color: rim,
-            textShadow: "1px 1px 0 rgba(0,0,0,0.35)",
+            // The rim hue at 25% toward black: still the livery's letter,
+            // but >= 4.5:1 on the face's darkest stop for every livery key
+            // (the bare rim color fell to ~1.1:1 on the light ones). The
+            // light emboss keeps the stamped read the dark shadow gave.
+            color: `color-mix(in srgb, ${rim} 25%, #000)`,
+            textShadow: "1px 1px 0 rgba(255,255,255,0.35)",
           }}
         >
           {glyph}
