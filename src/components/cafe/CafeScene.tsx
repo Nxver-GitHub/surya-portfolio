@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ConsoleResolution } from "../gt/ConsoleResolution";
+import { TouchPanY } from "../gt/TouchPanY";
 import {
   Environment,
   Html,
@@ -635,9 +636,12 @@ export function CafeScene({
       flat
       dpr={1}
       gl={{ antialias: false }}
-      className="touch-none"
+      className="touch-pan-y"
     >
       <ConsoleResolution />
+      {/* vertical swipes scroll the page; horizontal drags look around and a
+          two-finger pinch still zooms through OrbitControls */}
+      <TouchPanY allowPinch />
       {/* warm ambient wash — café interior, not a studio */}
       <ambientLight intensity={0.6} color="#ffe6c0" />
       <directionalLight
