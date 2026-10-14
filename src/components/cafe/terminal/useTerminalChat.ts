@@ -29,7 +29,7 @@
  *     submit time, finished replies folded in via `onFinish`, and the in-flight
  *     reply renders as a transient tail (derived here, never committed) — so
  *     errors and later commands always appear in true session order.
- *   - Intercept the Proximize teaser question BEFORE the model: it is answered
+ *   - Intercept the Citation teaser question BEFORE the model: it is answered
  *     entirely client-side, spends no turn, and works with the API down.
  *   - Enforce a per-session user-message cap, then nudge to the contact links.
  *   - Map 429/503 errors to themed lines instead of raw errors.
@@ -70,7 +70,7 @@ import {
 import { isWhoIsSurya, makePortraitLine } from "./portrait";
 import { isCafeOriginQuestion, makeCafeOriginLines } from "./cafeOrigin";
 import { isMeetupRequest, makeMeetupLines } from "./meetup";
-import { isProximizeQuestion, makeProximizeLines } from "./proximize";
+import { isCitationQuestion, makeCitationLines } from "./citation";
 import {
   appendSessionLines,
   clearSessionLines,
@@ -185,7 +185,7 @@ export interface TerminalChatApi {
   login: LoginState;
   /** Submitted-input history (oldest → newest) for ↑/↓ cycling in the inputs. */
   history: readonly string[];
-  /** The Proximize advert is on screen. Terminal surfaces render the takeover
+  /** The Citation advert is on screen. Terminal surfaces render the takeover
    * over their screen area and DISABLE their input while true — a live text
    * field behind a cinematic collects keystrokes nobody can see. */
   teaserPlaying: boolean;
@@ -424,7 +424,7 @@ export function useTerminalChat({
           pushSessionHistory(input);
           appendSessionLines([
             makeLine("prompt", `${prompt}${input.trim()}`),
-            ...makeProximizeLines(),
+            ...makeCitationLines(),
           ]);
           startTeaser();
           return;
@@ -436,14 +436,14 @@ export function useTerminalChat({
           // before the session cap on purpose: the one question this site most
           // wants to answer must still answer at turn 16, and must survive the
           // API being rate-limited or down. Costs no turn for the same reason.
-          if (isProximizeQuestion(resolved.text)) {
+          if (isCitationQuestion(resolved.text)) {
             // The card is written NOW, underneath, whether or not the advert
             // plays over it — so a skip, an abort, or a close all leave the
             // same coherent scrollback.
             appendSessionLines([
               makeLine("prompt", `${prompt}${resolved.text}`),
               ...(teaserPlayed ? [makeLine("system", REPEAT_TEASER_LINE)] : []),
-              ...makeProximizeLines(),
+              ...makeCitationLines(),
             ]);
             // Only the FIRST ask this visit gets the takeover. Repeat plays
             // punish exactly the curious visitor who probes the matcher with

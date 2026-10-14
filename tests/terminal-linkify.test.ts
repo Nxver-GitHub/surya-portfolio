@@ -7,7 +7,7 @@ const CONTACT_HREFS: readonly string[] = [
   ...joinControlHrefs().filter((href) => href.startsWith("https://")),
   emailMailto(),
 ];
-import { proximize } from "../content/proximize";
+import { citation } from "../content/citation";
 
 function reassemble(segments: readonly { text: string }[]): string {
   return segments.map((s) => s.text).join("");
@@ -81,12 +81,12 @@ describe("linkify — spec (allowlist only)", () => {
   });
 });
 
-describe("linkify — proximize.net (allowlist widening)", () => {
-  it("links the exact Proximize URL", () => {
-    const segments = linkifySegments(`Status: coming soon.  ${proximize.href}`);
+describe("linkify — citation.so (allowlist widening)", () => {
+  it("links the exact Citation URL", () => {
+    const segments = linkifySegments(`Status: coming soon.  ${citation.href}`);
     const link = segments.find((s) => s.type === "link");
-    expect(link?.href).toBe(proximize.href);
-    expect(link?.text).toBe(proximize.href);
+    expect(link?.href).toBe(citation.href);
+    expect(link?.text).toBe(citation.href);
   });
 
   it("NEVER mints an href to a lookalike domain", () => {
@@ -94,31 +94,31 @@ describe("linkify — proximize.net (allowlist widening)", () => {
     // is by construction an exact allowlist entry. A lookalike may share a
     // prefix, but the target can never be steered off the allowlist.
     const hostile = [
-      "https://proximize.net.evil.com/steal",
-      "https://proximize.net@evil.com",
-      "https://evil.com/?next=https://proximize.net",
-      "https://notproximize.net",
-      "https://proximize.net.co",
+      "https://citation.so.evil.com/steal",
+      "https://citation.so@evil.com",
+      "https://evil.com/?next=https://citation.so",
+      "https://notcitation.so",
+      "https://citation.so.co",
     ];
     for (const text of hostile) {
       for (const seg of linkifySegments(text)) {
         if (seg.type !== "link") continue;
-        expect(seg.href, text).toBe(proximize.href);
+        expect(seg.href, text).toBe(citation.href);
         expect(seg.href, text).not.toContain("evil.com");
       }
     }
   });
 
-  it("leaves a bare, scheme-less proximize.net as inert text", () => {
-    const segments = linkifySegments("visit proximize.net sometime");
+  it("leaves a bare, scheme-less citation.so as inert text", () => {
+    const segments = linkifySegments("visit citation.so sometime");
     expect(segments.some((s) => s.type === "link")).toBe(false);
   });
 
   it("keeps hostile input reassembling to the exact original", () => {
     // Nothing may be dropped or duplicated while splitting a lookalike.
     for (const text of [
-      "https://proximize.net.evil.com/steal",
-      `${proximize.href} and /garage`,
+      "https://citation.so.evil.com/steal",
+      `${citation.href} and /garage`,
     ]) {
       expect(reassemble(linkifySegments(text))).toBe(text);
     }

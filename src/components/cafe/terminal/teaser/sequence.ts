@@ -1,5 +1,5 @@
 /**
- * The Proximize teaser sequence — PURE DATA, no JSX, so it stays testable in
+ * The Citation teaser sequence — PURE DATA, no JSX, so it stays testable in
  * the node test env and its invariants can be asserted (see
  * tests/teaser-sequence.test.ts). The renderer is frames.tsx.
  *
@@ -114,4 +114,4 @@ export const DECODE_STALL_CAP_MS = 2000;
 
 /** The single sentence announced to assistive tech in place of the beats. */
 export const TEASER_ANNOUNCEMENT =
-  "Advertisement: Proximize — improving geo for the physical world. Coming soon. proximize.net";
+  "Advertisement: Citation — improving geo for the physical world. Coming soon. citation.so";

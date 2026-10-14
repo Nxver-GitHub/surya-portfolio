@@ -173,7 +173,7 @@ function InputLine({ chat, inputId, autoFocus, reducedMotion }: InputLineProps) 
         spellCheck={false}
         maxLength={500}
         placeholder={placeholder}
-        // Dead while the Proximize advert owns the screen: the field is
+        // Dead while the Citation advert owns the screen: the field is
         // hidden behind an opaque takeover, so anything typed into it would
         // be invisible keystrokes landing in a box the visitor can't see.
         disabled={chat.teaserPlaying}

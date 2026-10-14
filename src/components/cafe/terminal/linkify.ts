@@ -4,19 +4,19 @@
  * SECURITY CONTRACT: only a strict allowlist ever becomes a link — the site's
  * own internal paths (/garage, /license-center, /career, /missions, /scapes,
  * /cafe, /lobby and subpaths), the exact contact URLs/mailto from
- * content/lobby.ts, and the owner's own proximize.net. Arbitrary model-emitted
+ * content/lobby.ts, and the owner's own citation.so. Arbitrary model-emitted
  * URLs stay plain text (prompt-injection surface: a model reply must never
  * mint a clickable external link).
  *
  * The invariant that makes lookalikes safe: a match's `href` is always the
  * MATCHED SUBSTRING, which by construction is an exact allowlist entry. Given
- * "https://proximize.net.evil.com", only the allowlisted prefix is linked (to
+ * "https://citation.so.evil.com", only the allowlisted prefix is linked (to
  * the allowlisted target) and ".evil.com" stays inert plain text — an attacker
  * can never steer an href to a domain that isn't enumerated below.
  */
 
 import { emailMailto, joinControlHrefs } from "../../../../content/lobby";
-import { proximize } from "../../../../content/proximize";
+import { citation } from "../../../../content/citation";
 
 /** One rendered run of a line: plain text, or an allowlisted link. */
 export interface LinkSegment {
@@ -39,22 +39,22 @@ const INTERNAL_ROOTS = [
 
 /**
  * Every exact external href that may become a link: the contact channels from
- * content/lobby.ts, plus the owner's own pre-launch Proximize URL.
+ * content/lobby.ts, plus the owner's own pre-launch Citation URL.
  *
- * Proximize is listed here (rather than being added to `joinControls`) because
+ * Citation is listed here (rather than being added to `joinControls`) because
  * it is NOT a contact channel — putting it in lobby content would also render
  * it as a Lobby join control and inject it into the system prompt's CONTACT
  * block. This stays an explicit, compile-time enumeration of exact strings:
  * no patterns, no wildcards, nothing model-supplied.
  *
  * Consequence, deliberately accepted: the model can now emit a clickable
- * proximize.net, since the terminal prompt tells it about the launch. That is
+ * citation.so, since the terminal prompt tells it about the launch. That is
  * the owner's own domain and the intended call-to-action.
  */
 const ALLOWED_HREFS: readonly string[] = [
   ...joinControlHrefs().filter((href) => href.startsWith("https://")),
   emailMailto(),
-  proximize.href,
+  citation.href,
 ];
 
 /**
