@@ -12,7 +12,7 @@ import { pavilions } from "../../../content/pavilions";
 export const metadata: Metadata = {
   title: "Online Lobby — Surya Pugazhenthi",
   description:
-    "Contact Surya Pugazhenthi — email, book a call, GitHub, LinkedIn, and X — and see the communities on his journey, from 16VC today back through UCSC and DVC.",
+    "Contact Surya Pugazhenthi — email, book a call, GitHub, LinkedIn, and X — and see the communities on his journey, from 16VC back through UCSC and DVC.",
   alternates: pageAlternates("/lobby"),
 };
 

@@ -5,8 +5,10 @@ import {
   SYSTEM_NAME,
   buildFactsDigest,
   buildSystemPrompt,
+  careerBlock,
 } from "../src/lib/terminal-prompt";
 import { proximize } from "../content/proximize";
+import { seasons } from "../content/career";
 
 describe("terminal prompt — facts digest", () => {
   const digest = buildFactsDigest();
@@ -32,11 +34,25 @@ describe("terminal prompt — facts digest", () => {
 
   // Regression: the model called a "Present"-dated role "former" — currency
   // must be explicit in the digest and enforced by a hard rule in the prompt.
-  it("marks Present-dated roles as current", () => {
-    expect(digest).toContain("[CURRENT — ongoing role]");
+  it("marks exactly the Present-dated roles as current", () => {
+    const current = seasons
+      .flatMap((s) => s.events)
+      .filter((e) => /present/i.test(e.dates)).length;
+    expect(digest.split("[CURRENT — ongoing role]").length - 1).toBe(current);
     expect(buildSystemPrompt()).toContain(
       "Never describe them as former, past, or previous",
     );
+  });
+
+  it("emits the CURRENT marker for a Present-dated role", () => {
+    // No real stint is running today, so drive the positive path directly.
+    const [first] = seasons;
+    const [event] = first.events;
+    const block = careerBlock([
+      { ...first, events: [{ ...event, dates: "Jun 2026 – Present" }, { ...event, dates: "2025" }] },
+    ]);
+    expect(block.split("[CURRENT — ongoing role]").length - 1).toBe(1);
+    expect(block).toContain("Jun 2026 – Present [CURRENT — ongoing role].");
   });
 
   it("never leaks undefined or [object Object]", () => {

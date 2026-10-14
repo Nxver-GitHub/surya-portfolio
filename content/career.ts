@@ -271,16 +271,16 @@ export const seasons: readonly Season[] = [
         title: "Venture Starters",
         org: "Venture Starters",
         role: "Venture Analyst Intern",
-        dates: "Jan 2026 – Present",
+        dates: "2026",
         result: "Hands-on reps in live startup pitching and investor Q&A",
         story: {
           problem:
             "Evaluating startups well requires reps — hearing real pitches and real investor questioning, repeatedly.",
           actions: [
-            "Participating in Venture Starters' educational internship: live, virtual startup pitching sessions and investor Q&A.",
+            "Took part in Venture Starters' educational internship: live, virtual startup pitching sessions and investor Q&A.",
           ],
           results:
-            "A steady training ground running alongside active scout work at LvlUp and 16VC.",
+            "A steady training ground running alongside scout work at LvlUp and 16VC.",
         },
       },
       {
@@ -289,7 +289,7 @@ export const seasons: readonly Season[] = [
         title: "LvlUp Ventures",
         org: "LvlUp Ventures (Shopline-backed seed fund)",
         role: "Venture Scout",
-        dates: "Feb 2026 – Present",
+        dates: "Feb – May 2026",
         result: "3 companies surfaced for potential investment from 20+ founder outreaches",
         story: {
           problem:
@@ -333,7 +333,7 @@ export const seasons: readonly Season[] = [
     name: "Bay Area",
     period: "2026 – Present",
     summary:
-      "The post-grad season: scouting pre-seed and seed founders full-time at 16VC — while something new takes shape under the car cover.",
+      "The post-grad season: scouted pre-seed and seed founders full-time at 16VC (Jun – Oct 2026) while something new took shape under the car cover.",
     events: [
       {
         slug: "16vc",
@@ -341,16 +341,16 @@ export const seasons: readonly Season[] = [
         title: "16VC",
         org: "16VC",
         role: "Venture Associate",
-        dates: "Jun 2026 – Present",
-        result: "Sourcing pre-seed and seed opportunities across the SF Bay Area ecosystem",
+        dates: "Jun – Oct 2026",
+        result: "Sourced pre-seed and seed opportunities across the SF Bay Area ecosystem",
         story: {
           problem:
             "Early-stage funds live or die on seeing great founders before everyone else.",
           actions: [
-            "Source and evaluate pre-seed and seed-stage investment opportunities across the SF Bay Area through demo days, founder outreach, and the hackathon and builder community.",
+            "Sourced and evaluated pre-seed and seed-stage investment opportunities across the SF Bay Area through demo days, founder outreach, and the hackathon and builder community.",
           ],
           results:
-            "The current stint: a builder inside the venture machine, using the hackathon circuit as a sourcing edge.",
+            "A builder inside the venture machine, using the hackathon circuit as a sourcing edge. The stint wrapped in October 2026.",
         },
       },
       {

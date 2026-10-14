@@ -17,7 +17,7 @@
  * text reaches this file — it is derived purely from committed content.
  */
 
-import { seasons } from "../../content/career";
+import { seasons, type Season } from "../../content/career";
 import { cars } from "../../content/cars";
 import { licenses } from "../../content/licenses";
 import { missionPacks } from "../../content/missions";
@@ -78,10 +78,12 @@ function packWithinCap(blocks: readonly string[], cap: number): string {
   return out.join("\n\n");
 }
 
-/** Career: seasons → events, with org, role, dates, and headline result. */
-function careerBlock(): string {
+/** Career: seasons → events, with org, role, dates, and headline result.
+ * Takes the seasons as a parameter so tests can exercise the CURRENT marker
+ * even when no real stint is running. Pure. */
+export function careerBlock(source: readonly Season[] = seasons): string {
   const lines: string[] = ["CAREER (education & work):"];
-  for (const season of seasons) {
+  for (const season of source) {
     lines.push(`- ${season.name} (${season.period}): ${oneLine(season.summary)}`);
     for (const event of season.events) {
       // "Present" in the dates = a role held TODAY. The model has no idea

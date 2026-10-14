@@ -18,16 +18,19 @@ describe("career page ledes", () => {
   it("never doubles brackets when the org already ends in one", () => {
     for (const e of events) expect(careerLede(e)).not.toMatch(/\) \(/);
     expect(careerLede(findEvent("lvlup-ventures")!.event)).toContain(
-      "at LvlUp Ventures (Shopline-backed seed fund), Feb 2026 – Present.",
+      "at LvlUp Ventures (Shopline-backed seed fund), Feb – May 2026.",
     );
   });
 
   it("uses the present tense only for stints still running", () => {
     const templated = events.filter((x) => !x.lede);
-    // Both branches must actually be exercised, or this test is vacuous.
-    expect(templated.some((e) => /present/i.test(e.dates))).toBe(true);
     expect(templated.some((e) => !/present/i.test(e.dates))).toBe(true);
-    expect(careerLede(findEvent("16vc")!.event)).toContain("serves as Venture Associate at 16VC (Jun 2026 – Present).");
+    const vc = findEvent("16vc")!.event;
+    expect(careerLede(vc)).toContain("served as Venture Associate at 16VC (Jun – Oct 2026).");
+    // No real stint is running today, so exercise the present branch directly.
+    expect(careerLede({ ...vc, dates: "Jun 2026 – Present" })).toContain(
+      "serves as Venture Associate at 16VC (Jun 2026 – Present).",
+    );
     for (const e of templated) {
       const current = /present/i.test(e.dates);
       expect(careerLede(e)).toContain(current ? " serves as " : " served as ");
