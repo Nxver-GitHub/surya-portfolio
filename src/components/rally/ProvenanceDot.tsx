@@ -23,7 +23,7 @@ export function ProvenanceDot() {
 /** The one-line key that explains every dot on the page. */
 export function ProvenanceLegend() {
   return (
-    <p className="flex max-w-[68ch] items-start gap-2 text-sm text-silver leading-snug">
+    <p className="flex max-w-measure items-start gap-2 text-sm text-silver leading-snug">
       <span className="mt-2 shrink-0">
         <ProvenanceDot />
       </span>

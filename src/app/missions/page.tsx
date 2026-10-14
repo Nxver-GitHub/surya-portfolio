@@ -11,6 +11,7 @@ import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
 import { Glyph } from "@/components/gt/Glyph";
+import { Num } from "@/components/gt/Num";
 
 /** The Missions pavilion's livery nod (Jägermeister DTM orange/green), applied
  * to card/section chrome like the other pavilions. */
@@ -42,17 +43,19 @@ function MissionCard({ mission }: { mission: Mission }) {
       />
       <span
         aria-label={`Status: ${mission.stamp.toLowerCase()}`}
-        className={`ts-hard absolute top-3 right-3 -rotate-6 border-2 px-2 py-0.5 font-display text-sm font-black tracking-[0.2em] uppercase ${STAMP_STYLES[mission.stamp]}`}
+        className={`ts-hard mx-5 mt-5 -rotate-6 self-start border-2 px-2 py-0.5 sm:absolute sm:top-3 sm:right-3 sm:m-0 font-display text-sm font-black tracking-[0.2em] uppercase ${STAMP_STYLES[mission.stamp]}`}
       >
         {mission.stamp}
       </span>
 
-      <div className="flex flex-col gap-4 p-5">
-        <div className="flex items-center gap-3 pr-24">
+      {/* Phones put the stamp above the title, in flow: pinned in the corner
+          it reserved a 96px gutter that squeezed titles onto three lines. */}
+      <div className="flex flex-col gap-4 p-5 max-sm:pt-3">
+        <div className="flex items-center gap-3 sm:pr-24">
           <OrgLogo logo={mission.logo} org={mission.host} size={32} />
           <div>
             <h3 className="ts-hard font-display text-lg leading-tight font-bold tracking-wide text-chrome uppercase">
-              {mission.name}
+              <Num>{mission.name}</Num>
             </h3>
             <p className="font-display text-xs tracking-wide text-silver uppercase">
               {mission.host} · {mission.date}
@@ -135,7 +138,7 @@ export default function MissionsPage() {
 
         {missionPacks.map((pack) => (
           <section key={pack.id} aria-label={pack.name} className="mt-10">
-            <div className="flex items-baseline gap-3 border-b border-steel pb-2">
+            <div className="flex flex-col gap-1 border-b border-steel pb-2 sm:flex-row sm:items-baseline sm:gap-3">
               <h2 className="ts-hard font-display text-2xl font-bold tracking-wide text-chrome uppercase">
                 {pack.name}
               </h2>

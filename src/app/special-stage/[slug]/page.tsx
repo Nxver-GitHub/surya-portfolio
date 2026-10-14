@@ -13,6 +13,7 @@ import {
 import type { LiveryId } from "../../../../content/liveries";
 import { pavilions } from "../../../../content/pavilions";
 import { GtBackHeader, GtCrumb } from "@/components/gt/GtChrome";
+import { Num } from "@/components/gt/Num";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { Chevron } from "@/components/rally/Chevron";
 import { HandCheckBoard } from "@/components/rally/HandCheckBoard";
@@ -105,7 +106,7 @@ function Prose({ body }: { body: readonly string[] }) {
       {body.map((paragraph) => (
         <p
           key={paragraph}
-          className="max-w-[68ch] text-base text-ink leading-snug"
+          className="max-w-measure text-base text-ink leading-snug"
         >
           {paragraph}
         </p>
@@ -153,7 +154,7 @@ function StoryBlock({ section }: { section: StageSection }) {
   return (
     <section className="mt-8 flex flex-col gap-3">
       {section.chrome ? <ChromeCaption>{section.chrome}</ChromeCaption> : null}
-      <SectionHeading>{section.heading}</SectionHeading>
+      <SectionHeading><Num>{section.heading}</Num></SectionHeading>
       <Prose body={section.body} />
       <SectionFigure figure={section.figure} />
       {section.quotes?.map((quote) => (
@@ -183,7 +184,7 @@ function IncidentBlock({ section }: { section: StageSection }) {
           </p>
         ) : null}
         <div className="max-w-fit">
-          <SectionHeading>{section.heading}</SectionHeading>
+          <SectionHeading><Num>{section.heading}</Num></SectionHeading>
           <div className="gt-rule mt-2 mr-3" />
         </div>
         <Prose body={section.body} />
@@ -209,14 +210,26 @@ function ArtifactFigure({ artifact }: { artifact: StageArtifact }) {
 
         {artifact.kind === "image" && artifact.src ? (
           <div className="mt-3 overflow-x-auto border border-steel">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={artifact.src}
-              alt={artifact.caption}
-              width={1300}
-              height={840}
-              className="block h-auto w-[1300px] max-w-none"
-            />
+            {/* The capture is a 1300px spreadsheet: at phone width the scroll
+                strip shows a slice of it, so the image itself opens the full
+                file in a new tab, the same as a section figure does. */}
+            <a
+              href={artifact.src}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-max outline-none focus-visible:ring-2 focus-visible:ring-gt-bright"
+              title="Open the full-size capture in a new tab"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={artifact.src}
+                alt={artifact.caption}
+                width={1300}
+                height={840}
+                className="block h-auto w-[1300px] max-w-none"
+              />
+              <span className="sr-only"> (opens the full-size capture in a new tab)</span>
+            </a>
           </div>
         ) : null}
 
@@ -261,7 +274,7 @@ export default async function StagePage({ params }: StagePageProps) {
             chrome={stage.chrome}
             window={stage.window}
             livery={RALLY_LIVERY}
-            className="max-w-[68ch]"
+            className="max-w-measure"
           />
           <div className="mt-5 max-w-[46ch]">
             <h1 className="gt-title text-3xl text-chrome md:text-4xl">
@@ -325,7 +338,7 @@ export default async function StagePage({ params }: StagePageProps) {
                   <h3 className="ts-hard font-display text-base font-bold tracking-wide text-chrome">
                     {entry.title}
                   </h3>
-                  <p className="max-w-[64ch] text-base text-ink leading-snug">
+                  <p className="max-w-measure text-base text-ink leading-snug">
                     {entry.body}
                   </p>
                 </div>
@@ -349,7 +362,7 @@ export default async function StagePage({ params }: StagePageProps) {
                 </dt>
                 <dd>
                   <span className="ts-hard flex items-center gap-2 font-display text-xl font-black break-words text-chrome">
-                    <span>{metric.value}</span>
+                    <span className="num">{metric.value}</span>
                     {metric.provenance === "session" ? <ProvenanceDot /> : null}
                   </span>
                   {metric.detail ? (

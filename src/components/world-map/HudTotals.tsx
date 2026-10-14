@@ -33,6 +33,26 @@ function Divider() {
   );
 }
 
+function Segment({ segment }: { segment: (typeof SEGMENTS)[number] }) {
+  return (
+    <Link
+      transitionTypes={["nav-forward"]}
+      href={segment.href}
+      /* WCAG 2.5.8 wants a 24px target. Above sm, py-1 grows the hit area
+         from 16px to 24px and the matching -my-1 hands the same 8px back to
+         layout: this strip is inside the desktop height-aware no-scroll
+         budget, so the row must not grow. Phones have room, so there the
+         padding is real (28px). */
+      className="ts-hard group inline-flex items-baseline gap-1.5 py-1 -my-1 text-silver outline-none max-sm:my-0 max-sm:py-1.5 hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
+    >
+      <span className="text-chrome tabular-nums group-hover:text-gt-bright">
+        {segment.value}
+      </span>
+      {segment.label}
+    </Link>
+  );
+}
+
 export function HudTotals() {
   return (
     <div className="mt-6 w-full border-t border-steel">
@@ -46,30 +66,19 @@ export function HudTotals() {
           aria-label="Portfolio totals"
           className="order-1 flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-1 font-display text-xs font-bold tracking-[0.14em] whitespace-nowrap uppercase sm:order-2 sm:w-auto sm:flex-1 sm:gap-x-4"
         >
-          {SEGMENTS.map((s, i) => (
+          {SEGMENTS.slice(0, -1).map((s, i) => (
             <span key={s.label} className="flex items-center gap-x-2.5 sm:gap-x-4">
               {i > 0 ? <Divider /> : null}
-              <Link
-                transitionTypes={["nav-forward"]}
-                href={s.href}
-                /* max-sm:py-1.5 lifts the tap target from 16px to 28px on
-                   touch, clearing the 24px WCAG 2.5.8 minimum. Padding is
-                   phone-only on purpose: on desktop this strip is inside the
-                   height-aware no-scroll budget, and growing it there would
-                   push the HUD back below the fold. */
-                className="ts-hard group inline-flex items-baseline gap-1.5 text-silver outline-none max-sm:py-1.5 hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
-              >
-                <span className="text-chrome tabular-nums group-hover:text-gt-bright">
-                  {s.value}
-                </span>
-                {s.label}
-              </Link>
+              <Segment segment={s} />
             </span>
           ))}
-          {/* Wrapped with its own divider, exactly like the segments above:
-              a bare Divider here stayed behind on the previous line when the
-              row wrapped on a phone, leaving a "·" dangling off the end. */}
+          {/* The last count and the OPEN chip wrap as one unit: alone, the
+              chip was the only thing on a phone's second row ("8/8 OPEN" as
+              an orphan). Each keeps its own divider, so a wrapped row never
+              starts or ends on a dangling "·". */}
           <span className="flex items-center gap-x-2.5 sm:gap-x-4">
+            <Divider />
+            <Segment segment={SEGMENTS[SEGMENTS.length - 1]} />
             <Divider />
             <span className="ts-hard inline-flex items-baseline gap-1.5 text-silver">
               <span className="text-gt-bright tabular-nums">
@@ -81,7 +90,7 @@ export function HudTotals() {
           <HudOnline />
         </div>
         <p className="ts-hard order-3 font-display text-xs font-bold tracking-[0.14em] text-silver uppercase">
-          © 2026 Surya Pugazhenthi
+          © <span className="num">2026</span> Surya Pugazhenthi
         </p>
       </div>
     </div>

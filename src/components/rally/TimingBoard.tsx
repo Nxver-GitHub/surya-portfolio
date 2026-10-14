@@ -1,6 +1,7 @@
 import type { LiveryId } from "../../../content/liveries";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { SSDoorPlate, stageChromeParts } from "./SSDoorPlate";
+import { Num } from "@/components/gt/Num";
 
 interface TimingBoardProps {
   /** The stage's rally chrome, e.g. "SS1 · RECON" */
@@ -43,7 +44,7 @@ export function TimingBoard({
             Window
           </span>
           <span className="ts-hard font-display text-sm font-bold tracking-wide text-chrome uppercase">
-            {stageWindow}
+            <Num>{stageWindow}</Num>
           </span>
         </p>
       </div>
