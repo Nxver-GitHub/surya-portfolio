@@ -64,6 +64,22 @@ async function settledFrame(scene: Locator): Promise<Buffer> {
   throw new Error("scene never settled");
 }
 
+/** The gesture must land on the live canvas, not on the NOW LOADING backdrop
+ * that covers it while the glb streams (that backdrop scrolls regardless). */
+async function expectCanvasUnderCentre(scene: Locator) {
+  await scene.evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await expect
+    .poll(
+      () =>
+        scene.evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.tagName;
+        }),
+      { timeout: 40_000 },
+    )
+    .toBe("CANVAS");
+}
+
 /** Top edge of the scene box in the viewport — moves iff the page scrolled. */
 async function topOf(scene: Locator): Promise<number> {
   return scene.evaluate((el) => el.getBoundingClientRect().top);
@@ -108,6 +124,7 @@ async function openGarageScene(page: Page): Promise<Locator> {
   await expect(region.locator("canvas")).toHaveCount(1, { timeout: 20_000 });
   // R3F's wrapper div (canvas → sizer → wrapper): what OrbitControls binds to.
   const scene = region.locator("canvas").locator("xpath=../..");
+  await expectCanvasUnderCentre(scene);
   // The bay remounts once the model streams in; act on the settled one.
   await settledFrame(scene);
   return scene;
@@ -119,6 +136,7 @@ async function openCafeScene(page: Page): Promise<Locator> {
   const scene = page.getByLabel(/GT Café 3D view/);
   await expect(scene.locator("canvas")).toHaveCount(1, { timeout: 30_000 });
   await expect(page.getByTestId("cafe-scene-hint")).toBeVisible({ timeout: 30_000 });
+  await expectCanvasUnderCentre(scene);
   return scene;
 }
 
@@ -232,12 +250,30 @@ async function presentAsPerson(page: Page) {
   });
 }
 
-/** Stays on the title: one input reaches PRESS START and never passes it. */
-async function expectHeldOnTitle(page: Page, dialog: Locator) {
-  await expect(dialog.getByRole("button", { name: /press start/i })).toBeVisible({ timeout: 1_000 });
-  await page.waitForTimeout(800);
+/** Open the intro on a frozen clock and step it to mid-montage: the monogram
+ * holds 850ms, then the montage runs ~2.8s on its own. With time stopped, a
+ * title screen after the input can only mean the input skipped — no race
+ * against a loaded CI box. */
+async function openIntroAtMontage(page: Page): Promise<Locator> {
+  await presentAsPerson(page);
+  await page.clock.install();
+  await page.goto("/");
+  await page.clock.runFor(1_500);
+  const dialog = page.getByRole("dialog", { name: /portfolio introduction/ });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("button", { name: /press start/i })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /press start/i })).toHaveCount(0);
+  return dialog;
+}
+
+/** One input reaches PRESS START without the montage clock moving — and,
+ * however long it then sits, never passes it. */
+async function expectHeldOnTitle(page: Page, dialog: Locator) {
+  const start = dialog.getByRole("button", { name: /press start/i });
+  await page.clock.runFor(50);
+  await expect(start).toBeVisible();
+  await page.clock.runFor(10_000);
+  await expect(dialog).toBeVisible();
+  await expect(start).toBeVisible();
   expect(await page.evaluate(() => sessionStorage.getItem("sr-boot-seen"))).toBeNull();
 }
 
@@ -245,17 +281,23 @@ test.describe("boot intro on a phone", () => {
   test.use({ ...device("iPhone 15 Pro"), reducedMotion: "no-preference" });
 
   test("a tap during the montage jumps to the title screen, not past it", async ({ page }) => {
-    await presentAsPerson(page);
-    await page.goto("/");
-    const dialog = page.getByRole("dialog", { name: /portfolio introduction/ });
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByText("Tap to skip")).toBeVisible({ timeout: 5_000 });
-    await expect(dialog.getByText("Press any key to skip")).toBeHidden();
-
+    const dialog = await openIntroAtMontage(page);
     // Tap dead centre — exactly where PRESS START will appear.
     const c = await centreOf(dialog);
     await page.touchscreen.tap(c.x, c.y);
     await expectHeldOnTitle(page, dialog);
+  });
+});
+
+test.describe("boot intro on a tablet", () => {
+  test.use({ ...device("iPad Mini"), reducedMotion: "no-preference" });
+
+  test("the skip hint says tap (768px wide, but no keys)", async ({ page }) => {
+    await presentAsPerson(page);
+    await page.goto("/");
+    const dialog = page.getByRole("dialog", { name: /portfolio introduction/ });
+    await expect(dialog.getByText("Tap to skip")).toBeVisible({ timeout: 5_000 });
+    await expect(dialog.getByText("Press any key to skip")).toBeHidden();
   });
 });
 
@@ -268,11 +310,16 @@ test.describe("boot intro with a keyboard", () => {
   });
 
   test("any key during the montage jumps to the title screen, not past it", async ({ page }) => {
+    const dialog = await openIntroAtMontage(page);
+    await page.keyboard.press("a");
+    await expectHeldOnTitle(page, dialog);
+  });
+
+  test("the skip hint says press any key", async ({ page }) => {
     await presentAsPerson(page);
     await page.goto("/");
     const dialog = page.getByRole("dialog", { name: /portfolio introduction/ });
     await expect(dialog.getByText("Press any key to skip")).toBeVisible({ timeout: 5_000 });
-    await page.keyboard.press("a");
-    await expectHeldOnTitle(page, dialog);
+    await expect(dialog.getByText("Tap to skip")).toBeHidden();
   });
 });
