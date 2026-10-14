@@ -11,7 +11,10 @@ export interface NumeralPart {
  * side is a short code (SS1, 01A, S3, 4K), not a number, and is left alone —
  * except a version's "v" (v1.9), which prefixes a number rather than a code.
  */
-const NUMBER = /(?<![A-Za-uw-z\d.,])[+]?\d(?:[\d,.:/%]|[–-](?=\d))*(?![A-Za-z\d])/g;
+// The run is captured in a lookahead and re-matched by backreference — JS's
+// stand-in for an atomic group — so a number glued to a letter ("1.5x", "2-3x")
+// is rejected whole instead of backtracking to a shorter numeric prefix.
+const NUMBER = /(?<![A-Za-uw-z\d.,])(?=([+]?\d(?:[\d,.:/%]|[–-](?=\d))*))\1(?![A-Za-z\d])/g;
 
 /** Splits text into alternating lettering and number runs, in order. */
 export function splitNumerals(text: string): readonly NumeralPart[] {

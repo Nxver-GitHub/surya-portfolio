@@ -9,8 +9,8 @@ interface SectionFigureProps {
  * frame so the whole capture is visible at once; the image itself links to
  * the full-size file for anyone who wants to read the small text (at phone
  * width that is everyone), and so does the caption's "Full size" mark. Renders nothing when
- * the section carries no figure. The frame runs wider than the 68ch prose
- * column on purpose: these captures are wide UI, and fitting them into the
+ * the section carries no figure. The frame runs wider than the prose column
+ * (`--container-measure`) on purpose: these captures are wide UI, and fitting them into the
  * text measure would shrink them past legibility.
  */
 export function SectionFigure({ figure }: SectionFigureProps) {

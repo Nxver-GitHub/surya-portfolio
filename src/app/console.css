@@ -55,9 +55,10 @@ input, textarea { caret-color: #ffbf19; }
    code (SS1, 01A, a tier letter) and wrong for a count, a date or a version.
    `.num` marks a numeric readout (or a number set inside a Pixelify heading,
    via <Num>); `tabular-nums` already meant "readout" here, so it carries the
-   same face. Unlayered on purpose: it must beat the font-display utility on
-   the same element. */
-.num, .tabular-nums { font-family: var(--font-numeric); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+   same face inside console pages. Unlayered on purpose: it must beat the
+   font-display utility on the same element. No letter-spacing here, so the
+   element's own tracking utility still wins. */
+.num, .console-page .tabular-nums { font-family: var(--font-numeric); font-variant-numeric: tabular-nums; }
 .console-page button, .console-page a.lozenge { min-height: 44px; }
 .console-page [role="tab"], .console-menu > button { position: relative; }
 .console-page [role="tab"][aria-selected="true"]::before,

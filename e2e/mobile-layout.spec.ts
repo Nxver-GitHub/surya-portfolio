@@ -49,13 +49,24 @@ test.describe("mobile focused regressions", () => {
     const input = page.getByPlaceholder(/help · projects · contact/).first();
     await expect(input).toBeVisible({ timeout: 20_000 });
 
+    const bar = page.locator(".sound-bar");
+    const overlay = page.locator("[data-fullscreen-overlay]");
+    if ((await overlay.count()) > 0) {
+      // Phones: the terminal is a full-screen overlay and the bar steps aside
+      // for exactly as long as it is open.
+      await expect(bar).toBeHidden();
+      await page.keyboard.press("Escape");
+      await expect(overlay).toHaveCount(0);
+      await expect(bar).toBeVisible();
+      return;
+    }
+
+    // Wider screens dock the terminal in the page: the bar must not cover it.
     const overlap = await page.evaluate(() => {
       const field = document.querySelector<HTMLElement>("input[placeholder*='help']");
       const bar = document.querySelector<HTMLElement>(".sound-bar");
       if (!field) return "no input";
-      if (!bar) return 0;
-      const style = getComputedStyle(bar);
-      if (style.display === "none" || style.visibility === "hidden") return 0;
+      if (!bar) return "no music bar";
       const a = field.getBoundingClientRect();
       const b = bar.getBoundingClientRect();
       // The input wins only if it is painted above the bar where they meet.
@@ -66,7 +77,8 @@ test.describe("mobile focused regressions", () => {
     expect(overlap).toBe(0);
   });
 
-  test("320px header: mark, back lozenge and OPTIONS do not overlap", async ({ page }) => {
+  test("320px header: mark, back lozenge and OPTIONS do not overlap", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "phone-375", "pins its own 320px viewport; one project is enough");
     await page.setViewportSize({ width: 320, height: 640 });
     for (const route of ["/career", "/career/16vc", "/garage/nodegent", "/special-stage/reason-codes", "/lobby"]) {
       await page.goto(route);
@@ -90,7 +102,8 @@ test.describe("mobile focused regressions", () => {
     }
   });
 
-  test("career season tabs stack on a phone", async ({ page }) => {
+  test("career season tabs stack on a phone", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "phone-375", "pins its own 375px viewport; one project is enough");
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/career");
     await expectRendered(page);

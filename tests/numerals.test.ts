@@ -25,6 +25,9 @@ describe("splitNumerals", () => {
 
   it("leaves short codes as lettering", () => {
     expect(numbers("SS1 · 01A · S3 · 4K · GT1")).toEqual([]);
+    // Glued to a letter, a decimal/grouped/range number is a code too — never
+    // a numeric prefix split off the front.
+    expect(numbers("1.5x · 4.5K · 1,000x · 2-3x")).toEqual([]);
   });
 
   it("returns one lettering part when there is no number", () => {
