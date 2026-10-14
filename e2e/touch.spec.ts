@@ -316,6 +316,12 @@ test.describe("boot intro with a keyboard", () => {
     await expectHeldOnTitle(page, dialog);
   });
 
+  test("browser shortcuts during the montage do not skip it", async ({ page }) => {
+    const dialog = await openIntroAtMontage(page);
+    for (const combo of ["Control+r", "Meta+f", "Alt+d", "F5"]) await page.keyboard.press(combo);
+    await expect(dialog.getByRole("button", { name: /press start/i })).toHaveCount(0);
+  });
+
   test("the skip hint says press any key", async ({ page }) => {
     await presentAsPerson(page);
     await page.goto("/");

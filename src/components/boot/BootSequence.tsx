@@ -120,6 +120,9 @@ export function BootSequence() {
   };
   const skipOnKey = (event: KeyboardEvent) => {
     if (!skippable || event.repeat || NON_SKIP_KEYS.has(event.key)) return;
+    // Browser shortcuts (reload, find, address bar, devtools) keep working and
+    // never count as "any key".
+    if (event.metaKey || event.ctrlKey || event.altKey || /^F\d{1,2}$/.test(event.key)) return;
     // Enter/Space on the focused Skip control is that control's own press.
     if ((event.key === "Enter" || event.key === " ") && onControl(event.target)) return;
     event.preventDefault();

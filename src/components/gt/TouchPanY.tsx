@@ -17,7 +17,8 @@ const TOUCH_ACTION = "pan-y";
  * OrbitControls.connect() writes `touch-action: none` inline on its element
  * (R3F's event-source wrapper), so a className cannot win. This re-asserts
  * the value every frame — one string compare — which also survives the
- * controls re-connecting. Render it inside the `<Canvas>`, after the controls.
+ * controls re-connecting. Render it inside the `<Canvas>`; order relative to the controls does not
+ * matter, since the value is re-pinned every frame.
  *
  * `allowPinch`: `pan-y` excludes `pinch-zoom`, so a two-finger gesture would be
  * read as a page scroll. With this set, any touch event carrying two or more
@@ -34,7 +35,7 @@ export function TouchPanY({ allowPinch = false }: { allowPinch?: boolean }) {
     pinTouchAction(target);
     if (!allowPinch) return;
     const holdMultiTouch = (event: TouchEvent) => {
-      if (event.touches.length >= 2 && event.cancelable) event.preventDefault();
+      if (event.targetTouches.length >= 2 && event.cancelable) event.preventDefault();
     };
     target.addEventListener("touchstart", holdMultiTouch, { passive: false });
     target.addEventListener("touchmove", holdMultiTouch, { passive: false });
