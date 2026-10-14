@@ -14,7 +14,7 @@
  * and the response ends with a pointer to /garage so a visitor who actually
  * meant "what have you built" is one click from the right place.
  *
- * A later change wraps this with the PS2-advert takeover cinematic; the lines
+ * The PS2-advert takeover cinematic (teaser/) plays over this; the lines
  * built here remain the permanent scrollback residue once the ad dismisses,
  * so this module stays the single definition of "what the terminal says about
  * Citation" either way.
@@ -36,9 +36,19 @@ const POSTER_CARD_WIDTH = 176;
  * are asking about shipped work, not the teaser.
  */
 export function isCitationQuestion(text: string): boolean {
-  // 1. Named directly — no ambiguity possible. "Proximize" is the pre-rebrand
-  //    name (Oct 2026), kept so visitors who saw the old teaser still land here.
-  if (/\b(citation|proximize)\b/i.test(text)) return true;
+  // 1. Named directly. "Proximize" (the pre-rebrand name, Oct 2026) is a
+  //    coined word and safe bare. "Citation" is ordinary English, so it only
+  //    counts as the product name on its own, as the domain, or when asked
+  //    about as a name — "give me a citation for that" must reach the model.
+  if (/\bproximize\b/i.test(text)) return true;
+  if (/\bcitation\.so\b/i.test(text) || /^\W*citation\W*$/i.test(text)) return true;
+  if (
+    /\b(?:what(?:'s|s|\s+is)|tell\s+me\s+(?:more\s+)?about|what\s+about|surya'?s|your|his)\s+citation\b(?!\s+(?:for|needed|style|format|of|in|on|to)\b)/i.test(
+      text,
+    )
+  ) {
+    return true;
+  }
   if (/\bproject\s+silhouette\b/i.test(text)) return true;
 
   // 2. "Secret next thing" vocabulary, unambiguous enough to stand alone.

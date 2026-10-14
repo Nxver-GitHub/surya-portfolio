@@ -61,6 +61,21 @@ describe("isCitationQuestion", () => {
     expect(isCitationQuestion("what is Proximize?")).toBe(true);
   });
 
+  it("treats Citation as a name, never the ordinary word", () => {
+    for (const text of ["what is Citation?", "tell me about citation", "Citation!", "citation.so", "what's Surya's Citation"]) {
+      expect(isCitationQuestion(text), text).toBe(true);
+    }
+    for (const text of [
+      "can you give me a citation for that?",
+      "citation needed",
+      "what is a citation?",
+      "how do I format a citation",
+      "what's your citation for that claim",
+    ]) {
+      expect(isCitationQuestion(text), text).toBe(false);
+    }
+  });
+
   it("ignores empty and whitespace input", () => {
     expect(isCitationQuestion("")).toBe(false);
     expect(isCitationQuestion("   ")).toBe(false);

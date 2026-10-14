@@ -9,7 +9,7 @@
  *   2. the linkify allowlist (src/components/cafe/terminal/linkify.ts), so the
  *      URL is clickable in the terminal;
  *   3. the terminal's teaser response (terminal/citation.ts);
- *   4. the PS2-advert takeover cinematic (terminal/teaser/, a later change).
+ *   4. the PS2-advert takeover cinematic (terminal/teaser/).
  *
  * DISCLOSURE BOUNDARY — read before adding a field. Everything here is
  * deliberately thin: a name, a positioning line, a status, and a URL. That is
