@@ -43,10 +43,10 @@ export function EmptyBay() {
           className="block h-8 w-1.5 border border-dashed border-steel"
         />
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-display text-base leading-tight font-bold tracking-wide text-silver uppercase">
+          <span className="font-display text-base leading-tight wrap-break-word font-bold tracking-wide text-silver uppercase">
             + Add a new car
           </span>
-          <span className="truncate text-xs text-silver/70">
+          <span className="text-xs leading-snug text-silver/70">
             Empty bay — yours?
           </span>
         </span>
