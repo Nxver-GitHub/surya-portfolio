@@ -38,6 +38,7 @@ import { useReducedMotion } from "../../garage/useReducedMotion";
 import { LogRenderer, PHOSPHOR, PHOSPHOR_DIM, PHOSPHOR_USER } from "./LogRenderer";
 import { cycleHistory, HISTORY_CURSOR_HOME, type HistoryCursor } from "./history";
 import { TeaserTakeover } from "./teaser/TeaserTakeover";
+import { PointerText } from "../../gt/pointer";
 import type { TerminalChatApi } from "./useTerminalChat";
 
 /** Which surface we're rendering. See the module doc for each variant. */
@@ -52,10 +53,13 @@ interface TerminalProps {
   onClose: () => void;
   /** Toggle between the overlay panel and the in-3D-screen view, if wired. */
   onToggleExpand?: () => void;
-  /** Label for the close control. "Esc ✕" fits desktop; the mobile full-screen
-   * window passes "Exit ✕" (phones have no Escape key). */
-  closeLabel?: string;
+  /** Label for the close control. Defaults to pointer-aware wording: "Esc ✕"
+   * with a mouse, "Exit ✕" on touch (no Escape key there — iPads included).
+   * Escape closes either way. */
+  closeLabel?: ReactNode;
 }
+
+const DEFAULT_CLOSE_LABEL = <PointerText fine="Esc ✕" touch="Exit ✕" />;
 
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
 
@@ -282,7 +286,7 @@ export function Terminal({
   variant,
   onClose,
   onToggleExpand,
-  closeLabel = "Esc ✕",
+  closeLabel = DEFAULT_CLOSE_LABEL,
 }: TerminalProps) {
   const reducedMotion = useReducedMotion();
 

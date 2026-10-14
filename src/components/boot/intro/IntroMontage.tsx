@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FrameView } from "./frames";
+import { PointerText } from "../../gt/pointer";
 import { CAR_SILHOUETTES, FRAMES, FRAMES_COMPACT } from "./sequence";
 
 /** Beat 2 — the hard-cut heritage montage on a fixed beat grid. Silent: the
@@ -79,7 +80,8 @@ export function IntroMontage({ compact, onComplete }: IntroMontageProps) {
       />
       {showHint && (
         <p className="intro-hint ts-hard pointer-events-none absolute inset-x-0 bottom-6 z-20 text-center font-display text-xs font-semibold tracking-[0.3em] text-silver uppercase">
-          {compact ? "Tap to skip" : "Press any key to skip"}
+          {/* Pointer, not width: an iPad Mini is 768 wide and has no keys. */}
+          <PointerText fine="Press any key to skip" touch="Tap to skip" />
         </p>
       )}
     </div>
