@@ -18,7 +18,7 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import { Color, Vector3 } from "three";
-import type { Group, Object3D } from "three";
+import type { Camera, Group, Object3D } from "three";
 import { warmCafeMaterials } from "./warmCafe";
 import { menuBooks, type MenuBook } from "../../../content/menu-books";
 import { exhibits, exhibitById, type Exhibit } from "../../../content/cafe-exhibits";
@@ -48,6 +48,38 @@ const CAFE_MODEL_PATH = "/models/cafe.glb";
 /** Camera-flight duration (ms). Longer than the 150–250ms UI motion is fine
  * for a scripted flight; same mechanical easing family, no bounce/overshoot. */
 const FLIGHT_MS = 800;
+
+/** Clear gap kept between an in-scene label and the canvas edge, in CSS px. */
+const LABEL_EDGE_GAP = 4;
+const projected = new Vector3();
+
+/**
+ * Screen position for an in-scene label, kept inside the canvas.
+ *
+ * drei's default projects the anchor and stops there, so a book standing near
+ * the frame edge pushed its sign half off the canvas: on a tablet the selected
+ * book sits at the left edge and "FOR FOUNDERS" lost its first letters. This
+ * is the same projection, then a clamp by the label's measured box. The camera
+ * is untouched (its clamps are fixed); only the 2D overlay slides inward. The
+ * box comes from the previous frame, which is the one on screen. The label is
+ * `center`ed and lifted a full height above its anchor (translateY(-100%)),
+ * hence the 1.5x on the top edge.
+ */
+function clampedLabelPosition(
+  el: Object3D,
+  camera: Camera,
+  size: { width: number; height: number },
+  box: DOMRect | undefined,
+): number[] {
+  projected.setFromMatrixPosition(el.matrixWorld).project(camera);
+  const x = (projected.x * size.width) / 2 + size.width / 2;
+  const y = (-projected.y * size.height) / 2 + size.height / 2;
+  if (!box || box.width === 0) return [x, y];
+  const halfW = box.width / 2 + LABEL_EDGE_GAP;
+  const maxX = Math.max(halfW, size.width - halfW);
+  const minY = box.height * 1.5 + LABEL_EDGE_GAP;
+  return [Math.min(Math.max(x, halfW), maxX), Math.max(y, minY)];
+}
 
 /** The site's mechanical easing (cubic-bezier(0.16, 1, 0.3, 1)) as a scalar
  * ease for a 0→1 flight progress. A decelerating ease-out, no overshoot. */
@@ -140,6 +172,12 @@ interface BookMarkerProps {
  * gently unless reduced motion is set; hover/active shows an HTML label. */
 function BookMarker({ book, isActive, onSelect, idle, focused }: BookMarkerProps) {
   const ref = useRef<Group>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
+  const labelPosition = useCallback(
+    (el: Object3D, camera: Camera, size: { width: number; height: number }) =>
+      clampedLabelPosition(el, camera, size, labelRef.current?.getBoundingClientRect()),
+    [],
+  );
   const [hovered, setHovered] = useState(false);
   const { x, y, z } = book.anchor;
   const { color, label } = book.cover;
@@ -189,8 +227,15 @@ function BookMarker({ book, isActive, onSelect, idle, focused }: BookMarkerProps
           2D UI for keyboard users, so this is never the sole source. Suppressed
           while this book is the flown-in focus (label would fill the frame). */}
       {lit && !focused ? (
-        <Html center distanceFactor={6} position={[0, 0.34, 0]} zIndexRange={[20, 0]}>
+        <Html
+          center
+          distanceFactor={6}
+          position={[0, 0.34, 0]}
+          zIndexRange={[20, 0]}
+          calculatePosition={labelPosition}
+        >
           <div
+            ref={labelRef}
             style={{
               transform: "translateY(-100%)",
               // Wraps (rather than clipping via the canvas's overflow-hidden
@@ -212,7 +257,8 @@ function BookMarker({ book, isActive, onSelect, idle, focused }: BookMarkerProps
             <div
               style={{
                 color,
-                fontSize: 9,
+                // 12px is the site's type floor, scene labels included.
+                fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: "0.18em",
               }}

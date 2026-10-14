@@ -6,8 +6,15 @@ import { MusicCreditLine } from "./MusicCreditLine";
 import { SoundSelectPanel } from "./SoundSelectPanel";
 import { useMusicDeck } from "./useMusicDeck";
 
-/** What the readout says with nothing sounding — an idle deck, not a title. */
-const IDLE_READOUT = "— —";
+/**
+ * What the readout says with nothing sounding. A real sentence, not a dash
+ * placeholder: "— —" read as a broken readout before anyone had pressed play.
+ * Between the press and the first decoded frame the deck is armed but silent,
+ * which gets its own word so the label never claims "off" right after "on".
+ */
+const IDLE_READOUT = "Music off";
+const IDLE_HINT = " · press play";
+const CUEING_READOUT = "Cueing track…";
 
 /**
  * SOUND SELECT — the site's music UI, a deck bar pinned along the bottom edge.
@@ -22,7 +29,7 @@ const IDLE_READOUT = "— —";
  * Its top border is the stamped 2px rule of `.map-control-strip`, because that
  * is what a hint strip along the bottom of a screen already looks like here.
  *
- * It is always visible and always stopped until asked: the deck reads "■ — —"
+ * It is always visible and always stopped until asked: the deck reads "■ Music off"
  * and pressing play is how a visitor opts into music. That press is both the
  * consent and the user gesture the autoplay policy wants, and it writes the
  * same persisted key the Options panel used to own, so anyone who already had
@@ -68,7 +75,9 @@ export function SoundBar() {
     };
   }, [open, close]);
 
-  const title = deck.track?.title ?? IDLE_READOUT;
+  const title =
+    deck.track?.title ?? (deck.enabled ? CUEING_READOUT : IDLE_READOUT);
+  const idle = !deck.track && !deck.enabled;
 
   return (
     <div className="sound-bar" ref={rootRef}>
@@ -130,6 +139,9 @@ export function SoundBar() {
           </span>
           <span className="sound-readout-title ts-hard font-display">
             {title}
+            {/* The hint is the first thing to go on a narrow phone, so the
+                state ("Music off") never ends in an ellipsis. */}
+            {idle ? <span className="max-[399px]:hidden">{IDLE_HINT}</span> : null}
           </span>
           {/* CSS triangle, the same selection-cursor shape used across the
               system — a drawn mark, never a typed one that a bitmap face might
