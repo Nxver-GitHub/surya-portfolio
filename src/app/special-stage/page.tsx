@@ -11,6 +11,7 @@ import { credentialById } from "../../../content/credentials";
 import type { LiveryId } from "../../../content/liveries";
 import { pavilions } from "../../../content/pavilions";
 import { GtBackHeader, GtCrumb, GtTitle } from "@/components/gt/GtChrome";
+import { Num } from "@/components/gt/Num";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
 import { CredentialPlate } from "@/components/rally/CredentialPlate";
 import { ProvenanceDot, ProvenanceLegend } from "@/components/rally/ProvenanceDot";
@@ -64,7 +65,7 @@ function StageCard({ stage }: { stage: CaseStudy }) {
             data-sfx="confirm"
             className="outline-none after:absolute after:inset-0 group-hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
           >
-            {stage.title}
+            <Num>{stage.title}</Num>
           </Link>
         </h2>
 
@@ -84,7 +85,7 @@ function StageCard({ stage }: { stage: CaseStudy }) {
                 {metric.label}
               </dt>
               <dd className="ts-hard mt-0.5 flex items-center gap-1.5 font-display text-base font-bold break-words text-chrome">
-                <span>{metric.value}</span>
+                <span className="num">{metric.value}</span>
                 {metric.provenance === "session" ? <ProvenanceDot /> : null}
               </dd>
             </div>
@@ -130,7 +131,7 @@ function ThesisCard({ stage }: { stage: CaseStudy }) {
             data-sfx="confirm"
             className="outline-none after:absolute after:inset-0 group-hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
           >
-            {stage.title}
+            <Num>{stage.title}</Num>
           </Link>
         </h2>
 
@@ -140,7 +141,7 @@ function ThesisCard({ stage }: { stage: CaseStudy }) {
           </p>
         ) : null}
 
-        <p className="max-w-[68ch] text-base text-ink leading-snug">
+        <p className="max-w-measure text-base text-ink leading-snug">
           {throughLine}
         </p>
 
@@ -155,7 +156,7 @@ function ThesisCard({ stage }: { stage: CaseStudy }) {
                   {metric.label}
                 </dt>
                 <dd className="ts-hard mt-0.5 flex items-center gap-1.5 font-display text-base font-bold break-words text-chrome">
-                  <span>{metric.value}</span>
+                  <span className="num">{metric.value}</span>
                   {metric.provenance === "session" ? <ProvenanceDot /> : null}
                 </dd>
               </div>
@@ -198,7 +199,7 @@ export default function SpecialStagePage() {
             {specialStage.headline}
           </p>
 
-          <div className="mt-4 flex max-w-[68ch] flex-col gap-3">
+          <div className="mt-4 flex max-w-measure flex-col gap-3">
             {specialStage.wedge.map((paragraph) => (
               <p key={paragraph} className="text-base text-ink leading-snug">
                 {paragraph}
@@ -265,7 +266,7 @@ export default function SpecialStagePage() {
         ) : null}
 
         <section aria-label="Stages" className="mt-10">
-          <div className="flex items-baseline gap-3 border-b border-steel pb-2">
+          <div className="flex flex-col gap-1 border-b border-steel pb-2 sm:flex-row sm:items-baseline sm:gap-3">
             <h2 className="ts-hard font-display text-2xl font-bold tracking-wide text-chrome uppercase">
               Stages
             </h2>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CareerEvent } from "../../../content/career";
 import { Glyph } from "../gt/Glyph";
+import { Num } from "../gt/Num";
 import { OrgLogo } from "./OrgLogo";
 
 /** Orange small-caps label over a white value — the GT2 HUD field. */
@@ -10,8 +11,8 @@ function Field({ label, value }: { label: string; value: string }) {
       <dt className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
         {label}
       </dt>
-      <dd className="ts-hard truncate text-sm text-chrome" title={value}>
-        {value}
+      <dd className="ts-hard text-sm leading-snug wrap-break-word text-chrome">
+        <Num>{value}</Num>
       </dd>
     </div>
   );

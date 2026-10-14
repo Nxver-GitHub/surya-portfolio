@@ -519,6 +519,7 @@ export function CafeBrowser() {
             scrolling the page, and Exit drops back to the café overview. */}
         {takeoverVisible ? (
           <div
+            data-fullscreen-overlay=""
             className="fixed inset-0 z-50 bg-[#020604] p-2"
             style={{ height: "100dvh" }}
           >

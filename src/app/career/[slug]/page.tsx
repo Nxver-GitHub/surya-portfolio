@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { allEventSlugs, findEvent } from "../../../../content/career";
 import { GtBackHeader, GtCrumb } from "@/components/gt/GtChrome";
+import { Num } from "@/components/gt/Num";
 import { EventBriefing } from "@/components/career/EventBriefing";
 import { OrgLogo } from "@/components/career/OrgLogo";
 import { LiveryStripe } from "@/components/livery/LiveryStripe";
@@ -39,7 +40,9 @@ function MetaField({ label, value }: { label: string; value: string }) {
       <dt className="font-display text-xs font-bold tracking-[0.18em] text-gt-bright uppercase">
         {label}
       </dt>
-      <dd className="ts-hard text-sm text-chrome">{value}</dd>
+      <dd className="ts-hard text-sm text-chrome">
+        <Num>{value}</Num>
+      </dd>
     </div>
   );
 }

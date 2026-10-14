@@ -97,6 +97,7 @@ export function MediaZoom({ media, onClose }: MediaZoomProps) {
   return createPortal(
     <div
       ref={dialogRef}
+      data-fullscreen-overlay=""
       role="dialog"
       aria-modal="true"
       aria-label={media.alt}

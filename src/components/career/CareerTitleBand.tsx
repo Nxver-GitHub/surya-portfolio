@@ -9,8 +9,10 @@ interface CareerTitleBandProps {
 }
 
 /**
- * A flat warm season field behind the kicker + title block, bleeding to the
- * left screen edge (matches the page's px-5 / md:px-10 gutter). Hard edges,
+ * A flat warm season field behind the kicker + title block. From md up it
+ * bleeds to the left screen edge (matching the page's md:px-10 gutter); on
+ * phones it sits on the standard 16px gutter instead, because a plate run
+ * flush to the glass edge read as clipped rather than as a bleed. Hard edges,
  * zero blur; ink mode follows the season's tint (dark asphalt ink for the
  * lighter S1/S2 fields, light chrome ink for the deep S3 crimson field).
  */
@@ -22,7 +24,7 @@ export function CareerTitleBand({
   const tint = seasonTint(seasonId);
   return (
     <div
-      className="mt-10 -ml-5 w-fit py-4 pr-8 pl-5 md:mt-12 md:-ml-10 md:pl-10"
+      className="mt-10 w-fit max-w-full py-4 pr-5 pl-4 md:mt-12 md:-ml-10 md:pr-8 md:pl-10"
       style={{ backgroundColor: tint.field }}
     >
       <GtTitle kicker={kicker} ink={tint.inkMode}>

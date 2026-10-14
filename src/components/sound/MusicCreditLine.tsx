@@ -1,7 +1,10 @@
 import { musicCredit } from "../../../content/music";
 
+/* inline-block + 4px of block padding lifts each link's hit area to 24px
+   (WCAG 2.5.8) at the 12px caption size; the matching negative margin keeps
+   the line box where it was, so the caption's rhythm does not change. */
 const LINK =
-  "underline decoration-silver/40 underline-offset-2 hover:text-chrome focus-visible:text-chrome";
+  "inline-block py-1 -my-1 underline decoration-silver/40 underline-offset-2 hover:text-chrome focus-visible:text-chrome";
 
 /**
  * The CC BY 4.0 credit, written once and rendered in two lengths.

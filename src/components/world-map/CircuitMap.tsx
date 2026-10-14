@@ -4,7 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { useSound } from "@/components/sound/SoundProvider";
-import { pavilions } from "../../../content/pavilions";
+import { pavilions as roster, type Pavilion } from "../../../content/pavilions";
+
+/* Widened to the declared shape: with every destination open today, the
+   literal roster type would make the locked branches below unreachable to
+   the compiler, but they stay for any destination that ships behind a lock. */
+const pavilions: readonly Pavilion[] = roster;
 
 export function CircuitMap() {
   const [selectedId, setSelectedId] = useState("cafe");

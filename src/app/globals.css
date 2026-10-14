@@ -17,6 +17,14 @@
   --font-title: var(--font-serif-title), Georgia, serif; /* GT2 headers */
   --font-display: var(--font-pixel), var(--font-saira), sans-serif;
   --font-body: var(--font-satoshi), "Satoshi", sans-serif;
+  /* Numeric readouts: counts, dates, years, versions (see .num) */
+  --font-numeric: var(--font-saira), sans-serif;
+
+  /* Reading measure: ~70 characters of Satoshi per line (its average glyph
+     runs ~0.48em, so 34em lands at 68-72 characters). Written in em, not ch:
+     ch is the width of "0", and 68ch of Satoshi measured 85-94 characters a
+     line on a tablet. */
+  --container-measure: 34em;
 
   /* Motion — mechanical, no bounce */
   --ease-mech: cubic-bezier(0.16, 1, 0.3, 1);

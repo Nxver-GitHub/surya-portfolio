@@ -60,7 +60,7 @@ export function VersionLog() {
         aria-controls={panelId}
         data-sfx="move"
         onClick={togglePanel}
-        className="ts-hard inline-flex items-baseline gap-1.5 font-display text-xs font-bold tracking-[0.14em] text-silver uppercase outline-none hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
+        className="ts-hard inline-flex items-baseline gap-1.5 py-1 -my-1 font-display text-xs font-bold tracking-[0.14em] text-silver uppercase outline-none hover:text-gt-bright focus-visible:ring-2 focus-visible:ring-gt-bright"
       >
         Version
         <span className="text-chrome tabular-nums">{siteVersion}</span>
