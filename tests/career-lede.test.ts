@@ -18,7 +18,7 @@ describe("career page ledes", () => {
   it("never doubles brackets when the org already ends in one", () => {
     for (const e of events) expect(careerLede(e)).not.toMatch(/\) \(/);
     expect(careerLede(findEvent("lvlup-ventures")!.event)).toContain(
-      "at LvlUp Ventures (Shopline-backed seed fund), Feb 2026 – Present.",
+      "at LvlUp Ventures (Shopline-backed seed fund), Feb – May 2026.",
     );
   });
 

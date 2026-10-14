@@ -289,7 +289,7 @@ export const seasons: readonly Season[] = [
         title: "LvlUp Ventures",
         org: "LvlUp Ventures (Shopline-backed seed fund)",
         role: "Venture Scout",
-        dates: "Feb 2026 – Present",
+        dates: "Feb – May 2026",
         result: "3 companies surfaced for potential investment from 20+ founder outreaches",
         story: {
           problem:
