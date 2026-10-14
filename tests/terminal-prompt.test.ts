@@ -7,6 +7,7 @@ import {
   buildSystemPrompt,
 } from "../src/lib/terminal-prompt";
 import { proximize } from "../content/proximize";
+import { seasons } from "../content/career";
 
 describe("terminal prompt — facts digest", () => {
   const digest = buildFactsDigest();
@@ -32,8 +33,11 @@ describe("terminal prompt — facts digest", () => {
 
   // Regression: the model called a "Present"-dated role "former" — currency
   // must be explicit in the digest and enforced by a hard rule in the prompt.
-  it("marks Present-dated roles as current", () => {
-    expect(digest).toContain("[CURRENT — ongoing role]");
+  it("marks exactly the Present-dated roles as current", () => {
+    const current = seasons
+      .flatMap((s) => s.events)
+      .filter((e) => /present/i.test(e.dates)).length;
+    expect(digest.split("[CURRENT — ongoing role]").length - 1).toBe(current);
     expect(buildSystemPrompt()).toContain(
       "Never describe them as former, past, or previous",
     );

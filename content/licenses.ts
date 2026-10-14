@@ -248,7 +248,7 @@ export const licenses: readonly License[] = [
         id: "s-pitch-and-qa",
         name: "Reps in the room",
         summary:
-          "Building investment judgment through Venture Starters — live startup pitching sessions and investor Q&A — reps that sharpen how startups get evaluated.",
+          "Built investment judgment through Venture Starters — live startup pitching sessions and investor Q&A — reps that sharpen how startups get evaluated.",
         grade: "bronze",
         careerEventId: "venture-starters",
       },

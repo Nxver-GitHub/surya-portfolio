@@ -271,13 +271,13 @@ export const seasons: readonly Season[] = [
         title: "Venture Starters",
         org: "Venture Starters",
         role: "Venture Analyst Intern",
-        dates: "Jan 2026 – Present",
+        dates: "2026",
         result: "Hands-on reps in live startup pitching and investor Q&A",
         story: {
           problem:
             "Evaluating startups well requires reps — hearing real pitches and real investor questioning, repeatedly.",
           actions: [
-            "Participating in Venture Starters' educational internship: live, virtual startup pitching sessions and investor Q&A.",
+            "Took part in Venture Starters' educational internship: live, virtual startup pitching sessions and investor Q&A.",
           ],
           results:
             "A steady training ground running alongside scout work at LvlUp and 16VC.",
