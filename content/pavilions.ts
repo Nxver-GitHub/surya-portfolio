@@ -91,7 +91,7 @@ export const pavilions = [
     slug: "scapes",
     name: "Scapes",
     caption: "Photography & interests",
-    status: "locked",
+    status: "open",
     map: { x: 64, y: 79 },
     livery: "leyton",
     glyph: "SC",

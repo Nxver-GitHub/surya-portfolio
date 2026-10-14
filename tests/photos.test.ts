@@ -13,7 +13,7 @@ import { missionById } from "../content/missions";
 import { findEvent } from "../content/career";
 
 const PUBLIC_DIR = join(__dirname, "..", "public");
-const CATEGORY_IDS: readonly PhotoCategory[] = ["nature", "cars", "life"];
+const CATEGORY_IDS: readonly PhotoCategory[] = ["cars", "nature", "life"];
 
 describe("scapes photos", () => {
   it("has at least nine photos", () => {

@@ -39,6 +39,11 @@ describe("pavilions", () => {
     );
     expect(openCount).toBeGreaterThanOrEqual(1);
   });
+
+  it("opens every pavilion, Scapes included (the map reads 8/8)", () => {
+    expect(pavilions.find((p) => p.id === "scapes")?.status).toBe("open");
+    expect(openCount).toBe(pavilions.length);
+  });
 });
 
 describe("career content", () => {
