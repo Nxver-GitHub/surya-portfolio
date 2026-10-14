@@ -1,10 +1,10 @@
 """Extracts the two cinematic frame assets from the source teaser artwork.
 
 The teaser takeover (terminal/teaser/) plays composed beats on black and needs
-the cover-car and the PROXIMIZE lockup as standalone images:
+the cover-car and the CITATION lockup as standalone images:
 
-    public/terminal/proximize/car.webp     frame 7 — the car under the cover
-    public/terminal/proximize/lockup.webp  frame 8 — P-mark + wordmark + rule
+    public/terminal/citation/car.webp     frame 7 — the car under the cover
+    public/terminal/citation/lockup.webp  frame 8 — P-mark + wordmark + rule
 
 WHY LUMINANCE-KEYED ALPHA: both elements sit on the poster's dark *gradient*
 sky, not on pure black. A plain rectangular crop composited onto the
@@ -20,12 +20,11 @@ at 50% alpha over black renders the same value it had over near-black — while
 producing perfectly clean edges at any position or scale.
 
 Requires Pillow (not a project dependency — this repo carries no image libs).
-Run from a throwaway venv, same as build-proximize-poster.py:
+Run from a throwaway venv, same as build-citation-poster.py:
 
-    /tmp/poster-venv/bin/python scripts/build-proximize-frames.py ~/path/to/source.png
+    /tmp/poster-venv/bin/python scripts/build-citation-frames.py ~/path/to/source.png
 
-The source art is deliberately not committed (it still carries the PlayStation
-mark this project strips). Only the outputs belong in git.
+The source art is deliberately not committed; only the outputs belong in git.
 """
 
 import sys
@@ -34,11 +33,11 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = ROOT / "public" / "terminal" / "proximize"
+OUT_DIR = ROOT / "public" / "terminal" / "citation"
 
 # Boxes measured off the 1085x1450 source by scanning for bright row bands,
 # padded so no lit pixel is clipped. See the band map in the PR description.
-#   lockup: P-mark + PROXIMIZE wordmark + tricolore + the strapline under it,
+#   lockup: P-mark + CITATION wordmark + tricolore + the strapline under it,
 #           kept together because they are one brand lockup.
 #   car:    the covered car and its ground reflection.
 REGIONS = {
@@ -68,7 +67,7 @@ def keyed(im):
 
 def main():
     if len(sys.argv) < 2:
-        sys.exit("usage: build-proximize-frames.py <source.png>  (see module docstring)")
+        sys.exit("usage: build-citation-frames.py <source.png>  (see module docstring)")
 
     src = Image.open(sys.argv[1])
     OUT_DIR.mkdir(parents=True, exist_ok=True)

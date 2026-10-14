@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  isProximizeQuestion,
-  makeProximizeLines,
-  makeProximizePosterLine,
-} from "../src/components/cafe/terminal/proximize";
-import { proximize, POSTER_ASPECT } from "../content/proximize";
+  isCitationQuestion,
+  makeCitationLines,
+  makeCitationPosterLine,
+} from "../src/components/cafe/terminal/citation";
+import { citation, POSTER_ASPECT } from "../content/citation";
 
-describe("isProximizeQuestion", () => {
+describe("isCitationQuestion", () => {
   it("matches the phrasings this feature exists to answer", () => {
     const asking = [
       "What is Surya working on?",
@@ -23,11 +23,11 @@ describe("isProximizeQuestion", () => {
       "what's cooking?",
       "anything in the works?",
       "are you building something in stealth",
-      "tell me about Proximize",
+      "tell me about Citation",
       "what is project silhouette",
     ];
     for (const text of asking) {
-      expect(isProximizeQuestion(text), text).toBe(true);
+      expect(isCitationQuestion(text), text).toBe(true);
     }
   });
 
@@ -49,27 +49,29 @@ describe("isProximizeQuestion", () => {
       "what is your tech stack",
     ];
     for (const text of notAsking) {
-      expect(isProximizeQuestion(text), text).toBe(false);
+      expect(isCitationQuestion(text), text).toBe(false);
     }
   });
 
   it("is case-insensitive on the named forms", () => {
-    expect(isProximizeQuestion("PROXIMIZE")).toBe(true);
-    expect(isProximizeQuestion("proximize")).toBe(true);
-    expect(isProximizeQuestion("Project Silhouette")).toBe(true);
+    expect(isCitationQuestion("CITATION")).toBe(true);
+    expect(isCitationQuestion("citation")).toBe(true);
+    expect(isCitationQuestion("Project Silhouette")).toBe(true);
+    // Pre-rebrand name (Oct 2026) still lands on the teaser.
+    expect(isCitationQuestion("what is Proximize?")).toBe(true);
   });
 
   it("ignores empty and whitespace input", () => {
-    expect(isProximizeQuestion("")).toBe(false);
-    expect(isProximizeQuestion("   ")).toBe(false);
+    expect(isCitationQuestion("")).toBe(false);
+    expect(isCitationQuestion("   ")).toBe(false);
   });
 });
 
-describe("makeProximizeLines", () => {
+describe("makeCitationLines", () => {
   it("leads with the poster card at the poster's true aspect", () => {
-    const poster = makeProximizePosterLine();
-    expect(poster.media?.src).toBe(proximize.poster.src);
-    expect(poster.media?.alt).toBe(proximize.poster.alt);
+    const poster = makeCitationPosterLine();
+    expect(poster.media?.src).toBe(citation.poster.src);
+    expect(poster.media?.alt).toBe(citation.poster.alt);
     // Default card geometry is a 4/5 portrait crop; the poster must override
     // it or object-fit:cover eats the lockup.
     expect(poster.media?.aspect).toBe(POSTER_ASPECT);
@@ -77,24 +79,24 @@ describe("makeProximizeLines", () => {
   });
 
   it("states the public facts and the clickable link", () => {
-    const lines = makeProximizeLines();
+    const lines = makeCitationLines();
     const text = lines.map((l) => l.text).join("\n");
-    expect(text).toContain(proximize.tagline);
-    expect(text).toContain(proximize.href);
-    expect(text).toContain(proximize.status);
+    expect(text).toContain(citation.tagline);
+    expect(text).toContain(citation.href);
+    expect(text).toContain(citation.status);
   });
 
   it("points shipped work at the Garage, for false positives", () => {
-    const text = makeProximizeLines()
+    const text = makeCitationLines()
       .map((l) => l.text)
       .join("\n");
     expect(text).toContain("/garage");
   });
 
   it("leaks nothing beyond the public content module", () => {
-    // The disclosure boundary is content/proximize.ts. If a future edit hard-
+    // The disclosure boundary is content/citation.ts. If a future edit hard-
     // codes a detail here instead, this catches it.
-    const text = makeProximizeLines()
+    const text = makeCitationLines()
       .map((l) => l.text)
       .join(" ")
       .toLowerCase();
@@ -104,7 +106,7 @@ describe("makeProximizeLines", () => {
   });
 
   it("gives every line a stable unique id", () => {
-    const ids = makeProximizeLines().map((l) => l.id);
+    const ids = makeCitationLines().map((l) => l.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 });

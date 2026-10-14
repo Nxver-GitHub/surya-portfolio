@@ -7,7 +7,7 @@ import {
   buildSystemPrompt,
   careerBlock,
 } from "../src/lib/terminal-prompt";
-import { proximize } from "../content/proximize";
+import { citation } from "../content/citation";
 import { seasons } from "../content/career";
 
 describe("terminal prompt — facts digest", () => {
@@ -136,20 +136,20 @@ describe("terminal prompt — full system prompt", () => {
   });
 });
 
-describe("terminal prompt — Proximize disclosure boundary", () => {
+describe("terminal prompt — Citation disclosure boundary", () => {
   const digest = buildFactsDigest();
 
   it("tells the model the public facts", () => {
-    expect(digest).toContain(proximize.name);
-    expect(digest).toContain(proximize.tagline);
-    expect(digest).toContain(proximize.href);
+    expect(digest).toContain(citation.name);
+    expect(digest).toContain(citation.tagline);
+    expect(digest).toContain(citation.href);
   });
 
   it("survives an aggressively small cap", () => {
     // Ordered early on purpose: if a future content addition pushes this block
     // out of the digest, the terminal silently regresses to "not on file" one
     // turn after running an advert for it.
-    expect(buildFactsDigest(1_500)).toContain(proximize.name);
+    expect(buildFactsDigest(1_500)).toContain(citation.name);
   });
 
   it("instructs the model to refuse everything else in character", () => {

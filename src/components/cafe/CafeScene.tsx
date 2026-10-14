@@ -495,7 +495,7 @@ interface CafeSceneProps {
   terminalActive?: boolean;
   /** The terminal scrollback to mirror onto the CRT screen (set dressing). */
   terminalLines?: readonly TerminalLine[];
-  /** The Proximize advert is playing on the DOM terminal — the in-scene tube
+  /** The Citation advert is playing on the DOM terminal — the in-scene tube
    * drops its signal at the same instant instead of calmly mirroring text. */
   teaserPlaying?: boolean;
   /** The live terminal DOM to render on the physical CRT face when docked. When

@@ -28,7 +28,7 @@ import {
   lobbyRoom,
   statusChips,
 } from "../../content/lobby";
-import { proximize } from "../../content/proximize";
+import { citation } from "../../content/citation";
 import { caseStudies, specialStage, throughLine } from "../../content/gtme";
 import { credentialById } from "../../content/credentials";
 import { handCheck } from "../../content/gtme-handcheck";
@@ -212,23 +212,23 @@ function cafeOriginBlock(): string {
  * The one pre-launch venture the terminal may acknowledge, and the hard limit
  * on what it may say about it.
  *
- * The teaser answer itself is built CLIENT-side (terminal/proximize.ts) and
+ * The teaser answer itself is built CLIENT-side (terminal/citation.ts) and
  * normally never reaches the model at all. This block exists for the turn
- * AFTER that — "ok, so what does Proximize actually do?" — where without it
+ * AFTER that — "ok, so what does Citation actually do?" — where without it
  * the model would fall back on "I don't have that on file", which reads as a
  * malfunction moments after the site ran an advert for it. The refusal has to
  * sound like a choice, not a gap.
  *
- * Every fact here comes from content/proximize.ts, which is capped to exactly
+ * Every fact here comes from content/citation.ts, which is capped to exactly
  * what is printed on the public poster. Ordered early so no future cap drops
  * it. See the disclosure note in that file before adding anything.
  */
 function upcomingBlock(): string {
   return [
     "UPCOMING (announced, pre-launch — this is ALL that is public):",
-    `- ${proximize.name} — "${proximize.tagline}". Positioning: ${proximize.positioning}.`,
-    `- Status: ${proximize.status}; not yet launched. Link: ${proximize.href}`,
-    `- NOTHING else about ${proximize.name} is public. If asked what it does in detail, its stack, funding, timing, team, customers, or metrics, say it is still under the cover and point to ${proximize.href}. Never speculate, infer, or connect it to his other work.`,
+    `- ${citation.name} — "${citation.tagline}". Positioning: ${citation.positioning}.`,
+    `- Status: ${citation.status}; not yet launched. Link: ${citation.href}`,
+    `- NOTHING else about ${citation.name} is public. If asked what it does in detail, its stack, funding, timing, team, customers, or metrics, say it is still under the cover and point to ${citation.href}. Never speculate, infer, or connect it to his other work.`,
     `- "Project Silhouette" on the career timeline is this same venture, still shown locked. Treat them as one thing; reveal nothing beyond the lines above.`,
   ].join("\n");
 }
@@ -265,7 +265,7 @@ function contactBlock(): string {
 export function buildFactsDigest(cap: number = DIGEST_CHAR_CAP): string {
   const blocks = [
     cafeOriginBlock(), // tiny; first so it always survives the cap
-    upcomingBlock(), // tiny; must survive the cap or Proximize answers regress
+    upcomingBlock(), // tiny; must survive the cap or Citation answers regress
     contactBlock(),
     careerBlock(), // who he is / current roles — must survive any future cap
     gtmeBlock(), // the GTM engineering body of work — assignment-critical

@@ -80,7 +80,7 @@ function paintFeed(
   ctx.fillStyle = "#02160b";
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
-  // While the Proximize advert owns the DOM terminal, the tube in the room
+  // While the Citation advert owns the DOM terminal, the tube in the room
   // loses signal at the same instant. Two screens dying together reads as
   // something taking over the machine; the alternative — green text scrolling
   // calmly eighteen inches from a playing advert — is the most fiction-
@@ -131,7 +131,7 @@ interface CrtScreenFeedProps {
   active: boolean;
   /** The current scrollback lines to mirror. */
   lines: readonly TerminalLine[];
-  /** The Proximize advert is playing on the DOM terminal — paint a dead-signal
+  /** The Citation advert is playing on the DOM terminal — paint a dead-signal
    * field instead of the scrollback so both screens drop together. */
   deadSignal?: boolean;
 }

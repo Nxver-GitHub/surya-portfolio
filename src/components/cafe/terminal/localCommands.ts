@@ -38,7 +38,7 @@ export const LOCAL_COMMANDS = [
 ] as const;
 
 /**
- * `teaser` — replay the Proximize takeover on demand, ignoring the
+ * `teaser` — replay the Citation takeover on demand, ignoring the
  * once-per-session guard.
  *
  * Deliberately NOT in LOCAL_COMMANDS, so it never appears in `help`. Its

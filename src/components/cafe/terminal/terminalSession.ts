@@ -34,7 +34,7 @@ export interface TerminalSessionState {
   /** Whether the cold boot has already played this visit. */
   readonly booted: boolean;
   /**
-   * Whether the Proximize teaser takeover has already run this VISIT.
+   * Whether the Citation teaser takeover has already run this VISIT.
    *
    * Deliberately session state rather than localStorage: someone returning a
    * week later should see the ad again, and a demo resets with a refresh

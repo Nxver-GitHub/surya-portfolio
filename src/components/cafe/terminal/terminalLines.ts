@@ -20,7 +20,7 @@ export interface TerminalLine {
    *
    * `width` (px) and `aspect` (a CSS `aspect-ratio` value) are optional
    * overrides for cards whose source art isn't the default portrait crop —
-   * the Proximize teaser poster is 1085×1450 and would lose its lockup to
+   * the Citation teaser poster is 1085×1450 and would lose its lockup to
    * `object-fit: cover` at the default 4/5. Omit both for the original
    * portrait/café cards, which keep their existing size exactly. */
   media?: {

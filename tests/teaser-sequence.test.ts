@@ -9,7 +9,7 @@ import {
   preloadWindowMs,
   totalDuration,
 } from "../src/components/cafe/terminal/teaser/sequence";
-import { proximize } from "../content/proximize";
+import { citation } from "../content/citation";
 
 describe("teaser sequence — shape", () => {
   it("runs long enough to be an advert, short enough to sit through", () => {
@@ -106,9 +106,9 @@ describe("teaser sequence — reduced motion", () => {
 
 describe("teaser sequence — announcement", () => {
   it("carries the whole advert as one sentence for assistive tech", () => {
-    expect(TEASER_ANNOUNCEMENT).toContain(proximize.name);
-    expect(TEASER_ANNOUNCEMENT).toContain(proximize.tagline);
-    expect(TEASER_ANNOUNCEMENT).toContain("proximize.net");
+    expect(TEASER_ANNOUNCEMENT).toContain(citation.name);
+    expect(TEASER_ANNOUNCEMENT).toContain(citation.tagline);
+    expect(TEASER_ANNOUNCEMENT).toContain("citation.so");
   });
 
   it("is a single sentence group, not a beat list", () => {

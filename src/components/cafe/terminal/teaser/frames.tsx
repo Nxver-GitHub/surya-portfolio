@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Renders one beat of the Proximize teaser (see sequence.ts for the data).
+ * Renders one beat of the Citation teaser (see sequence.ts for the data).
  *
  * Every beat is centred on black. Type beats are REAL DOM TEXT, not baked
  * pixels: crisp at any DPI, correct at any width, and restyleable without
@@ -17,7 +17,7 @@
  * overlay panel, a full-screen mobile window, and the 3D CRT face.
  */
 
-import { proximize } from "../../../../../content/proximize";
+import { citation } from "../../../../../content/citation";
 import type { Frame } from "./sequence";
 
 /** Poster type is a condensed, wide-tracked, all-caps grotesque. */
@@ -98,7 +98,7 @@ function CarBeat({ reducedMotion }: { reducedMotion: boolean }) {
     <Beat>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={proximize.frames.car.src}
+        src={citation.frames.car.src}
         alt=""
         className={reducedMotion ? undefined : "teaser-rise"}
         style={{ width: "92%", height: "auto", maxHeight: "78%", objectFit: "contain" }}
@@ -112,7 +112,7 @@ function LockupBeat() {
     <Beat>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={proximize.frames.lockup.src}
+        src={citation.frames.lockup.src}
         alt=""
         style={{ width: "84%", height: "auto", maxHeight: "62%", objectFit: "contain" }}
       />
@@ -189,7 +189,7 @@ function UrlBeat({ portrait }: { portrait: boolean }) {
           fontSize: portrait ? "clamp(13px, 5cqw, 30px)" : "clamp(13px, 3cqw, 34px)",
         }}
       >
-        proximize.net
+        citation.so
       </p>
     </Beat>
   );

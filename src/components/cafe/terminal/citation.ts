@@ -1,5 +1,5 @@
 /**
- * proximize — the "what is Surya working on next" teaser. Pure helpers,
+ * citation — the "what is Surya working on next" teaser. Pure helpers,
  * mirroring the portrait (portrait.ts), café-origin (cafeOrigin.ts) and
  * meetup (meetup.ts) seams.
  *
@@ -17,10 +17,10 @@
  * A later change wraps this with the PS2-advert takeover cinematic; the lines
  * built here remain the permanent scrollback residue once the ad dismisses,
  * so this module stays the single definition of "what the terminal says about
- * Proximize" either way.
+ * Citation" either way.
  */
 
-import { proximize, POSTER_ASPECT } from "../../../../content/proximize";
+import { citation, POSTER_ASPECT } from "../../../../content/citation";
 import { makeLine, makeMediaLine, type TerminalLine } from "./terminalLines";
 
 /** Rendered width of the poster card (px). Larger than the 128px portrait
@@ -35,9 +35,10 @@ const POSTER_CARD_WIDTH = 176;
  * on") deliberately fall through to the model and the Garage, because those
  * are asking about shipped work, not the teaser.
  */
-export function isProximizeQuestion(text: string): boolean {
-  // 1. Named directly — no ambiguity possible.
-  if (/\bproximize\b/i.test(text)) return true;
+export function isCitationQuestion(text: string): boolean {
+  // 1. Named directly — no ambiguity possible. "Proximize" is the pre-rebrand
+  //    name (Oct 2026), kept so visitors who saw the old teaser still land here.
+  if (/\b(citation|proximize)\b/i.test(text)) return true;
   if (/\bproject\s+silhouette\b/i.test(text)) return true;
 
   // 2. "Secret next thing" vocabulary, unambiguous enough to stand alone.
@@ -76,9 +77,9 @@ export function isProximizeQuestion(text: string): boolean {
 }
 
 /** The poster card line, shown on its own row above the copy. */
-export function makeProximizePosterLine(): TerminalLine {
+export function makeCitationPosterLine(): TerminalLine {
   return makeMediaLine({
-    ...proximize.poster,
+    ...citation.poster,
     width: POSTER_CARD_WIDTH,
     aspect: POSTER_ASPECT,
   });
@@ -88,13 +89,13 @@ export function makeProximizePosterLine(): TerminalLine {
  * The full teaser response: poster card, the public one-liner, the status and
  * link, then the Garage pointer. This is what the scrollback keeps forever —
  * the takeover cinematic is ephemeral, so a visitor who skipped it (or got
- * interrupted) can still reach proximize.net from the log.
+ * interrupted) can still reach citation.so from the log.
  */
-export function makeProximizeLines(): TerminalLine[] {
+export function makeCitationLines(): TerminalLine[] {
   return [
-    makeProximizePosterLine(),
-    makeLine("reply", `${proximize.name.toUpperCase()} — ${proximize.tagline}.`),
-    makeLine("system", `Status: ${proximize.status}.  ${proximize.href}`),
+    makeCitationPosterLine(),
+    makeLine("reply", `${citation.name.toUpperCase()} — ${citation.tagline}.`),
+    makeLine("system", `Status: ${citation.status}.  ${citation.href}`),
     makeLine("system", ""),
     makeLine("system", "Shipped work lives in the Garage: /garage"),
   ];

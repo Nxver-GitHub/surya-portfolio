@@ -242,7 +242,7 @@ body {
   font-family: ui-monospace, monospace;
 }
 
-/* Proximize teaser takeover (terminal/teaser/). Every beat is a hard cut, so
+/* Citation teaser takeover (terminal/teaser/). Every beat is a hard cut, so
    there are only two motions in the whole piece:
 
    .teaser-signal — beat 1, the terminal's phosphor field crushing to a single

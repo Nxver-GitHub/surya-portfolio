@@ -36,7 +36,7 @@ export interface ToneStep {
 
 /**
  * The tone table: five era menu-feedback blips, plus two cinematic cues for
- * the Proximize teaser takeover.
+ * the Citation teaser takeover.
  *
  * The five menu tones are one family, deliberately: the same square wave, the
  * same 30–80ms steps, distinguished by CONTOUR rather than by timbre. `move`

@@ -27,7 +27,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "../../../garage/useReducedMotion";
 import { useSound } from "../../../sound/SoundProvider";
-import { proximize } from "../../../../../content/proximize";
+import { citation } from "../../../../../content/citation";
 import { FrameView } from "./frames";
 import {
   DECODE_STALL_CAP_MS,
@@ -46,7 +46,7 @@ interface TeaserTakeoverProps {
  * a failed decode must not hang the ad, the beat just renders whatever the
  * browser has (broken images are invisible on black anyway). */
 function decodeFrameAssets(): Promise<void> {
-  const sources = [proximize.frames.car.src, proximize.frames.lockup.src];
+  const sources = [citation.frames.car.src, citation.frames.lockup.src];
   return Promise.all(
     sources.map(
       (src) =>
@@ -170,7 +170,7 @@ export function TeaserTakeover({ onDone }: TeaserTakeoverProps) {
       ref={rootRef}
       role="dialog"
       aria-modal="true"
-      aria-label="Proximize teaser advertisement"
+      aria-label="Citation teaser advertisement"
       tabIndex={-1}
       onKeyDown={onKeyDown}
       onClick={finish}
