@@ -67,11 +67,12 @@ async function settledFrame(scene: Locator): Promise<Buffer> {
 /** The gesture must land on the live canvas, not on the NOW LOADING backdrop
  * that covers it while the glb streams (that backdrop scrolls regardless). */
 async function expectCanvasUnderCentre(scene: Locator) {
-  await scene.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await expect
     .poll(
       () =>
         scene.evaluate((el) => {
+          // Re-centre each time: the layout above can still shift while loading.
+          el.scrollIntoView({ block: "center" });
           const r = el.getBoundingClientRect();
           return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.tagName;
         }),
