@@ -66,8 +66,8 @@ export interface PlayerCard {
   /** One-line plain-English description of the org/community */
   description: string;
   /**
-   * Whether Surya is currently part of this community. Exactly ONE card is
-   * "active" (16VC — owner call, 2026-07); everything else renders a FORMER
+   * Whether Surya is currently part of this community. No card is "active"
+   * since the 16VC stint wrapped (Oct 2026); a "former" card renders a FORMER
    * chip and reads in the past tense. Communities that only hosted a
    * hackathon/competition don't belong in this list at all.
    */
@@ -125,8 +125,8 @@ export const playerList: readonly PlayerCard[] = [
     id: "16vc",
     name: "16VC",
     description:
-      "Venture firm where Surya sources pre-seed and seed opportunities across the SF Bay Area.",
-    membership: "active",
+      "Venture firm where Surya previously sourced pre-seed and seed opportunities across the SF Bay Area (Jun – Oct 2026).",
+    membership: "former",
     careerEventSlug: "16vc",
   },
   {

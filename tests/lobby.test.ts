@@ -77,9 +77,9 @@ describe("lobby player list", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("marks exactly one community as active — 16VC (owner call, 2026-07)", () => {
+  it("marks no community as active — the 16VC stint wrapped Oct 2026", () => {
     const active = playerList.filter((p) => p.membership === "active");
-    expect(active.map((p) => p.id)).toEqual(["16vc"]);
+    expect(active.map((p) => p.id)).toEqual([]);
   });
 
   it("excludes communities that only hosted a competition/hackathon", () => {

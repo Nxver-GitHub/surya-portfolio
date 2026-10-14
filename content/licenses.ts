@@ -240,7 +240,7 @@ export const licenses: readonly License[] = [
         id: "s-16vc-sourcing",
         name: "Pre-seed sourcing",
         summary:
-          "As a Venture Associate at 16VC, sourcing and evaluating pre-seed and seed opportunities across the SF Bay Area through demo days, founder outreach, and the builder community.",
+          "As a Venture Associate at 16VC (Jun – Oct 2026), sourced and evaluated pre-seed and seed opportunities across the SF Bay Area through demo days, founder outreach, and the builder community.",
         grade: "silver",
         careerEventId: "16vc",
       },

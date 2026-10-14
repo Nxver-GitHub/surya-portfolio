@@ -280,7 +280,7 @@ export const seasons: readonly Season[] = [
             "Participating in Venture Starters' educational internship: live, virtual startup pitching sessions and investor Q&A.",
           ],
           results:
-            "A steady training ground running alongside active scout work at LvlUp and 16VC.",
+            "A steady training ground running alongside scout work at LvlUp and 16VC.",
         },
       },
       {
@@ -333,7 +333,7 @@ export const seasons: readonly Season[] = [
     name: "Bay Area",
     period: "2026 – Present",
     summary:
-      "The post-grad season: scouting pre-seed and seed founders full-time at 16VC — while something new takes shape under the car cover.",
+      "The post-grad season: scouting pre-seed and seed founders full-time at 16VC through October 2026 — while something new takes shape under the car cover.",
     events: [
       {
         slug: "16vc",
@@ -341,16 +341,16 @@ export const seasons: readonly Season[] = [
         title: "16VC",
         org: "16VC",
         role: "Venture Associate",
-        dates: "Jun 2026 – Present",
-        result: "Sourcing pre-seed and seed opportunities across the SF Bay Area ecosystem",
+        dates: "Jun – Oct 2026",
+        result: "Sourced pre-seed and seed opportunities across the SF Bay Area ecosystem",
         story: {
           problem:
             "Early-stage funds live or die on seeing great founders before everyone else.",
           actions: [
-            "Source and evaluate pre-seed and seed-stage investment opportunities across the SF Bay Area through demo days, founder outreach, and the hackathon and builder community.",
+            "Sourced and evaluated pre-seed and seed-stage investment opportunities across the SF Bay Area through demo days, founder outreach, and the hackathon and builder community.",
           ],
           results:
-            "The current stint: a builder inside the venture machine, using the hackathon circuit as a sourcing edge.",
+            "A builder inside the venture machine, using the hackathon circuit as a sourcing edge. The stint wrapped in October 2026.",
         },
       },
       {

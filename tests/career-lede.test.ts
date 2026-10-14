@@ -27,7 +27,7 @@ describe("career page ledes", () => {
     // Both branches must actually be exercised, or this test is vacuous.
     expect(templated.some((e) => /present/i.test(e.dates))).toBe(true);
     expect(templated.some((e) => !/present/i.test(e.dates))).toBe(true);
-    expect(careerLede(findEvent("16vc")!.event)).toContain("serves as Venture Associate at 16VC (Jun 2026 – Present).");
+    expect(careerLede(findEvent("16vc")!.event)).toContain("served as Venture Associate at 16VC (Jun – Oct 2026).");
     for (const e of templated) {
       const current = /present/i.test(e.dates);
       expect(careerLede(e)).toContain(current ? " serves as " : " served as ");
