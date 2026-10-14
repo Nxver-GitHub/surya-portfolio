@@ -352,8 +352,6 @@ input, textarea { caret-color: #ffbf19; }
   .map-information p { font: 14px/1.45 var(--font-body); }
   .map-enter { padding: 10px 12px; gap: 8px; font-size: 18px; min-height: 44px; flex-shrink: 0; }
   .map-control-strip { padding: 9px 16px; font-size: 12px; }
-  .map-control-strip > span:first-child { font-size: 0; }
-  .map-control-strip > span:first-child::after { content: "Choose a destination"; font-size: 12px; }
   .map-desktop-hint { display: none; }
   /* The HUD totals row: 12px here plus the inner strip's own px-1 lands its
      text on the same 16px gutter as the rest of the column. At the shared
