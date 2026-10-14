@@ -19,8 +19,8 @@ export function PlayerList({ players, livery }: PlayerListProps) {
         Player List
       </h2>
       <p className="mt-1 max-w-2xl text-sm text-silver">
-        The communities and organizations on Surya&apos;s journey — where he
-        is now, and where he came up.
+        The communities and organizations on Surya&apos;s journey — where
+        he came up and what he has done.
       </p>
 
       <LiveRacers />

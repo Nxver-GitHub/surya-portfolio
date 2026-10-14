@@ -333,7 +333,7 @@ export const seasons: readonly Season[] = [
     name: "Bay Area",
     period: "2026 – Present",
     summary:
-      "The post-grad season: scouting pre-seed and seed founders full-time at 16VC through October 2026 — while something new takes shape under the car cover.",
+      "The post-grad season: scouted pre-seed and seed founders full-time at 16VC (Jun – Oct 2026) while something new took shape under the car cover.",
     events: [
       {
         slug: "16vc",

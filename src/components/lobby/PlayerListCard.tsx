@@ -11,8 +11,8 @@ interface PlayerListCardProps {
 /**
  * One entry in the lobby's player list: a community/org card with badge/
  * plate chrome, matching the stamped-plate vocabulary used across the site.
- * The membership chip separates the one community Surya is ACTIVE in from
- * FORMER ones; optional external link and career cross-link render as small
+ * The membership chip marks a community ACTIVE or FORMER (none is active
+ * since the 16VC stint wrapped in Oct 2026); optional external link and career cross-link render as small
  * chips. Renders through the shared PlayerPlate so this stays byte-identical
  * with the live guest rows in LiveRacers.
  */

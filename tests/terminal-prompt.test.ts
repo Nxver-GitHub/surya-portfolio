@@ -5,6 +5,7 @@ import {
   SYSTEM_NAME,
   buildFactsDigest,
   buildSystemPrompt,
+  careerBlock,
 } from "../src/lib/terminal-prompt";
 import { proximize } from "../content/proximize";
 import { seasons } from "../content/career";
@@ -41,6 +42,17 @@ describe("terminal prompt — facts digest", () => {
     expect(buildSystemPrompt()).toContain(
       "Never describe them as former, past, or previous",
     );
+  });
+
+  it("emits the CURRENT marker for a Present-dated role", () => {
+    // No real stint is running today, so drive the positive path directly.
+    const [first] = seasons;
+    const [event] = first.events;
+    const block = careerBlock([
+      { ...first, events: [{ ...event, dates: "Jun 2026 – Present" }, { ...event, dates: "2025" }] },
+    ]);
+    expect(block.split("[CURRENT — ongoing role]").length - 1).toBe(1);
+    expect(block).toContain("Jun 2026 – Present [CURRENT — ongoing role].");
   });
 
   it("never leaks undefined or [object Object]", () => {

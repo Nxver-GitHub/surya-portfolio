@@ -43,12 +43,15 @@ test.describe("wrapped stints", () => {
   test("the lobby marks 16VC former and nothing active", async ({ page }) => {
     await page.goto("/lobby");
     await expectRendered(page);
-    const card = page.locator("li, article").filter({ hasText: /^.*16VC/ }).filter({ hasText: "Venture firm" }).first();
+    const card = page.getByRole("listitem").filter({ hasText: "Venture firm where Surya previously sourced" });
+    await expect(card).toHaveCount(1);
     await expect(card).toContainText(/Former/i);
     await expect(card).toContainText("previously sourced");
     await expect(page.getByText(/^Active$/i)).toHaveCount(0);
     const description = await page.locator('meta[name="description"]').getAttribute("content");
-    expect(description).not.toMatch(/16VC today/);
+    expect(description).toBe(
+      "Contact Surya Pugazhenthi — email, book a call, GitHub, LinkedIn, and X — and see the communities on his journey, from 16VC back through UCSC and DVC.",
+    );
   });
 
   test("the license center dates the 16VC test", async ({ page }) => {
