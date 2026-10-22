@@ -15,8 +15,8 @@ import { GradeChip } from "./GradeChip";
  * Trophy wall — the flattened License Center. Every tier and medal is visible
  * at once (no tabs, no detail panel): each test is ONE skimmable line whose
  * whole purpose is to springboard into the work that earned it. The page
- * exists to sell the projects, not to restate a resume — prose summaries
- * live only in tooltips.
+ * exists to sell the projects, not to restate a resume — so each medal's
+ * plain-English summary is one short line under its row, never a tooltip.
  *
  * A tier may also carry an external credential (`credentialId`), which lands
  * at the foot of its card as a rally competition plate plus a verify link out
@@ -67,7 +67,7 @@ function MedalRow({ test }: { test: LicenseTest }) {
   );
 
   return (
-    <li title={test.summary}>
+    <li>
       {target ? (
         <Link
           transitionTypes={["nav-forward"]}
@@ -79,6 +79,10 @@ function MedalRow({ test }: { test: LicenseTest }) {
       ) : (
         <span className="flex px-2 py-1.5">{row}</span>
       )}
+      {/* The proof in plain English, visible on every device. It used to be a
+          title tooltip — unreachable by touch, keyboard or a screen reader.
+          It sits after the link, so the row stays a short, scannable link. */}
+      <p className="trophy-summary text-sm text-silver">{test.summary}</p>
     </li>
   );
 }
