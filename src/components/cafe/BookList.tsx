@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useSound } from "@/components/sound/SoundProvider";
+import { useCenterSelected, useSidePicker } from "@/components/gt/pickerStrip";
 import {
   bookTypeLabel,
   menuBooks,
@@ -21,7 +22,12 @@ interface BookListProps {
  */
 export function BookList({ selectedId, onSelect }: BookListProps) {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const stripRef = useRef<HTMLDivElement>(null);
   const { tick } = useSound();
+  // A column beside the scene from 1024px, a horizontal strip below it — the
+  // arrow keys already move both ways, this keeps the announced axis honest.
+  const sidePicker = useSidePicker();
+  useCenterSelected(stripRef, selectedId);
 
   // One tick per book actually entered — arrowing along the shelf ticks per
   // book, re-picking the open one is silent. Throttled inside useSound, so
@@ -63,10 +69,11 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
 
   return (
     <div
+      ref={stripRef}
       role="tablist"
       aria-label="Menu Books"
-      aria-orientation="vertical"
-      className="console-menu flex min-w-0 flex-col gap-2"
+      aria-orientation={sidePicker ? "vertical" : "horizontal"}
+      className="console-menu picker-strip flex min-w-0 flex-col gap-2"
     >
       {menuBooks.map((book, index) => {
         const isActive = book.id === selectedId;
@@ -103,8 +110,10 @@ export function BookList({ selectedId, onSelect }: BookListProps) {
               >
                 {bookTypeLabel(book.type)}
               </span>
+              {/* The strip keeps to title + type; the open book's panel
+                  right below it carries the audience line in full. */}
               <span
-                className={`line-clamp-2 text-xs ${
+                className={`line-clamp-2 text-xs max-lg:hidden ${
                   isActive ? "text-asphalt/90" : "text-silver"
                 }`}
               >
