@@ -40,6 +40,7 @@ test.describe("mobile layout audit", () => {
 
 test.describe("mobile focused regressions", () => {
   test("café terminal input is never under the music bar", async ({ page }) => {
+    test.slow(); // the 3D café boots slowly under CI's software GL
     await page.goto("/cafe");
     await expectRendered(page);
     const opener = page.getByRole("button", { name: /^(Open )?terminal$/i }).first();
