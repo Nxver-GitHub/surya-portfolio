@@ -38,30 +38,42 @@ export interface Env {
   /** "1" only under `wrangler dev`; never defined in production. */
   readonly PRESENCE_DEV?: string;
   /**
-   * Optional `wrangler secret`. When set, the per-IP cap hashes under this key
-   * instead of a per-boot random one, so the cap also holds across hibernation
-   * wakes. Without it the room still works; the idle sweep is the backstop.
+   * REQUIRED `wrangler secret` (also needed in `.dev.vars` for local dev): the
+   * HMAC key the per-IP cap hashes addresses under. Typed optional because a
+   * missing secret is a runtime condition — when it is absent or empty, both
+   * the Worker and the room refuse every upgrade with 503 (fail closed).
    */
   readonly PRESENCE_IP_KEY?: string;
 }
 
+/** Whether the required per-IP HMAC key is configured (non-empty). */
+export function hasIpKey(env: Pick<Env, "PRESENCE_IP_KEY">): boolean {
+  return typeof env.PRESENCE_IP_KEY === "string" && env.PRESENCE_IP_KEY.length > 0;
+}
+
 export class PresenceRoom extends DurableObject<Env> {
   /**
-   * HMAC key for the per-IP cap. `PRESENCE_IP_KEY` when the owner has set it;
-   * otherwise generated in memory on wake and never persisted, in which case
-   * sockets attached before a hibernation wake stop counting toward their
-   * address — the idle sweep in `fetch` bounds how long that can matter.
-   * Either way no address, raw or derived, is ever logged or stored (spec §5).
+   * HMAC key for the per-IP cap, from the required `PRESENCE_IP_KEY` secret.
+   * It must be stable across hibernation wakes: attachments carry the hash, so
+   * a per-wake random key (the old fallback) made every socket admitted before
+   * a wake stop counting toward its address. The idle sweep did NOT bound that
+   * — it closes only sockets that stopped heartbeating or passed the 8-hour
+   * session ceiling, so a heartbeating socket kept escaping the cap for its
+   * whole session. Hence: no key, no upgrades. No address, raw or derived, is
+   * ever logged or stored (spec §5).
    */
-  readonly #ipKeyBytes = this.env.PRESENCE_IP_KEY
+  readonly #ipKeyBytes: Uint8Array | null = hasIpKey(this.env)
     ? new TextEncoder().encode(this.env.PRESENCE_IP_KEY)
-    : crypto.getRandomValues(new Uint8Array(32));
+    : null;
   #ipKey: Promise<CryptoKey> | null = null;
 
-  /** Upgrade entry point. The Worker has already checked Origin and path. */
+  /** Upgrade entry point. The Worker has already checked Origin, path and key. */
   override async fetch(request: Request): Promise<Response> {
     if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return new Response("expected a websocket upgrade", { status: 426 });
+    }
+    if (this.#ipKeyBytes === null) {
+      return new Response("presence unavailable", { status: 503 });
     }
 
     const ipHash = await this.#hashIp(request.headers.get("cf-connecting-ip"));
@@ -269,9 +281,13 @@ export class PresenceRoom extends DurableObject<Env> {
   }
 
   #hmacKey(): Promise<CryptoKey> {
+    const keyBytes = this.#ipKeyBytes;
+    // fetch() refuses before hashing when the key is absent; this is the
+    // type-level backstop, never a fallback key.
+    if (keyBytes === null) return Promise.reject(new Error("PRESENCE_IP_KEY missing"));
     this.#ipKey ??= crypto.subtle.importKey(
       "raw",
-      this.#ipKeyBytes,
+      keyBytes,
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"],

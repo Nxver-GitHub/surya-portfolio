@@ -43,9 +43,15 @@ is nothing to migrate, nothing to retain, and — the point — no visitor data 
 rest, in a service that necessarily sees `cf-connecting-ip`.
 
 That address is never stored or logged. The per-IP cap keys on an HMAC of it
-under a key generated with `crypto.getRandomValues` when the object wakes and
-never persisted, so the cap holds for one Durable Object lifetime and nothing
-derived from an address outlives the process. Logs carry counts only.
+under the **required** `PRESENCE_IP_KEY` secret. The hash lives only in each
+live socket's in-memory hibernation attachment, never in storage, so nothing
+derived from an address outlives the socket. The key must be stable: an
+earlier per-wake random fallback made every socket admitted before a
+hibernation wake stop counting toward its address, and the idle sweep did not
+bound that (it only closes sockets that stopped heartbeating or passed the 8 h
+ceiling). So without the key the Worker refuses every upgrade with `503
+presence unavailable` — fail closed — while `/health` keeps answering. Logs
+carry counts only.
 
 If a peak-online statistic is ever wanted, it belongs in the existing Upstash
 events pipeline on the site Worker, not here.
@@ -55,6 +61,7 @@ events pipeline on the site Worker, not here.
 | Rule | Limit | Response |
 |---|---|---|
 | Origin | `https://suryapugaz.com` only | `403` |
+| `PRESENCE_IP_KEY` | must be set (non-empty) | `503 presence unavailable` |
 | Path | `/room` with `Upgrade: websocket` | `404` otherwise (`/health` → `200 ok`) |
 | Sockets per address | 3 | `429` before the upgrade |
 | Sockets per room | 64 | accept, send `{"t":"full"}`, close `1013` |
@@ -72,14 +79,17 @@ pnpm --filter presence typecheck  # tsc --noEmit
 ```
 
 `wrangler dev` refuses `http://localhost` origins unless `PRESENCE_DEV=1` is
-set. Do that locally only — create `.dev.vars` in this directory (it is
-gitignored repo-wide) with:
+set, and refuses every upgrade (`503`) unless `PRESENCE_IP_KEY` is set. Do
+both locally only — create `.dev.vars` in this directory (it is gitignored
+repo-wide; never commit it) with:
 
 ```
 PRESENCE_DEV=1
+PRESENCE_IP_KEY=<any long random string, e.g. `openssl rand -hex 32`>
 ```
 
-Production must never define `PRESENCE_DEV`.
+Production must never define `PRESENCE_DEV`. The test run needs no
+`.dev.vars`: `vitest.config.ts` binds a fixed fake key.
 
 Two notes on the local toolchain:
 
@@ -120,12 +130,13 @@ all of that. Source:
    `NEXT_PUBLIC_PRESENCE_URL=wss://live.suryapugaz.com/room`, then trigger a
    build. Until then the site is keyless and behaves exactly as it does today,
    so this Worker can ship before the client does.
-5. **Optional secret** `PRESENCE_IP_KEY` (`wrangler secret put PRESENCE_IP_KEY`
-   from `workers/presence`, any long random string). With it set, the per-IP
-   cap hashes under a stable key and so also holds across hibernation wakes.
-   Without it the room falls back to a per-boot random key and the idle sweep
-   is the backstop. Never logged, never used for anything but that HMAC.
+5. **Required secret** `PRESENCE_IP_KEY` (`wrangler secret put PRESENCE_IP_KEY`
+   from `workers/presence`, any long random string). The per-IP cap hashes
+   under it, so it holds across hibernation wakes. **Set it before deploying
+   code that requires it:** without it every upgrade is refused with `503` and
+   the lobby renders offline. Never logged, never used for anything but that
+   HMAC. (Set on `surya-presence` 2026-10-22.)
 
 Suggested order: merge this PR (it ships both halves; the site stays keyless)
-→ owner steps 1–3 and optionally 5 → owner step 4 → verify a build deployed by
-timestamp and that the lobby shows `ONLINE 1` in one tab.
+→ owner steps 1–3 and 5 → owner step 4 → verify a build deployed by timestamp
+and that the lobby shows `ONLINE 1` in one tab.

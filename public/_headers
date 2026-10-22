@@ -1,5 +1,11 @@
-# Cloudflare Workers static-asset headers (not applied to Worker-rendered
-# responses — next.config.ts headers() covers those).
+# Cloudflare Workers static-asset headers. Workers Static Assets serves files
+# from .open-next/assets BEFORE the Worker runs, and these rules apply ONLY to
+# those asset responses — never to Worker-rendered ones (pages, API routes,
+# prerendered HTML served through the incremental cache), which get their
+# headers from next.config.ts headers(). So nothing here can clobber the HTML
+# Content-Security-Policy, and the /* block deliberately carries NO CSP.
+# Values mirror next.config.ts SECURITY_HEADERS (asserted in
+# tests/static-headers.test.ts). HSTS is left to the Cloudflare edge setting.
 #
 # Next's build output under /_next/static/ is content-hashed: a changed file
 # gets a new name, so a cached copy can never go stale. Without this rule
@@ -7,3 +13,16 @@
 # view re-validates the render-blocking CSS, every JS chunk, font and media file.
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-DNS-Prefetch-Control: off
+
+# An SVG opened directly is a document that could run script. Every SVG here is
+# owner-authored and shown via <img> (where CSP is moot), but lock the document
+# form down anyway: no script, no external fetches, inline presentation only.
+/*.svg
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'
