@@ -15,8 +15,10 @@
  *     hand-rolled request cannot invent assistant "precedent". Shape alone did
  *     NOT achieve this — see lib/transcriptSignature.ts.
  *   - Same-origin guard and a hard body-size cap run BEFORE the body is read.
- *   - Upstash rate limits (per-IP + global) run BEFORE the body is parsed and
- *     before Groq is ever called.
+ *   - Upstash per-IP rate limits run BEFORE the body is read, so a flood is
+ *     shed before any parsing. The shared global/day budget is debited only
+ *     AFTER the body validates — an invalid request is a 400 that never spends
+ *     a global token — and before Groq is ever called.
  *   - No top-level client construction: the module is import-safe with NO env
  *     vars set, so `pnpm build` (keyless CI) never throws. Clients are built
  *     lazily inside the handler after an env check.
@@ -222,16 +224,35 @@ export const IP_FALLBACK = "unknown";
 export function extractClientIp(
   getHeader: (name: string) => string | null,
 ): string {
+  const raw = rawClientIp(getHeader);
+  return raw === null ? IP_FALLBACK : normalizeIpForKey(raw);
+}
+
+/**
+ * The same client, keyed for the per-IP DAY limiter: identical header trust
+ * order to {@link extractClientIp}, but IPv6 collapses to its /48 (see
+ * {@link normalizeIpForDayKey}). Pure.
+ */
+export function extractClientDayKey(
+  getHeader: (name: string) => string | null,
+): string {
+  const raw = rawClientIp(getHeader);
+  return raw === null ? IP_FALLBACK : normalizeIpForDayKey(raw);
+}
+
+/** The first non-empty client-IP header, most-trusted-first (see
+ * {@link extractClientIp} for the trust boundary), or null when none is set. */
+function rawClientIp(getHeader: (name: string) => string | null): string | null {
   const cf = getHeader("cf-connecting-ip");
-  if (cf && cf.trim()) return normalizeIpForKey(cf);
+  if (cf && cf.trim()) return cf;
   const real = getHeader("x-real-ip");
-  if (real && real.trim()) return normalizeIpForKey(real);
+  if (real && real.trim()) return real;
   const xff = getHeader("x-forwarded-for");
   if (xff) {
     const first = xff.split(",")[0]?.trim();
-    if (first) return normalizeIpForKey(first);
+    if (first) return first;
   }
-  return IP_FALLBACK;
+  return null;
 }
 
 /**
@@ -242,6 +263,8 @@ export function extractClientIp(
  * a whole /64 — 2^64 addresses — and keying at /128 would have let one
  * allocation mint an unlimited number of fresh buckets, which matters most on
  * /api/admin/login's 5-attempts-per-hour cap. So IPv6 keys on its /64 prefix.
+ * (The café terminal's per-IP DAY limiter goes coarser still, to the /48 — see
+ * {@link normalizeIpForDayKey}.)
  *
  * IPv4-mapped forms (`::ffff:203.0.113.7`) are left whole: truncating those to
  * four hextets would fold EVERY IPv4 client into one shared bucket. Anything
@@ -249,33 +272,75 @@ export function extractClientIp(
  * it still keys consistently, which is all the limiter needs. Pure.
  */
 export function normalizeIpForKey(raw: string): string {
+  const parsed = parseIpForKey(raw);
+  return parsed.kind === "verbatim"
+    ? parsed.key
+    : ipv6PrefixKey(parsed.groups, 4, 64);
+}
+
+/**
+ * Like {@link normalizeIpForKey}, but IPv6 keys on its /48 — for the per-IP
+ * DAY limiter only. A /64 is the smallest allocation, not the usual one: ISPs
+ * and cloud providers routinely hand a single customer a /56 or a /48, i.e. 256
+ * to 65,536 /64s. Keyed at /64, one such customer could mint enough fresh
+ * 20-a-day buckets (400 / 20 = 20 of them) to drain the shared global/day
+ * budget alone. Keyed at /48, draining it takes 20 distinct /48s. The minute
+ * limiter stays at /64 so neighbours inside one /48 don't throttle each other's
+ * bursts. IPv4, IPv4-mapped forms, the fallback and malformed input behave
+ * exactly as in {@link normalizeIpForKey}. Pure.
+ */
+export function normalizeIpForDayKey(raw: string): string {
+  const parsed = parseIpForKey(raw);
+  return parsed.kind === "verbatim"
+    ? parsed.key
+    : ipv6PrefixKey(parsed.groups, 3, 48);
+}
+
+/** A key to use as-is (IPv4, mapped IPv4, fallback, malformed), or the eight
+ * expanded hextets of a well-formed IPv6 address. */
+type ParsedIpKey =
+  | { readonly kind: "verbatim"; readonly key: string }
+  | { readonly kind: "ipv6"; readonly groups: readonly string[] };
+
+function parseIpForKey(raw: string): ParsedIpKey {
+  const verbatim = (key: string): ParsedIpKey => ({ kind: "verbatim", key });
   const trimmed = raw.trim();
   // `[2001:db8::1]:443` — bracketed host with an optional port.
   const bracketed = /^\[([^\]]+)\](?::\d+)?$/.exec(trimmed);
   const candidate = bracketed ? bracketed[1] : trimmed;
-  if (!candidate.includes(":")) return candidate; // IPv4, or the fallback key
+  if (!candidate.includes(":")) return verbatim(candidate); // IPv4, or the fallback key
   // `203.0.113.7:443` — IPv4 with a port; key on the address alone.
   if (candidate.split(":").length === 2 && candidate.includes(".")) {
-    return candidate.split(":")[0];
+    return verbatim(candidate.split(":")[0]);
   }
   const address = candidate.split("%")[0].toLowerCase(); // drop any %zone id
-  if (address.includes(".")) return address; // IPv4-mapped/compatible — keep whole
+  if (address.includes(".")) return verbatim(address); // IPv4-mapped/compatible — keep whole
 
   const halves = address.split("::");
-  if (halves.length > 2) return address; // malformed; key on it verbatim
+  if (halves.length > 2) return verbatim(address); // malformed; key on it verbatim
   const head = halves[0] ? halves[0].split(":") : [];
   const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
   const elided = 8 - head.length - tail.length;
-  if (halves.length === 2 && elided < 0) return address; // malformed
+  if (halves.length === 2 && elided < 0) return verbatim(address); // malformed
   const groups =
     halves.length === 2
       ? [...head, ...Array<string>(elided).fill("0"), ...tail]
       : head;
-  if (groups.length !== 8) return address; // malformed; key on it verbatim
+  if (groups.length !== 8) return verbatim(address); // malformed; key on it verbatim
+  return { kind: "ipv6", groups };
+}
+
+/** `2001:db8:abcd::/48`-style key from the first `hextets` groups, leading
+ * zeros stripped so equivalent spellings share one key. */
+function ipv6PrefixKey(
+  groups: readonly string[],
+  hextets: number,
+  bits: number,
+): string {
   const prefix = groups
-    .slice(0, 4)
+    .slice(0, hextets)
     .map((group) => group.replace(/^0+(?=.)/, ""));
-  return `${prefix.join(":")}::/64`;
+  return `${prefix.join(":")}::/${bits}`;
 }
 
 /* ─────────────────────────── server-derived source ─────────────────────── */
@@ -421,35 +486,69 @@ export interface LimitCheckers {
   readonly adminMinute: LimitChecker;
 }
 
+/** The identifiers the per-IP limiters key on. IPv6 differs between the two:
+ * the minute limiter keys on the /64, the day limiter on the /48 (see
+ * {@link normalizeIpForDayKey}); IPv4 is the same address in both. */
+export interface RateLimitKeys {
+  readonly minute: string;
+  readonly day: string;
+}
+
+/** Derive both per-IP limiter keys from the request headers. Pure. */
+export function rateLimitKeys(
+  getHeader: (name: string) => string | null,
+): RateLimitKeys {
+  return {
+    minute: extractClientIp(getHeader),
+    day: extractClientDayKey(getHeader),
+  };
+}
+
+export type LimitVerdict = { ok: true } | { ok: false; reset: number };
+
 /**
- * Spend rate-limit budget for one request, PER-IP FIRST.
+ * Phase 1 of the rate limit: spend the PER-IP budget (minute, plus the 20/day
+ * cap for guests). Runs before the body is read, so a flood from one IP is shed
+ * before any parsing. Never touches the shared global/day limiter.
+ */
+export async function applyPerIpLimits(
+  limiters: LimitCheckers,
+  plan: LimitPlan,
+  keys: RateLimitKeys,
+): Promise<LimitVerdict> {
+  const perIp: Promise<{ success: boolean; reset: number }>[] = [
+    plan.minute === "admin"
+      ? limiters.adminMinute.limit(keys.minute)
+      : limiters.ipMinute.limit(keys.minute),
+  ];
+  if (plan.enforceIpDay) perIp.push(limiters.ipDay.limit(keys.day));
+  const blocked = (await Promise.all(perIp)).find((r) => !r.success);
+  if (blocked) return { ok: false, reset: blocked.reset };
+  return { ok: true };
+}
+
+/**
+ * Phase 2: debit one token from the shared global/day budget. The handler
+ * calls this only AFTER {@link applyPerIpLimits} passed AND the body validated.
  *
  * Order is the security property, not a style choice. Checking the shared
  * global/day limiter in the same `Promise.all` as the per-IP limiters consumed
  * a global token even for requests the per-IP cap then rejected — so one IP
  * could burn all 400 daily tokens in a few minutes and take the terminal
- * offline for every other visitor. Sequencing the global check AFTER the per-IP
- * verdict means an IP can only ever spend as many global tokens as its own cap
- * allows (20/day for a guest).
+ * offline for every other visitor. Debiting it before the body was validated
+ * let a stream of junk bodies do the same within the per-IP allowance. Now a
+ * client can only spend as many global tokens as its own day cap allows (20/day
+ * per guest IPv4 address or IPv6 /48), and only on requests Groq would
+ * actually serve — so taking the terminal offline needs 400 / 20 = 20 distinct
+ * day buckets.
  *
  * The global cap still genuinely caps Groq spend: every request that reaches
- * Groq has passed this function, and every request that passes consumes exactly
+ * Groq has passed both phases, and every request that passes consumes exactly
  * one global token. The cost is one extra round trip on the allowed path.
  */
-export async function applyRateLimits(
+export async function applyGlobalLimit(
   limiters: LimitCheckers,
-  plan: LimitPlan,
-  ip: string,
-): Promise<{ ok: true } | { ok: false; reset: number }> {
-  const perIp: Promise<{ success: boolean; reset: number }>[] = [
-    plan.minute === "admin"
-      ? limiters.adminMinute.limit(ip)
-      : limiters.ipMinute.limit(ip),
-  ];
-  if (plan.enforceIpDay) perIp.push(limiters.ipDay.limit(ip));
-  const blocked = (await Promise.all(perIp)).find((r) => !r.success);
-  if (blocked) return { ok: false, reset: blocked.reset };
-
+): Promise<LimitVerdict> {
   const global = await limiters.globalDay.limit("all");
   if (!global.success) return { ok: false, reset: global.reset };
   return { ok: true };
@@ -467,6 +566,24 @@ function json(body: unknown, status: number, headers?: HeadersInit): Response {
     status,
     headers: { "content-type": "application/json", ...headers },
   });
+}
+
+/** 429 with Retry-After for a limiter that said no. */
+function rateLimited(reset: number): Response {
+  const retryAfterSecondsValue = retryAfterSeconds(reset);
+  return json(
+    { error: "RATE_LIMITED", retryAfterSeconds: retryAfterSecondsValue },
+    429,
+    { "retry-after": String(retryAfterSecondsValue) },
+  );
+}
+
+/** Rate-limit backend hiccup — fail closed as busy rather than letting an
+ * unbounded flood through to Groq. Log the MESSAGE only: SDK error objects
+ * serialize request/response detail into Cloudflare's observability logs. */
+function rateLimitBackendError(error: unknown): Response {
+  console.error("[cafe-terminal] rate-limit backend error", errorMessage(error));
+  return json({ error: "SYSTEM_BUSY" }, 503);
 }
 
 /* ─────────────────────────────── the handler ───────────────────────────── */
@@ -499,32 +616,22 @@ export async function POST(request: Request): Promise<Response> {
     sessionConfigOrNull(),
   );
 
-  // 3) Rate limit BEFORE the body is read and long before Groq is touched —
-  //    parsing first meant every flood request was buffered and parsed on our
-  //    CPU before any cap applied. Per-IP first, then the shared global/day
-  //    budget: see applyRateLimits for why that order is the availability fix.
-  //    Any failure → 429 with Retry-After.
-  const ip = extractClientIp((name) => request.headers.get(name));
+  // 3) Per-IP rate limits BEFORE the body is read — parsing first meant every
+  //    flood request was buffered and parsed on our CPU before any cap
+  //    applied. The minute limiter keys IPv6 on its /64, the day limiter on
+  //    its /48 (see normalizeIpForDayKey). The shared global/day budget is NOT
+  //    touched yet: see step 4.2. Any failure → 429 with Retry-After.
+  const keys = rateLimitKeys((name) => request.headers.get(name));
+  let limiters: Limiters;
   try {
     // Inside the try: a malformed UPSTASH_REDIS_REST_URL throws in the Redis
     // constructor, and outside it that surfaced as an unhandled 500 instead of
     // the 503 every other fail-closed path returns.
-    const limiters = getLimiters(env as Required<TerminalEnv>);
-    const verdict = await applyRateLimits(limiters, limitPlan(source), ip);
-    if (!verdict.ok) {
-      const retryAfterSecondsValue = retryAfterSeconds(verdict.reset);
-      return json(
-        { error: "RATE_LIMITED", retryAfterSeconds: retryAfterSecondsValue },
-        429,
-        { "retry-after": String(retryAfterSecondsValue) },
-      );
-    }
+    limiters = getLimiters(env as Required<TerminalEnv>);
+    const verdict = await applyPerIpLimits(limiters, limitPlan(source), keys);
+    if (!verdict.ok) return rateLimited(verdict.reset);
   } catch (error) {
-    // Rate-limit backend hiccup — fail closed as busy rather than letting an
-    // unbounded flood through to Groq. Log the MESSAGE only: SDK error objects
-    // serialize request/response detail into Cloudflare's observability logs.
-    console.error("[cafe-terminal] rate-limit backend error", errorMessage(error));
-    return json({ error: "SYSTEM_BUSY" }, 503);
+    return rateLimitBackendError(error);
   }
 
   // 4) Read + validate the body, now that the request has earned the work. The
@@ -537,6 +644,16 @@ export async function POST(request: Request): Promise<Response> {
   const parsed = parseChatBody(body.value);
   if (!parsed.ok) {
     return json({ error: "BAD_REQUEST" }, 400);
+  }
+
+  // 4.2) Only now debit the shared global/day budget: an invalid body is a 400
+  //      that never spent a global token, so junk requests cannot drain the
+  //      terminal for everyone. See applyGlobalLimit for the ordering argument.
+  try {
+    const verdict = await applyGlobalLimit(limiters);
+    if (!verdict.ok) return rateLimited(verdict.reset);
+  } catch (error) {
+    return rateLimitBackendError(error);
   }
 
   // 4.5) Anonymized telemetry: log the visitor's latest question (fire-and-
