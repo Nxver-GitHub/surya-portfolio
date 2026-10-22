@@ -14,6 +14,7 @@
  */
 
 import { z } from "zod";
+import { adminJson } from "@/lib/adminResponse";
 import { requireAdmin } from "@/lib/adminSession";
 import { accessConfigFromEnv, checkCfAccess, readAccessEnv } from "@/lib/cfAccess";
 import { extractClientIp } from "@/app/api/cafe-terminal/route";
@@ -123,11 +124,9 @@ export function toCount(raw: unknown): number {
 
 /* ─────────────────────────────── the handler ───────────────────────────── */
 
+/** Every response here is owner-only — never cacheable (see lib/adminResponse). */
 function json(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json" },
-  });
+  return adminJson(body, status);
 }
 
 /** The audit line for an admin data read — the ip only, never the session. */

@@ -33,6 +33,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
 import { verifyPassphraseGuarded } from "@/lib/adminAuth";
+import { adminJson } from "@/lib/adminResponse";
 import {
   buildSessionCookie,
   mintSessionToken,
@@ -131,11 +132,10 @@ function getLoginLimiters(
   return cachedLimiters;
 }
 
+/** Every response here — the Set-Cookie success and every refusal — is
+ * user-specific and never cacheable (see lib/adminResponse). */
 function json(body: unknown, status: number, headers?: HeadersInit): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json", ...headers },
-  });
+  return adminJson(body, status, headers);
 }
 
 /** Reason a login attempt failed — the only two cases that get logged. */

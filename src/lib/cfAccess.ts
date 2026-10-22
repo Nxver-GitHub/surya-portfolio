@@ -30,6 +30,7 @@
  * AUD are kept out of this public repo. No new dependency: Web Crypto does it.
  */
 
+import { adminJson } from "@/lib/adminResponse";
 import { truncateIpForLog } from "@/lib/logging";
 
 /** The request header Access sets on every request it lets through. */
@@ -332,10 +333,7 @@ export function logAccessDenied(ip: string, reason: AccessDenyReason): void {
 
 /** The opaque 403 every Access denial returns — same shape as the origin guard. */
 export function accessDeniedResponse(): Response {
-  return new Response(JSON.stringify({ error: "FORBIDDEN" }), {
-    status: 403,
-    headers: { "content-type": "application/json" },
-  });
+  return adminJson({ error: "FORBIDDEN" }, 403);
 }
 
 /**

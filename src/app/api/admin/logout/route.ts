@@ -25,8 +25,10 @@
  * logout. Clearing "storage" or "*" would wipe them for no security benefit.
  */
 
+import { adminJson } from "@/lib/adminResponse";
 import {
   buildClearCookie,
+  buildLegacyClearCookie,
   sessionConfigFromEnv,
   sessionTokenFrom,
   verifyCurrentSession,
@@ -38,11 +40,22 @@ import { hasTrustedOrigin } from "@/lib/requestGuards";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** Every response here is user-specific and never cacheable (see lib/adminResponse). */
 function json(body: unknown, status: number, headers?: HeadersInit): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json", ...headers },
-  });
+  return adminJson(body, status, headers);
+}
+
+/**
+ * Headers clearing BOTH session cookie names: the current `__Host-` one and
+ * the pre-rename `admin_session`, so a browser still holding the legacy cookie
+ * drops it on logout. Two Set-Cookie values need `Headers.append` — a plain
+ * object can carry only one. Exported for tests.
+ */
+export function clearSessionCookieHeaders(): Headers {
+  const headers = new Headers();
+  headers.append("set-cookie", buildClearCookie());
+  headers.append("set-cookie", buildLegacyClearCookie());
+  return headers;
 }
 
 /**
@@ -78,12 +91,11 @@ export async function POST(request: Request): Promise<Response> {
     config = null;
   }
   const outcome = await revokeIfAuthenticated(request, config);
+  const headers = clearSessionCookieHeaders();
   if (outcome === "failed") {
-    return json({ error: "SYSTEM_BUSY" }, 503, { "set-cookie": buildClearCookie() });
+    return json({ error: "SYSTEM_BUSY" }, 503, headers);
   }
-  return json({ ok: true }, 200, {
-    "set-cookie": buildClearCookie(),
-    // "cookies" only — see the header comment above for why not "storage"/"*".
-    "clear-site-data": '"cookies"',
-  });
+  // "cookies" only — see the header comment above for why not "storage"/"*".
+  headers.set("clear-site-data", '"cookies"');
+  return json({ ok: true }, 200, headers);
 }

@@ -2,9 +2,11 @@ import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   ADMIN_SESSION_COOKIE,
+  LEGACY_ADMIN_SESSION_COOKIE,
   SESSION_EPOCH_KEY,
   SESSION_TTL_MS,
   buildClearCookie,
+  buildLegacyClearCookie,
   buildSessionCookie,
   deriveSessionKey,
   mintSessionToken,
@@ -214,6 +216,26 @@ describe("adminSession — cookies", () => {
     expect(cookie).toContain("HttpOnly");
   });
 
+  // The __Host- prefix is only honoured for Secure + Path=/ + no Domain; any
+  // other shape and the browser silently drops the cookie (no admin login).
+  it("uses the __Host- prefix with exactly the attributes it requires", () => {
+    expect(ADMIN_SESSION_COOKIE).toBe("__Host-admin_session");
+    for (const cookie of [buildSessionCookie("t"), buildClearCookie()]) {
+      expect(cookie.startsWith("__Host-admin_session=")).toBe(true);
+      expect(cookie.split("; ")).toContain("Path=/");
+      expect(cookie.split("; ")).toContain("Secure");
+      expect(cookie.toLowerCase()).not.toContain("domain=");
+    }
+  });
+
+  it("the legacy clear cookie expires the pre-rename admin_session name", () => {
+    expect(LEGACY_ADMIN_SESSION_COOKIE).toBe("admin_session");
+    const cookie = buildLegacyClearCookie();
+    expect(cookie.startsWith("admin_session=; ")).toBe(true);
+    expect(cookie).toContain("Max-Age=0");
+    expect(cookie).toContain("Path=/");
+  });
+
   it("reads a named cookie from a header", () => {
     const header = `foo=1; ${ADMIN_SESSION_COOKIE}=abc.def.ghi; bar=2`;
     expect(readCookie(header, ADMIN_SESSION_COOKIE)).toBe("abc.def.ghi");
@@ -285,6 +307,26 @@ describe("adminSession — requireAdmin guard", () => {
       expect(result.response.status).toBe(503);
       expect(await result.response.json()).toEqual({ error: "SYSTEM_BUSY" });
     }
+  });
+
+  it("every guard refusal is private, no-store", async () => {
+    const store = memoryStore(1);
+    const unauth = await requireAdmin(req(), config(store));
+    store.fail = true;
+    const busy = await requireAdmin(req(`${ADMIN_SESSION_COOKIE}=${mintSessionToken(KEY, 1)}`), config(store));
+    for (const result of [unauth, busy]) {
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.response.headers.get("cache-control")).toBe("private, no-store");
+      }
+    }
+  });
+
+  it("ignores a valid token presented under the legacy admin_session name", async () => {
+    const token = mintSessionToken(KEY, 1);
+    const result = await requireAdmin(req(`admin_session=${token}`), config(memoryStore(1)));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.response.status).toBe(401);
   });
 
   it("passes with a valid, unexpired, current-epoch token", async () => {

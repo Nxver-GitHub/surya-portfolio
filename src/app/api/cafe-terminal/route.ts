@@ -347,7 +347,7 @@ function ipv6PrefixKey(
 
 /**
  * Determine the request's source SERVER-SIDE. The client can never set this:
- * "admin" is granted ONLY when the httpOnly `admin_session` cookie carries a
+ * "admin" is granted ONLY when the httpOnly `__Host-admin_session` cookie carries a
  * valid, unexpired, correctly-signed token from the CURRENT session epoch —
  * the same check requireAdmin runs. A missing/invalid/expired/superseded
  * cookie, no session config, or an unreachable epoch store is simply "guest"

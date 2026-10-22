@@ -26,6 +26,9 @@ const limiterState = vi.hoisted(() => ({
 const redisState = vi.hoisted(() => ({
   values: new Map<string, number>(),
   fail: false,
+  /** Fail only INCR — reads still work, so a valid session can be verified
+   * and then fail to be revoked (logout's 503 path). */
+  failIncr: false,
 }));
 
 vi.mock("@upstash/redis", () => ({
@@ -39,7 +42,7 @@ vi.mock("@upstash/redis", () => ({
         return redisState.values.get(key) ?? null;
       },
       async incr(key: string) {
-        if (redisState.fail) throw new Error("redis down");
+        if (redisState.fail || redisState.failIncr) throw new Error("redis down");
         const next = (redisState.values.get(key) ?? 0) + 1;
         redisState.values.set(key, next);
         return next;
@@ -179,6 +182,7 @@ beforeEach(() => {
   limiterState.calls = 0;
   redisState.values.clear();
   redisState.fail = false;
+  redisState.failIncr = false;
   verifyOverride.outcome = null;
   process.env.ADMIN_PASSPHRASE_SCRYPT = STORED_HASH;
   process.env.ADMIN_SESSION_SECRET = "test-session-secret";
@@ -434,5 +438,112 @@ describe("admin data — Access + current-session guard + audit line", () => {
     expect(logout.status).toBe(200);
     expect(redisState.values.get(SESSION_EPOCH_KEY)).toBe(1);
     expect((await dataGET(dataRequest(token))).status).toBe(200);
+  });
+});
+
+describe("admin responses — never cacheable, __Host- session cookie", () => {
+  const NO_STORE = "private, no-store";
+
+  function logoutRequest(sessionToken: string | null, origin = "https://suryapugaz.com"): Request {
+    const headers: Record<string, string> = { ...baseHeaders(null), origin };
+    if (sessionToken) headers.cookie = `${ADMIN_SESSION_COOKIE}=${sessionToken}`;
+    return new Request("https://suryapugaz.com/api/admin/logout", { method: "POST", headers });
+  }
+
+  it("login: the Set-Cookie 200 and every refusal carry no-store", async () => {
+    const ok = await POST(loginRequest(PASSPHRASE));
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get("cache-control")).toBe(NO_STORE);
+
+    const bad = await POST(loginRequest("wrong-passphrase-that-is-long"));
+    expect(bad.status).toBe(401);
+    expect(bad.headers.get("cache-control")).toBe(NO_STORE);
+
+    const noAccess = await POST(loginRequest(PASSPHRASE, null));
+    expect(noAccess.status).toBe(403);
+    expect(noAccess.headers.get("cache-control")).toBe(NO_STORE);
+
+    verifyOverride.outcome = "busy";
+    const busy = await POST(loginRequest(PASSPHRASE));
+    expect(busy.status).toBe(503);
+    expect(busy.headers.get("cache-control")).toBe(NO_STORE);
+    verifyOverride.outcome = null;
+
+    limiterState.success = false;
+    limiterState.reset = Date.now() + 60_000;
+    const limited = await POST(loginRequest(PASSPHRASE));
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("cache-control")).toBe(NO_STORE);
+  });
+
+  it("login sets the session under the __Host- name with the prefix's required shape", async () => {
+    const res = await POST(loginRequest(PASSPHRASE));
+    const cookie = res.headers.get("set-cookie") ?? "";
+    expect(ADMIN_SESSION_COOKIE).toBe("__Host-admin_session");
+    expect(cookie.startsWith("__Host-admin_session=")).toBe(true);
+    expect(cookie).toContain("Path=/");
+    expect(cookie).toContain("Secure");
+    expect(cookie.toLowerCase()).not.toContain("domain=");
+  });
+
+  it("data: 200, 401, 403 and 503 all carry no-store", async () => {
+    const token = tokenFrom(await POST(loginRequest(PASSPHRASE)));
+    const ok = await dataGET(dataRequest(token));
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get("cache-control")).toBe(NO_STORE);
+
+    const unauth = await dataGET(dataRequest(null));
+    expect(unauth.status).toBe(401);
+    expect(unauth.headers.get("cache-control")).toBe(NO_STORE);
+
+    const noAccess = await dataGET(dataRequest(token, null));
+    expect(noAccess.status).toBe(403);
+    expect(noAccess.headers.get("cache-control")).toBe(NO_STORE);
+
+    delete process.env.CF_ACCESS_AUD;
+    const unconfigured = await dataGET(dataRequest(token));
+    expect(unconfigured.status).toBe(503);
+    expect(unconfigured.headers.get("cache-control")).toBe(NO_STORE);
+  });
+
+  it("a session presented under the legacy admin_session name is not read", async () => {
+    const token = tokenFrom(await POST(loginRequest(PASSPHRASE)));
+    const headers = { ...baseHeaders(accessToken), cookie: `admin_session=${token}` };
+    const res = await dataGET(new Request("https://suryapugaz.com/api/admin/data", { headers }));
+    expect(res.status).toBe(401);
+  });
+
+  it("logout clears BOTH the __Host- and the legacy cookie, with no-store", async () => {
+    const token = tokenFrom(await POST(loginRequest(PASSPHRASE)));
+    const res = await logoutPOST(logoutRequest(token));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe(NO_STORE);
+    expect(res.headers.get("clear-site-data")).toBe('"cookies"');
+    const cookies = res.headers.getSetCookie();
+    expect(cookies).toHaveLength(2);
+    expect(cookies[0]).toMatch(/^__Host-admin_session=; /);
+    expect(cookies[1]).toMatch(/^admin_session=; /);
+    for (const cookie of cookies) {
+      expect(cookie).toContain("Max-Age=0");
+      expect(cookie).toContain("Path=/");
+    }
+  });
+
+  it("logout's 503 (revocation failed) still clears both cookies, with no-store", async () => {
+    const token = tokenFrom(await POST(loginRequest(PASSPHRASE)));
+    redisState.failIncr = true;
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const res = await logoutPOST(logoutRequest(token));
+    errorSpy.mockRestore();
+    expect(res.status).toBe(503);
+    expect(res.headers.get("cache-control")).toBe(NO_STORE);
+    expect(res.headers.getSetCookie()).toHaveLength(2);
+    expect(res.headers.get("clear-site-data")).toBeNull();
+  });
+
+  it("logout's cross-origin 403 carries no-store", async () => {
+    const res = await logoutPOST(logoutRequest(null, "https://evil.example"));
+    expect(res.status).toBe(403);
+    expect(res.headers.get("cache-control")).toBe(NO_STORE);
   });
 });

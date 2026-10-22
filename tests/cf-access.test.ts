@@ -6,6 +6,7 @@ import {
   JWKS_MIN_REFETCH_MS,
   JWKS_TTL_MS,
   accessConfigFromEnv,
+  accessDeniedResponse,
   checkCfAccess,
   createAccessVerifier,
   type AccessConfig,
@@ -315,5 +316,15 @@ describe("cfAccess — checkCfAccess route glue", () => {
     } finally {
       warn.mockRestore();
     }
+  });
+});
+
+describe("cfAccess — denial response", () => {
+  it("is an opaque 403 that no cache may keep", async () => {
+    const res = accessDeniedResponse();
+    expect(res.status).toBe(403);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    expect(res.headers.get("content-type")).toBe("application/json");
+    expect(await res.json()).toEqual({ error: "FORBIDDEN" });
   });
 });

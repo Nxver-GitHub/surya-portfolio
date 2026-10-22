@@ -30,9 +30,24 @@
 
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { Redis } from "@upstash/redis";
+import { adminJson } from "@/lib/adminResponse";
 
-/** Cookie name carrying the signed admin session token. */
-export const ADMIN_SESSION_COOKIE = "admin_session";
+/**
+ * Cookie name carrying the signed admin session token. The `__Host-` prefix
+ * makes the browser refuse the cookie unless it is Secure, Path=/ and has NO
+ * Domain attribute — so a sibling subdomain (or a network attacker over plain
+ * http) cannot plant or overwrite a session cookie for this host. Keep
+ * {@link buildSessionCookie}'s attributes exactly that shape or the browser
+ * silently drops the cookie.
+ */
+export const ADMIN_SESSION_COOKIE = "__Host-admin_session";
+
+/**
+ * The pre-rename cookie name. Never READ any more (tokens minted under it are
+ * also dead: this release changed the token format). Only cleared, on logout,
+ * so browsers do not carry a stale copy around.
+ */
+export const LEGACY_ADMIN_SESSION_COOKIE = "admin_session";
 
 /** Session lifetime: 24 hours, in milliseconds and seconds (cookie Max-Age). */
 export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -258,8 +273,18 @@ export function buildSessionCookie(token: string): string {
 
 /** Serialize a Set-Cookie header that immediately clears the session cookie. */
 export function buildClearCookie(): string {
+  return clearCookieFor(ADMIN_SESSION_COOKIE);
+}
+
+/** Serialize a Set-Cookie header that clears the legacy `admin_session`
+ * cookie (same Path/flags it was set with, so the browser matches it). */
+export function buildLegacyClearCookie(): string {
+  return clearCookieFor(LEGACY_ADMIN_SESSION_COOKIE);
+}
+
+function clearCookieFor(name: string): string {
   return [
-    `${ADMIN_SESSION_COOKIE}=`,
+    `${name}=`,
     "Path=/",
     "HttpOnly",
     "Secure",
@@ -297,10 +322,7 @@ type DenyCode = "ADMIN_NOT_CONFIGURED" | "UNAUTHORIZED" | "SYSTEM_BUSY";
 
 /** Opaque JSON response used for every admin-guard rejection. */
 function deny(status: number, code: DenyCode): Response {
-  return new Response(JSON.stringify({ error: code }), {
-    status,
-    headers: { "content-type": "application/json" },
-  });
+  return adminJson({ error: code }, status);
 }
 
 /** Result of the admin guard: proceed, or a ready-to-return rejection Response. */
