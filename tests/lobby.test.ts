@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   emailMailto,
@@ -16,6 +18,15 @@ const EXPECTED_JOIN_HREFS: Record<string, string | undefined> = {
   linkedin: "https://www.linkedin.com/in/surya-pugazhenthi",
   x: "https://x.com/surpugaz",
 };
+
+describe("lobby player logos", () => {
+  it("gives every org card a logo that exists under public/logos", () => {
+    for (const player of playerList) {
+      expect(player.logo, player.id).toMatch(/^\/logos\/[a-z0-9-]+\.png$/);
+      expect(existsSync(join(process.cwd(), "public", player.logo ?? "")), player.id).toBe(true);
+    }
+  });
+});
 
 describe("lobby room", () => {
   it("has a non-empty room name and region", () => {

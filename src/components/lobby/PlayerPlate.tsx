@@ -5,6 +5,8 @@ import { LicenseBadge } from "../gt/LicenseBadge";
 interface PlayerPlateProps {
   /** 1-2 char glyph on the enamel badge */
   glyph: string;
+  /** Org mark for the badge face; the glyph is the fallback without one */
+  logo?: string;
   livery: LiveryId;
   /** Rendered as the card's h3 (Pixelify uppercase) */
   title: string;
@@ -25,6 +27,7 @@ interface PlayerPlateProps {
  */
 export function PlayerPlate({
   glyph,
+  logo,
   livery,
   title,
   chipLabel,
@@ -35,7 +38,15 @@ export function PlayerPlate({
   return (
     <li className="plate relative flex h-full flex-col gap-3 px-4 py-4">
       <div className="flex items-start gap-3">
-        <LicenseBadge glyph={glyph} livery={livery} size={40} muted />
+        {/* A real org mark stays at full strength — dimmed, it reads as a
+            missing image again. The glyph badge keeps its muted enamel. */}
+        <LicenseBadge
+          glyph={glyph}
+          logo={logo}
+          livery={livery}
+          size={40}
+          muted={!logo}
+        />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <h3 className="ts-hard font-display text-sm leading-tight font-bold tracking-wide text-chrome uppercase">
             {title}
