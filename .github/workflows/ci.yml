@@ -6,6 +6,13 @@ on:
   push:
     branches: [main]
 
+# Least privilege for GITHUB_TOKEN. Every step only reads the repo: checkout
+# needs contents:read, and setup-node's pnpm cache and upload-artifact talk to
+# the Actions runtime with their own runtime token, not GITHUB_TOKEN scopes.
+# Nothing here comments on PRs, pushes, or writes statuses.
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest

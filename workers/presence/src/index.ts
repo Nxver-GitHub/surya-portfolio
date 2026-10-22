@@ -1,9 +1,10 @@
 /**
  * surya-presence — the front door of the live lobby presence service.
  *
- * This Worker does three things and then gets out of the way: it rejects
+ * This Worker does four things and then gets out of the way: it rejects
  * anything that is not a WebSocket upgrade on PRESENCE_PATH, it checks the
- * Origin, and it hands the request to the one global `PresenceRoom` Durable
+ * Origin, it refuses upgrades (503) when the required PRESENCE_IP_KEY secret is
+ * missing, and it hands the request to the one global `PresenceRoom` Durable
  * Object. After the 101 the socket is between the browser and the room; the
  * Worker is not on the data path and is not billed for the conversation.
  *
@@ -12,7 +13,7 @@
 
 import { PRESENCE_PATH } from "../../../src/lib/presence/protocol";
 import { isAllowedOrigin } from "./logic";
-import { PresenceRoom, type Env } from "./room";
+import { PresenceRoom, hasIpKey, type Env } from "./room";
 
 /** One room for the whole site. Scope decision: spec §1, row 5. */
 const ROOM_NAME = "global";
@@ -36,6 +37,14 @@ export default {
     }
     if (!isAllowedOrigin(request.headers.get("Origin"), env.PRESENCE_DEV === "1")) {
       return new Response("forbidden", { status: 403 });
+    }
+    // Fail closed without the per-IP HMAC key. A per-instance random fallback
+    // let the per-IP cap silently reset on every hibernation wake, so a
+    // missing secret is a misconfiguration to surface, not to paper over. The
+    // room refuses too (defence in depth); checking here skips waking it.
+    if (!hasIpKey(env)) {
+      console.error("presence: PRESENCE_IP_KEY is not set; refusing upgrades");
+      return new Response("presence unavailable", { status: 503 });
     }
 
     try {

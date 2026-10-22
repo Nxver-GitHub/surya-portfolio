@@ -20,6 +20,7 @@ describe("security headers", () => {
     expect(headerValue("Permissions-Policy")).toBe(
       "camera=(), microphone=(), geolocation=()",
     );
+    expect(headerValue("X-DNS-Prefetch-Control")).toBe("off");
     expect(headerValue("Content-Security-Policy")).toContain(
       "default-src 'self'",
     );

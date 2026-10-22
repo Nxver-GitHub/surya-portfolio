@@ -25,7 +25,13 @@ export default defineConfig({
   plugins: [
     cloudflareTest({
       wrangler: { configPath: "./wrangler.jsonc" },
-      miniflare: { compatibilityDate: TEST_COMPATIBILITY_DATE },
+      miniflare: {
+        compatibilityDate: TEST_COMPATIBILITY_DATE,
+        // PRESENCE_IP_KEY is a REQUIRED secret (the Worker refuses upgrades
+        // without it), so the test run supplies a fixed, obviously-fake one.
+        // test/missing-key.test.ts strips it to prove the fail-closed path.
+        bindings: { PRESENCE_IP_KEY: "test-only-presence-ip-key" },
+      },
     }),
   ],
   test: {

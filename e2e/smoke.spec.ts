@@ -24,6 +24,8 @@ test("security headers ship on every HTML response", async ({ request }) => {
   expect(headers["x-frame-options"]).toBe("DENY");
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["strict-transport-security"]).toContain("max-age=");
+  expect(headers["x-dns-prefetch-control"]).toBe("off");
+  expect(headers["x-powered-by"]).toBeUndefined();
 });
 
 test("robots and sitemap are served", async ({ request }) => {

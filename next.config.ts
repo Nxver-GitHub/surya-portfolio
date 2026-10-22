@@ -51,6 +51,9 @@ export const SECURITY_HEADERS = [
     value: "camera=(), microphone=(), geolocation=()",
   },
   { key: "X-Frame-Options", value: "DENY" },
+  // No speculative DNS lookups for link hosts. Near-zero real value (the CSP
+  // admits no third-party origins) but free, and mirrored in public/_headers.
+  { key: "X-DNS-Prefetch-Control", value: "off" },
   { key: "Content-Security-Policy", value: CONTENT_SECURITY_POLICY },
 ];
 
@@ -86,6 +89,10 @@ const buildTimeEnv: NextConfig["env"] = {
 
 const nextConfig: NextConfig = {
   env: buildTimeEnv,
+  // No `X-Powered-By: Next.js`. OpenNext keys its own `X-OpenNext: 1` response
+  // header off this same flag (addOpenNextHeader in @opennextjs/aws), so this
+  // one line drops both fingerprints. The stack is public anyway; it is tidiness.
+  poweredByHeader: false,
   // Pin the Turbopack workspace root to this repo. Without it, a stray
   // lockfile in a parent directory makes Next infer that parent as the root
   // (breaking file tracing). On Vercel the repo is already the root, so this

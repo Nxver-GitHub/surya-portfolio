@@ -1,18 +1,61 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+/**
+ * Every limiter call the handler makes, by Redis prefix, plus the prefixes
+ * that should answer "over the limit". `vi.hoisted` so it exists before the
+ * hoisted `vi.mock` factory below runs. Only the POST-level tests read it; the
+ * pure-function tests never construct a limiter.
+ */
+const limiterLog = vi.hoisted(() => ({
+  calls: [] as { prefix: string; id: string }[],
+  rejecting: new Set<string>(),
+}));
+
+vi.mock("@upstash/redis", () => ({
+  Redis: vi.fn().mockImplementation(function Redis() {
+    return {};
+  }),
+}));
+
+vi.mock("@upstash/ratelimit", () => {
+  class Ratelimit {
+    private readonly prefix: string;
+    constructor(options: { prefix: string }) {
+      this.prefix = options.prefix;
+    }
+    static slidingWindow() {
+      return {};
+    }
+    static fixedWindow() {
+      return {};
+    }
+    async limit(id: string) {
+      limiterLog.calls.push({ prefix: this.prefix, id });
+      return { success: !limiterLog.rejecting.has(this.prefix), reset: 0 };
+    }
+  }
+  return { Ratelimit };
+});
+
 import {
   IP_FALLBACK,
   LIMITS,
   KEY_PREFIX,
+  POST,
   UI_MESSAGE_STREAM_OPTIONS,
-  applyRateLimits,
+  applyGlobalLimit,
+  applyPerIpLimits,
   assistantTurnMetadata,
   detectSource,
   envReady,
+  extractClientDayKey,
   extractClientIp,
   limitPlan,
   mapMessagesToModel,
+  normalizeIpForDayKey,
   normalizeIpForKey,
   parseChatBody,
+  rateLimitKeys,
   retryAfterSeconds,
   type ChatMessage,
   type LimitCheckers,
@@ -26,7 +69,13 @@ import {
   signAssistantTurn,
   verifiedTranscript,
 } from "../src/lib/transcriptSignature";
-import { ADMIN_SESSION_COOKIE, mintSessionToken } from "../src/lib/adminSession";
+import {
+  ADMIN_SESSION_COOKIE,
+  deriveSessionKey,
+  mintSessionToken,
+  type SessionConfig,
+  type SessionEpochStore,
+} from "../src/lib/adminSession";
 
 /** Build a header getter from a plain map, case-insensitive like real headers. */
 function headers(map: Record<string, string>): (name: string) => string | null {
@@ -447,6 +496,94 @@ describe("cafe-terminal route — IPv6 rate-limit keys (/64)", () => {
   });
 });
 
+describe("cafe-terminal route — IPv6 day-limit keys (/48)", () => {
+  /**
+   * ISPs and clouds routinely hand one customer a /56 or /48. Keyed at /64,
+   * that customer could open 400 / 20 = 20 fresh day buckets and drain the
+   * shared global budget alone; the day limiter therefore keys on the /48.
+   */
+  it("collapses every /64 inside one /48 onto one day key", () => {
+    const keys = [
+      "2001:db8:abcd:1234::1",
+      "2001:db8:abcd:1235::1",
+      "2001:db8:abcd:ffff:5678:9abc:def0:1234",
+    ].map(normalizeIpForDayKey);
+    expect(new Set(keys).size).toBe(1);
+    expect(keys[0]).toBe("2001:db8:abcd::/48");
+  });
+
+  it("keeps distinct /48s in distinct day buckets", () => {
+    expect(normalizeIpForDayKey("2001:db8:abcd::1")).not.toBe(
+      normalizeIpForDayKey("2001:db8:abce::1"),
+    );
+  });
+
+  it("expands :: compression before truncating", () => {
+    expect(normalizeIpForDayKey("2001:db8::1")).toBe("2001:db8:0::/48");
+    expect(normalizeIpForDayKey("::1")).toBe("0:0:0::/48");
+    expect(normalizeIpForDayKey("2001::abcd:1")).toBe("2001:0:0::/48");
+  });
+
+  it("strips brackets, ports and zone ids", () => {
+    expect(normalizeIpForDayKey("[2001:db8:abcd:1234::1]:443")).toBe(
+      "2001:db8:abcd::/48",
+    );
+    expect(normalizeIpForDayKey("2001:db8:abcd:1234::1%eth0")).toBe(
+      "2001:db8:abcd::/48",
+    );
+  });
+
+  it("normalizes leading zeros and case", () => {
+    expect(normalizeIpForDayKey("2001:0DB8:00AB:0001::9")).toBe(
+      "2001:db8:ab::/48",
+    );
+  });
+
+  it("leaves IPv4-mapped addresses whole (never folds IPv4 together)", () => {
+    expect(normalizeIpForDayKey("::ffff:203.0.113.7")).toBe("::ffff:203.0.113.7");
+    expect(normalizeIpForDayKey("::ffff:203.0.113.8")).not.toBe(
+      normalizeIpForDayKey("::ffff:203.0.113.7"),
+    );
+  });
+
+  it("leaves IPv4 and the fallback key untouched", () => {
+    expect(normalizeIpForDayKey("203.0.113.7")).toBe("203.0.113.7");
+    expect(normalizeIpForDayKey("203.0.113.7:51820")).toBe("203.0.113.7");
+    expect(normalizeIpForDayKey(IP_FALLBACK)).toBe(IP_FALLBACK);
+  });
+
+  it("keys a malformed address verbatim, exactly like the /64 helper", () => {
+    for (const bad of ["2001:db8::1::2", "2001:db8:1", "garbage"]) {
+      expect(normalizeIpForDayKey(bad)).toBe(normalizeIpForKey(bad));
+    }
+  });
+
+  it("uses the same header trust order as extractClientIp", () => {
+    expect(
+      extractClientDayKey(
+        headers({
+          "cf-connecting-ip": "2001:db8:abcd:1234::7",
+          "x-real-ip": "2001:db8:ffff::1",
+        }),
+      ),
+    ).toBe("2001:db8:abcd::/48");
+    expect(
+      extractClientDayKey(headers({ "x-forwarded-for": "2001:db8:abcd:1::7, 1.2.3.4" })),
+    ).toBe("2001:db8:abcd::/48");
+    expect(extractClientDayKey(headers({}))).toBe(IP_FALLBACK);
+  });
+
+  it("derives a /64 minute key and a /48 day key for one request", () => {
+    expect(
+      rateLimitKeys(headers({ "cf-connecting-ip": "2001:db8:abcd:1234::7" })),
+    ).toEqual({ minute: "2001:db8:abcd:1234::/64", day: "2001:db8:abcd::/48" });
+    expect(rateLimitKeys(headers({ "cf-connecting-ip": "203.0.113.7" }))).toEqual({
+      minute: "203.0.113.7",
+      day: "203.0.113.7",
+    });
+  });
+});
+
 describe("cafe-terminal route — env readiness (offline behavior)", () => {
   it("is offline when all env vars are missing", () => {
     expect(envReady({})).toBe(false);
@@ -507,7 +644,7 @@ describe("cafe-terminal route — retry-after", () => {
 describe("cafe-terminal route — rate-limit config", () => {
   it("enforces the decided thresholds", () => {
     expect(LIMITS.ipPerMinute).toBe(8);
-    expect(LIMITS.ipPerDay).toBe(60);
+    expect(LIMITS.ipPerDay).toBe(20);
     expect(LIMITS.globalPerDay).toBe(400);
     // Admin burst is generous but bounded (never unlimited).
     expect(LIMITS.adminPerMinute).toBe(60);
@@ -533,49 +670,63 @@ describe("cafe-terminal route — limit plan (guest vs admin posture)", () => {
 });
 
 describe("cafe-terminal route — server-derived source (never trust the client)", () => {
-  const SECRET = "test-session-secret";
+  const KEY = deriveSessionKey("test-session-secret", "32768:8:3:aa:bb");
   const headers = (map: Record<string, string>) => (name: string) =>
     map[name.toLowerCase()] ?? null;
+  function store(epoch: number | null, fail = false): SessionEpochStore {
+    return {
+      current: async () => {
+        if (fail) throw new Error("redis down");
+        return epoch;
+      },
+      bump: async () => {
+        throw new Error("not used");
+      },
+    };
+  }
+  const config = (s: SessionEpochStore = store(1)): SessionConfig => ({ key: KEY, store: s });
+  const cookie = (token: string) => headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
 
-  it("tags admin ONLY with a valid, signed session cookie", () => {
-    const token = mintSessionToken(SECRET);
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, SECRET)).toBe("admin");
+  it("tags admin ONLY with a valid, signed, current-epoch session cookie", async () => {
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1)), config())).toBe("admin");
   });
 
-  it("is guest when the cookie is missing", () => {
-    expect(detectSource(headers({}), SECRET)).toBe("guest");
+  it("is guest when the cookie is missing", async () => {
+    expect(await detectSource(headers({}), config())).toBe("guest");
   });
 
-  it("is guest when the cookie signature is forged/tampered", () => {
-    const token = `${mintSessionToken(SECRET)}tamper`;
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, SECRET)).toBe("guest");
+  it("is guest when the cookie signature is forged/tampered", async () => {
+    expect(await detectSource(cookie(`${mintSessionToken(KEY, 1)}tamper`), config())).toBe("guest");
   });
 
-  it("is guest when the token was signed with a different secret", () => {
-    const token = mintSessionToken("some-other-secret");
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, SECRET)).toBe("guest");
+  it("is guest when the token was signed with a different key", async () => {
+    const other = deriveSessionKey("some-other-secret", "32768:8:3:aa:bb");
+    expect(await detectSource(cookie(mintSessionToken(other, 1)), config())).toBe("guest");
   });
 
-  it("is guest when the session has expired", () => {
+  it("is guest when the session has expired", async () => {
     const past = Date.now() - 48 * 60 * 60 * 1000; // minted 48h ago (TTL 24h)
-    const token = mintSessionToken(SECRET, past);
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, SECRET)).toBe("guest");
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1, past)), config())).toBe("guest");
   });
 
-  it("is guest when no secret is configured, even with a cookie present", () => {
-    const token = mintSessionToken(SECRET);
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, undefined)).toBe("guest");
+  it("is guest when the session was superseded by a newer login or logout", async () => {
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1)), config(store(2)))).toBe("guest");
   });
 
-  it("ignores any client-supplied 'admin' signal that is not the signed cookie", () => {
+  it("is guest (fail closed) when the epoch store errors", async () => {
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1)), config(store(1, true)))).toBe(
+      "guest",
+    );
+  });
+
+  it("is guest when no session config exists, even with a cookie present", async () => {
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1)), null)).toBe("guest");
+  });
+
+  it("ignores any client-supplied 'admin' signal that is not the signed cookie", async () => {
     // A forged header / body flag can never earn [ADMIN]; only the cookie can.
     const getHeader = headers({ "x-admin": "true", "x-source": "admin" });
-    expect(detectSource(getHeader, SECRET)).toBe("guest");
+    expect(await detectSource(getHeader, config())).toBe("guest");
   });
 });
 
@@ -739,54 +890,150 @@ describe("cafe-terminal route — global budget is spent only on allowed request
     };
   }
 
+  const V4 = { minute: "1.2.3.4", day: "1.2.3.4" } as const;
+
   /**
    * THE AVAILABILITY BUG. Round 1 put globalDay in the same Promise.all as the
    * per-IP limiters, so a rejected request still consumed a global token — one
-   * IP could burn all 400 and take the terminal offline for everyone. After the
-   * reorder the per-IP verdict comes first and gates the shared budget.
+   * IP could burn all 400 and take the terminal offline for everyone. The
+   * per-IP phase now never touches the shared budget; the handler debits it in
+   * a separate phase, after the body validates (see the POST tests below).
    */
-  it("does NOT consume global budget when the per-IP minute cap rejects", async () => {
-    const limiters = checkers({ ipMinute: true });
-    const verdict = await applyRateLimits(limiters, limitPlan("guest"), "1.2.3.4");
-    expect(verdict.ok).toBe(false);
-    expect(limiters.globalDay.calls).toBe(0);
+  it("the per-IP phase never touches the global budget, even when it rejects", async () => {
+    for (const [plan, over] of [
+      ["guest", { ipMinute: true }],
+      ["guest", { ipDay: true }],
+      ["admin", { adminMinute: true }],
+    ] as const) {
+      const limiters = checkers(over);
+      const verdict = await applyPerIpLimits(limiters, limitPlan(plan), V4);
+      expect(verdict.ok).toBe(false);
+      expect(limiters.globalDay.calls).toBe(0);
+    }
   });
 
-  it("does NOT consume global budget when the per-IP day cap rejects", async () => {
-    const limiters = checkers({ ipDay: true });
-    const verdict = await applyRateLimits(limiters, limitPlan("guest"), "1.2.3.4");
-    expect(verdict.ok).toBe(false);
-    expect(limiters.globalDay.calls).toBe(0);
-  });
-
-  it("does NOT consume global budget when an admin's burst cap rejects", async () => {
-    const limiters = checkers({ adminMinute: true });
-    const verdict = await applyRateLimits(limiters, limitPlan("admin"), "1.2.3.4");
-    expect(verdict.ok).toBe(false);
-    expect(limiters.globalDay.calls).toBe(0);
-  });
-
-  /** The cap must still genuinely cap Groq spend: everything that gets through
-   * has spent exactly one global token. */
-  it("consumes exactly one global token on an allowed request", async () => {
+  it("the per-IP phase passes without spending a global token", async () => {
     const limiters = checkers();
-    const verdict = await applyRateLimits(limiters, limitPlan("guest"), "1.2.3.4");
+    const verdict = await applyPerIpLimits(limiters, limitPlan("guest"), V4);
+    expect(verdict.ok).toBe(true);
+    expect(limiters.globalDay.calls).toBe(0);
+  });
+
+  /** The cap must still genuinely cap Groq spend: the global phase spends
+   * exactly one token per call. */
+  it("the global phase consumes exactly one global token", async () => {
+    const limiters = checkers();
+    const verdict = await applyGlobalLimit(limiters);
     expect(verdict.ok).toBe(true);
     expect(limiters.globalDay.calls).toBe(1);
   });
 
-  it("still rejects when the global cap itself is exhausted", async () => {
+  it("the global phase rejects when the global cap itself is exhausted", async () => {
     const limiters = checkers({ globalDay: true });
-    const verdict = await applyRateLimits(limiters, limitPlan("guest"), "1.2.3.4");
+    const verdict = await applyGlobalLimit(limiters);
     expect(verdict.ok).toBe(false);
     if (!verdict.ok) expect(verdict.reset).toBe(1_000);
   });
 
   it("skips the visitor per-day cap for an admin", async () => {
     const limiters = checkers();
-    await applyRateLimits(limiters, limitPlan("admin"), "1.2.3.4");
+    await applyPerIpLimits(limiters, limitPlan("admin"), V4);
     expect(limiters.ipDay.calls).toBe(0);
     expect(limiters.adminMinute.calls).toBe(1);
     expect(limiters.ipMinute.calls).toBe(0);
+  });
+
+  it("keys the minute limiter on the minute key and the day limiter on the day key", async () => {
+    const seen: Record<string, string[]> = { ipMinute: [], ipDay: [] };
+    const recording = (name: string) => ({
+      limit: async (id: string) => {
+        seen[name].push(id);
+        return { success: true, reset: 0 };
+      },
+    });
+    const limiters = { ...checkers(), ipMinute: recording("ipMinute"), ipDay: recording("ipDay") };
+    await applyPerIpLimits(limiters, limitPlan("guest"), {
+      minute: "2001:db8:abcd:1234::/64",
+      day: "2001:db8:abcd::/48",
+    });
+    expect(seen.ipMinute).toEqual(["2001:db8:abcd:1234::/64"]);
+    expect(seen.ipDay).toEqual(["2001:db8:abcd::/48"]);
+  });
+});
+
+describe("cafe-terminal route — POST ordering (per-IP → body → global)", () => {
+  beforeEach(() => {
+    limiterLog.calls.length = 0;
+    limiterLog.rejecting.clear();
+    vi.stubEnv("GROQ_API_KEY", "test-groq-key");
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://redis.example.test");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "test-token");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  function chatRequest(ip: string, body: string): Request {
+    return new Request("https://suryapugaz.com/api/cafe-terminal", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "https://suryapugaz.com",
+        host: "suryapugaz.com",
+        "cf-connecting-ip": ip,
+      },
+      body,
+    });
+  }
+
+  const callsTo = (prefix: string) =>
+    limiterLog.calls.filter((c) => c.prefix === prefix).map((c) => c.id);
+
+  const VALID = JSON.stringify({ messages: [{ role: "user", content: "hi" }] });
+
+  it("an invalid body is a 400 that never debits the global budget", async () => {
+    for (const body of ["not json", JSON.stringify({ messages: [] })]) {
+      const res = await POST(chatRequest("203.0.113.7", body));
+      expect(res.status).toBe(400);
+    }
+    expect(callsTo(KEY_PREFIX.globalDay)).toEqual([]);
+    // The per-IP caps still ran first, so a junk flood is still shed by them.
+    expect(callsTo(KEY_PREFIX.ipMinute)).toHaveLength(2);
+    expect(callsTo(KEY_PREFIX.ipDay)).toHaveLength(2);
+  });
+
+  it("a per-IP rejection is a 429 before the body or global budget is touched", async () => {
+    limiterLog.rejecting.add(KEY_PREFIX.ipDay);
+    const res = await POST(chatRequest("203.0.113.7", "not json"));
+    expect(res.status).toBe(429); // not 400: the body was never read
+    expect(callsTo(KEY_PREFIX.globalDay)).toEqual([]);
+  });
+
+  it("a valid body does debit the global budget (and is refused when it is spent)", async () => {
+    limiterLog.rejecting.add(KEY_PREFIX.globalDay);
+    const res = await POST(chatRequest("203.0.113.7", VALID));
+    expect(res.status).toBe(429);
+    expect(callsTo(KEY_PREFIX.globalDay)).toEqual(["all"]);
+  });
+
+  it("two /64s inside one /48 share one day budget", async () => {
+    await POST(chatRequest("2001:db8:abcd:1::1", "not json"));
+    await POST(chatRequest("2001:db8:abcd:2::1", "not json"));
+    expect(callsTo(KEY_PREFIX.ipDay)).toEqual([
+      "2001:db8:abcd::/48",
+      "2001:db8:abcd::/48",
+    ]);
+  });
+
+  it("the minute limiter still keys each /64 separately", async () => {
+    await POST(chatRequest("2001:db8:abcd:1::1", "not json"));
+    await POST(chatRequest("2001:db8:abcd:2::1", "not json"));
+    expect(callsTo(KEY_PREFIX.ipMinute)).toEqual([
+      "2001:db8:abcd:1::/64",
+      "2001:db8:abcd:2::/64",
+    ]);
   });
 });
