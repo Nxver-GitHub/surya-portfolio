@@ -16,6 +16,7 @@
  * ADMIN_PASSPHRASE_SCRYPT`; `.dev.vars` holds the local copy for `wrangler dev`).
  *
  * The plaintext is never logged, never written to disk, and never echoed.
+ * Passphrases shorter than 16 characters are refused (length is the only rule).
  *
  * Usage:
  *   node scripts/hash-admin-passphrase.mjs
@@ -42,6 +43,23 @@ function hashPassphrase(passphrase) {
   const salt = randomBytes(SALT_BYTES);
   const hash = scryptSync(passphrase, salt, KEYLEN);
   return `${salt.toString("hex")}:${hash.toString("hex")}`;
+}
+
+/** Shortest passphrase this script will hash, in characters (code points).
+ * Length is the only rule: a long passphrase is what makes an offline guess
+ * against the stored digest infeasible; composition rules add little. */
+const MIN_PASSPHRASE_CHARS = 16;
+
+/** Exit with a clear message if the passphrase is too short. */
+function assertLongEnough(passphrase) {
+  const length = [...passphrase].length;
+  if (length < MIN_PASSPHRASE_CHARS) {
+    console.error(
+      `Error: passphrase is ${length} characters; use at least ${MIN_PASSPHRASE_CHARS}. ` +
+        "A few random words (e.g. four or more diceware words) is easiest.",
+    );
+    process.exit(1);
+  }
 }
 
 /** Read all of stdin as a UTF-8 string (for the --stdin pipe mode). */
@@ -97,6 +115,7 @@ async function main() {
     }
   }
 
+  assertLongEnough(passphrase);
   const stored = hashPassphrase(passphrase);
   // Only the digest is printed — never the plaintext.
   process.stdout.write("\nADMIN_PASSPHRASE_SCRYPT=" + stored + "\n");
