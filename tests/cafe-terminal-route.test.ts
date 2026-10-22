@@ -26,7 +26,13 @@ import {
   signAssistantTurn,
   verifiedTranscript,
 } from "../src/lib/transcriptSignature";
-import { ADMIN_SESSION_COOKIE, mintSessionToken } from "../src/lib/adminSession";
+import {
+  ADMIN_SESSION_COOKIE,
+  deriveSessionKey,
+  mintSessionToken,
+  type SessionConfig,
+  type SessionEpochStore,
+} from "../src/lib/adminSession";
 
 /** Build a header getter from a plain map, case-insensitive like real headers. */
 function headers(map: Record<string, string>): (name: string) => string | null {
@@ -507,7 +513,7 @@ describe("cafe-terminal route — retry-after", () => {
 describe("cafe-terminal route — rate-limit config", () => {
   it("enforces the decided thresholds", () => {
     expect(LIMITS.ipPerMinute).toBe(8);
-    expect(LIMITS.ipPerDay).toBe(60);
+    expect(LIMITS.ipPerDay).toBe(20);
     expect(LIMITS.globalPerDay).toBe(400);
     // Admin burst is generous but bounded (never unlimited).
     expect(LIMITS.adminPerMinute).toBe(60);
@@ -533,49 +539,63 @@ describe("cafe-terminal route — limit plan (guest vs admin posture)", () => {
 });
 
 describe("cafe-terminal route — server-derived source (never trust the client)", () => {
-  const SECRET = "test-session-secret";
+  const KEY = deriveSessionKey("test-session-secret", "32768:8:3:aa:bb");
   const headers = (map: Record<string, string>) => (name: string) =>
     map[name.toLowerCase()] ?? null;
+  function store(epoch: number | null, fail = false): SessionEpochStore {
+    return {
+      current: async () => {
+        if (fail) throw new Error("redis down");
+        return epoch;
+      },
+      bump: async () => {
+        throw new Error("not used");
+      },
+    };
+  }
+  const config = (s: SessionEpochStore = store(1)): SessionConfig => ({ key: KEY, store: s });
+  const cookie = (token: string) => headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
 
-  it("tags admin ONLY with a valid, signed session cookie", () => {
-    const token = mintSessionToken(SECRET);
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, SECRET)).toBe("admin");
+  it("tags admin ONLY with a valid, signed, current-epoch session cookie", async () => {
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1)), config())).toBe("admin");
   });
 
-  it("is guest when the cookie is missing", () => {
-    expect(detectSource(headers({}), SECRET)).toBe("guest");
+  it("is guest when the cookie is missing", async () => {
+    expect(await detectSource(headers({}), config())).toBe("guest");
   });
 
-  it("is guest when the cookie signature is forged/tampered", () => {
-    const token = `${mintSessionToken(SECRET)}tamper`;
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, SECRET)).toBe("guest");
+  it("is guest when the cookie signature is forged/tampered", async () => {
+    expect(await detectSource(cookie(`${mintSessionToken(KEY, 1)}tamper`), config())).toBe("guest");
   });
 
-  it("is guest when the token was signed with a different secret", () => {
-    const token = mintSessionToken("some-other-secret");
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, SECRET)).toBe("guest");
+  it("is guest when the token was signed with a different key", async () => {
+    const other = deriveSessionKey("some-other-secret", "32768:8:3:aa:bb");
+    expect(await detectSource(cookie(mintSessionToken(other, 1)), config())).toBe("guest");
   });
 
-  it("is guest when the session has expired", () => {
+  it("is guest when the session has expired", async () => {
     const past = Date.now() - 48 * 60 * 60 * 1000; // minted 48h ago (TTL 24h)
-    const token = mintSessionToken(SECRET, past);
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, SECRET)).toBe("guest");
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1, past)), config())).toBe("guest");
   });
 
-  it("is guest when no secret is configured, even with a cookie present", () => {
-    const token = mintSessionToken(SECRET);
-    const getHeader = headers({ cookie: `${ADMIN_SESSION_COOKIE}=${token}` });
-    expect(detectSource(getHeader, undefined)).toBe("guest");
+  it("is guest when the session was superseded by a newer login or logout", async () => {
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1)), config(store(2)))).toBe("guest");
   });
 
-  it("ignores any client-supplied 'admin' signal that is not the signed cookie", () => {
+  it("is guest (fail closed) when the epoch store errors", async () => {
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1)), config(store(1, true)))).toBe(
+      "guest",
+    );
+  });
+
+  it("is guest when no session config exists, even with a cookie present", async () => {
+    expect(await detectSource(cookie(mintSessionToken(KEY, 1)), null)).toBe("guest");
+  });
+
+  it("ignores any client-supplied 'admin' signal that is not the signed cookie", async () => {
     // A forged header / body flag can never earn [ADMIN]; only the cookie can.
     const getHeader = headers({ "x-admin": "true", "x-source": "admin" });
-    expect(detectSource(getHeader, SECRET)).toBe("guest");
+    expect(await detectSource(getHeader, config())).toBe("guest");
   });
 });
 

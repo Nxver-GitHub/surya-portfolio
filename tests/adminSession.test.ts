@@ -1,77 +1,198 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { createHmac } from "node:crypto";
+import { describe, expect, it } from "vitest";
 import {
   ADMIN_SESSION_COOKIE,
+  SESSION_EPOCH_KEY,
   SESSION_TTL_MS,
   buildClearCookie,
   buildSessionCookie,
+  deriveSessionKey,
   mintSessionToken,
   readCookie,
+  redisEpochStore,
   requireAdmin,
+  sessionConfigFromEnv,
+  verifyCurrentSession,
   verifySessionToken,
+  type SessionConfig,
+  type SessionEpochStore,
 } from "../src/lib/adminSession";
 
 const SECRET = "test-secret-key-do-not-use-in-prod";
+const HASH = "32768:8:3:aabb:ccdd";
+const KEY = deriveSessionKey(SECRET, HASH);
 const NOW = 1_700_000_000_000;
 const NONCE = "deadbeefdeadbeefdeadbeefdeadbeef";
 
-describe("adminSession — mint/verify round-trip", () => {
-  it("mints a token that verifies with the same secret", () => {
-    const token = mintSessionToken(SECRET, NOW, NONCE);
-    const payload = verifySessionToken(token, SECRET, NOW + 1000);
-    expect(payload).not.toBeNull();
-    expect(payload?.expiry).toBe(NOW + SESSION_TTL_MS);
-    expect(payload?.nonce).toBe(NONCE);
+/** In-memory epoch store; `fail` makes every call throw (Redis down). */
+function memoryStore(initial: number | null = null): SessionEpochStore & {
+  value: number | null;
+  fail: boolean;
+  bumps: number;
+} {
+  const store = {
+    value: initial,
+    fail: false,
+    bumps: 0,
+    async current() {
+      if (store.fail) throw new Error("redis down");
+      return store.value;
+    },
+    async bump() {
+      if (store.fail) throw new Error("redis down");
+      store.bumps += 1;
+      store.value = (store.value ?? 0) + 1;
+      return store.value;
+    },
+  };
+  return store;
+}
+
+describe("adminSession — key derivation", () => {
+  it("changes when the passphrase hash changes (passphrase rotation revokes)", () => {
+    const other = deriveSessionKey(SECRET, "32768:8:3:aabb:eeff");
+    expect(other.equals(KEY)).toBe(false);
+    const token = mintSessionToken(KEY, 1, NOW, NONCE);
+    expect(verifySessionToken(token, other, NOW + 1000)).toBeNull();
   });
 
-  it("produces a three-part expiry.nonce.sig token", () => {
-    const token = mintSessionToken(SECRET, NOW, NONCE);
-    expect(token.split(".")).toHaveLength(3);
-    expect(token.startsWith(`${NOW + SESSION_TTL_MS}.${NONCE}.`)).toBe(true);
+  it("changes when the session secret changes", () => {
+    expect(deriveSessionKey("another-secret", HASH).equals(KEY)).toBe(false);
+  });
+
+  it("is domain-separated: never the raw secret's HMAC of the hash", () => {
+    const naive = createHmac("sha256", SECRET).update(HASH).digest();
+    expect(naive.equals(KEY)).toBe(false);
+  });
+});
+
+describe("adminSession — mint/verify round-trip", () => {
+  it("mints a token that verifies with the same key", () => {
+    const token = mintSessionToken(KEY, 7, NOW, NONCE);
+    const payload = verifySessionToken(token, KEY, NOW + 1000);
+    expect(payload).toEqual({ epoch: 7, expiry: NOW + SESSION_TTL_MS, nonce: NONCE });
+  });
+
+  it("produces a five-part v2.epoch.expiry.nonce.sig token", () => {
+    const token = mintSessionToken(KEY, 3, NOW, NONCE);
+    expect(token.split(".")).toHaveLength(5);
+    expect(token.startsWith(`v2.3.${NOW + SESSION_TTL_MS}.${NONCE}.`)).toBe(true);
   });
 });
 
 describe("adminSession — tampered token rejection", () => {
-  it("rejects a token signed with a different secret", () => {
-    const token = mintSessionToken(SECRET, NOW, NONCE);
-    expect(verifySessionToken(token, "other-secret", NOW + 1000)).toBeNull();
+  it("rejects a token signed with a different key", () => {
+    const token = mintSessionToken(KEY, 1, NOW, NONCE);
+    expect(verifySessionToken(token, deriveSessionKey("x", HASH), NOW + 1000)).toBeNull();
   });
 
   it("rejects a token whose signature was altered", () => {
-    const token = mintSessionToken(SECRET, NOW, NONCE);
-    const [exp, nonce, sig] = token.split(".");
-    const flipped = sig[0] === "0" ? "1" : "0";
-    const bad = `${exp}.${nonce}.${flipped}${sig.slice(1)}`;
-    expect(verifySessionToken(bad, SECRET, NOW + 1000)).toBeNull();
+    const token = mintSessionToken(KEY, 1, NOW, NONCE);
+    const parts = token.split(".");
+    const sig = parts[4];
+    parts[4] = `${sig[0] === "0" ? "1" : "0"}${sig.slice(1)}`;
+    expect(verifySessionToken(parts.join("."), KEY, NOW + 1000)).toBeNull();
   });
 
   it("rejects a token whose expiry was extended (breaks the signature)", () => {
-    const token = mintSessionToken(SECRET, NOW, NONCE);
-    const [, nonce, sig] = token.split(".");
-    const forged = `${NOW + SESSION_TTL_MS * 10}.${nonce}.${sig}`;
-    expect(verifySessionToken(forged, SECRET, NOW + 1000)).toBeNull();
+    const parts = mintSessionToken(KEY, 1, NOW, NONCE).split(".");
+    parts[2] = String(NOW + SESSION_TTL_MS * 10);
+    expect(verifySessionToken(parts.join("."), KEY, NOW + 1000)).toBeNull();
+  });
+
+  it("rejects a token whose epoch was edited (breaks the signature)", () => {
+    const parts = mintSessionToken(KEY, 1, NOW, NONCE).split(".");
+    parts[1] = "2";
+    expect(verifySessionToken(parts.join("."), KEY, NOW + 1000)).toBeNull();
   });
 
   it("rejects malformed tokens", () => {
-    expect(verifySessionToken("", SECRET, NOW)).toBeNull();
-    expect(verifySessionToken(null, SECRET, NOW)).toBeNull();
-    expect(verifySessionToken("a.b", SECRET, NOW)).toBeNull();
-    expect(verifySessionToken("a.b.c.d", SECRET, NOW)).toBeNull();
-    expect(verifySessionToken("notanumber.nonce.sig", SECRET, NOW)).toBeNull();
+    expect(verifySessionToken("", KEY, NOW)).toBeNull();
+    expect(verifySessionToken(null, KEY, NOW)).toBeNull();
+    expect(verifySessionToken("a.b", KEY, NOW)).toBeNull();
+    expect(verifySessionToken("v2.1.2.3", KEY, NOW)).toBeNull();
+    expect(verifySessionToken("v2.x.1.n.sig", KEY, NOW)).toBeNull();
+    expect(verifySessionToken("v2.0.1.n.sig", KEY, NOW)).toBeNull();
+    expect(verifySessionToken("v1.1.1.n.sig", KEY, NOW)).toBeNull();
+  });
+
+  it("rejects an old-format expiry.nonce.sig token outright", () => {
+    const expiry = NOW + SESSION_TTL_MS;
+    const sig = createHmac("sha256", SECRET).update(`${expiry}.${NONCE}`).digest("hex");
+    expect(verifySessionToken(`${expiry}.${NONCE}.${sig}`, KEY, NOW)).toBeNull();
   });
 });
 
 describe("adminSession — expiry", () => {
   it("rejects a token at or after its expiry", () => {
-    const token = mintSessionToken(SECRET, NOW, NONCE);
+    const token = mintSessionToken(KEY, 1, NOW, NONCE);
     const expiry = NOW + SESSION_TTL_MS;
-    expect(verifySessionToken(token, SECRET, expiry)).toBeNull();
-    expect(verifySessionToken(token, SECRET, expiry + 1)).toBeNull();
+    expect(verifySessionToken(token, KEY, expiry)).toBeNull();
+    expect(verifySessionToken(token, KEY, expiry + 1)).toBeNull();
   });
 
   it("accepts a token one ms before expiry", () => {
-    const token = mintSessionToken(SECRET, NOW, NONCE);
-    const expiry = NOW + SESSION_TTL_MS;
-    expect(verifySessionToken(token, SECRET, expiry - 1)).not.toBeNull();
+    const token = mintSessionToken(KEY, 1, NOW, NONCE);
+    expect(verifySessionToken(token, KEY, NOW + SESSION_TTL_MS - 1)).not.toBeNull();
+  });
+});
+
+describe("adminSession — epoch (single, revocable session)", () => {
+  it("accepts a token from the current epoch", async () => {
+    const store = memoryStore(4);
+    const token = mintSessionToken(KEY, 4, NOW, NONCE);
+    const check = await verifyCurrentSession(token, KEY, store, NOW + 1);
+    expect(check.status).toBe("valid");
+  });
+
+  it("rejects an older session once a newer login advanced the epoch", async () => {
+    const store = memoryStore(null);
+    const first = mintSessionToken(KEY, await store.bump(), NOW, NONCE);
+    const second = mintSessionToken(KEY, await store.bump(), NOW, NONCE);
+    expect((await verifyCurrentSession(first, KEY, store, NOW + 1)).status).toBe("invalid");
+    expect((await verifyCurrentSession(second, KEY, store, NOW + 1)).status).toBe("valid");
+  });
+
+  it("rejects every token when no epoch has ever been set", async () => {
+    const token = mintSessionToken(KEY, 1, NOW, NONCE);
+    expect((await verifyCurrentSession(token, KEY, memoryStore(null), NOW + 1)).status).toBe(
+      "invalid",
+    );
+  });
+
+  it("fails closed (unavailable) when the store errors", async () => {
+    const store = memoryStore(1);
+    store.fail = true;
+    const token = mintSessionToken(KEY, 1, NOW, NONCE);
+    expect((await verifyCurrentSession(token, KEY, store, NOW + 1)).status).toBe("unavailable");
+  });
+
+  it("never reads the store for a badly signed token", async () => {
+    const store = memoryStore(1);
+    store.fail = true; // would surface as "unavailable" if it were read
+    expect((await verifyCurrentSession("garbage", KEY, store, NOW)).status).toBe("invalid");
+  });
+
+  it("redisEpochStore reads/increments the epoch key and coerces strings", async () => {
+    const calls: string[] = [];
+    const store = redisEpochStore({
+      get: async (key) => {
+        calls.push(`get:${key}`);
+        return "5";
+      },
+      incr: async (key) => {
+        calls.push(`incr:${key}`);
+        return 6;
+      },
+    });
+    expect(await store.current()).toBe(5);
+    expect(await store.bump()).toBe(6);
+    expect(calls).toEqual([`get:${SESSION_EPOCH_KEY}`, `incr:${SESSION_EPOCH_KEY}`]);
+  });
+
+  it("redisEpochStore treats a corrupt stored epoch as an error, not a match", async () => {
+    const store = redisEpochStore({ get: async () => "abc", incr: async () => 1 });
+    await expect(store.current()).rejects.toThrow();
   });
 });
 
@@ -101,40 +222,74 @@ describe("adminSession — cookies", () => {
   });
 });
 
-describe("adminSession — requireAdmin guard", () => {
-  const original = process.env.ADMIN_SESSION_SECRET;
-  afterEach(() => {
-    if (original === undefined) delete process.env.ADMIN_SESSION_SECRET;
-    else process.env.ADMIN_SESSION_SECRET = original;
+describe("adminSession — sessionConfigFromEnv", () => {
+  const full = {
+    ADMIN_SESSION_SECRET: SECRET,
+    ADMIN_PASSPHRASE_SCRYPT: HASH,
+    UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
+    UPSTASH_REDIS_REST_TOKEN: "t",
+  };
+
+  it("is null when any required var is missing (never a bypass)", () => {
+    for (const key of Object.keys(full) as (keyof typeof full)[]) {
+      expect(sessionConfigFromEnv({ ...full, [key]: undefined })).toBeNull();
+    }
   });
 
+  it("derives the key from the secret AND the passphrase hash", () => {
+    const config = sessionConfigFromEnv(full);
+    expect(config?.key.equals(KEY)).toBe(true);
+  });
+});
+
+describe("adminSession — requireAdmin guard", () => {
   function req(cookie?: string): Request {
     return new Request("https://x.test/api/admin/data", {
       headers: cookie ? { cookie } : {},
     });
   }
+  const config = (store: SessionEpochStore): SessionConfig => ({ key: KEY, store });
 
-  it("503s when the secret is not configured (never a bypass)", () => {
-    delete process.env.ADMIN_SESSION_SECRET;
-    const result = requireAdmin(req());
+  it("503s ADMIN_NOT_CONFIGURED when the session config is absent", async () => {
+    const result = await requireAdmin(req(), null);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.response.status).toBe(503);
+    if (!result.ok) {
+      expect(result.response.status).toBe(503);
+      expect(await result.response.json()).toEqual({ error: "ADMIN_NOT_CONFIGURED" });
+    }
   });
 
-  it("401s when no/invalid session cookie is present", () => {
-    process.env.ADMIN_SESSION_SECRET = SECRET;
-    const noCookie = requireAdmin(req());
+  it("401s when no/invalid session cookie is present", async () => {
+    const store = memoryStore(1);
+    const noCookie = await requireAdmin(req(), config(store));
     expect(noCookie.ok).toBe(false);
     if (!noCookie.ok) expect(noCookie.response.status).toBe(401);
-
-    const bad = requireAdmin(req(`${ADMIN_SESSION_COOKIE}=garbage`));
+    const bad = await requireAdmin(req(`${ADMIN_SESSION_COOKIE}=garbage`), config(store));
     expect(bad.ok).toBe(false);
   });
 
-  it("passes with a valid, unexpired token", () => {
-    process.env.ADMIN_SESSION_SECRET = SECRET;
-    const token = mintSessionToken(SECRET);
-    const result = requireAdmin(req(`${ADMIN_SESSION_COOKIE}=${token}`));
+  it("401s a validly signed token from a superseded epoch", async () => {
+    const token = mintSessionToken(KEY, 1);
+    const result = await requireAdmin(req(`${ADMIN_SESSION_COOKIE}=${token}`), config(memoryStore(2)));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.response.status).toBe(401);
+  });
+
+  it("503s SYSTEM_BUSY (fail closed) when the epoch store errors", async () => {
+    const store = memoryStore(1);
+    store.fail = true;
+    const token = mintSessionToken(KEY, 1);
+    const result = await requireAdmin(req(`${ADMIN_SESSION_COOKIE}=${token}`), config(store));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.response.status).toBe(503);
+      expect(await result.response.json()).toEqual({ error: "SYSTEM_BUSY" });
+    }
+  });
+
+  it("passes with a valid, unexpired, current-epoch token", async () => {
+    const token = mintSessionToken(KEY, 1);
+    const result = await requireAdmin(req(`${ADMIN_SESSION_COOKIE}=${token}`), config(memoryStore(1)));
     expect(result.ok).toBe(true);
   });
 });

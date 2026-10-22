@@ -48,6 +48,19 @@ describe("fetchAdminEndpoint", () => {
     expect(outcome).toEqual({ kind: "access_required" });
   });
 
+  it("classifies the Worker's own Access-check 403 as access_required", async () => {
+    const outcome = await fetchAdminEndpoint(
+      "/api/admin/login",
+      { method: "POST" },
+      async () =>
+        new Response(JSON.stringify({ error: "FORBIDDEN" }), {
+          status: 403,
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    expect(outcome).toEqual({ kind: "access_required" });
+  });
+
   it("passes through a normal JSON response untouched", async () => {
     const real = new Response(JSON.stringify({ ok: true }), {
       status: 200,

@@ -36,7 +36,9 @@ import { recordChatQuestion, type ChatSource } from "@/lib/events";
 import {
   ADMIN_SESSION_COOKIE,
   readCookie,
-  verifySessionToken,
+  sessionConfigFromEnv,
+  verifyCurrentSession,
+  type SessionConfig,
 } from "@/lib/adminSession";
 import {
   MAX_ASSISTANT_CONTENT_CHARS,
@@ -281,19 +283,31 @@ export function normalizeIpForKey(raw: string): string {
 /**
  * Determine the request's source SERVER-SIDE. The client can never set this:
  * "admin" is granted ONLY when the httpOnly `admin_session` cookie carries a
- * valid, unexpired, correctly-signed token (mirrors requireAdmin's check). A
- * missing/invalid/expired cookie — or no configured secret — is simply "guest"
- * (NOT a 401 here; this route serves guests too). Pure given its header getter
- * and secret, so it is unit-tested without a real Request.
+ * valid, unexpired, correctly-signed token from the CURRENT session epoch —
+ * the same check requireAdmin runs. A missing/invalid/expired/superseded
+ * cookie, no session config, or an unreachable epoch store is simply "guest"
+ * (NOT a 401 here; this route serves guests too). Redis is read only for a
+ * correctly signed cookie, so guests cost no extra round trip. Given its header
+ * getter and config, it is unit-tested without a real Request.
  */
-export function detectSource(
+export async function detectSource(
   getHeader: (name: string) => string | null,
-  secret: string | undefined,
+  config: SessionConfig | null,
   now: number = Date.now(),
-): ChatSource {
-  if (!secret) return "guest";
+): Promise<ChatSource> {
+  if (!config) return "guest";
   const token = readCookie(getHeader("cookie"), ADMIN_SESSION_COOKIE);
-  return verifySessionToken(token, secret, now) ? "admin" : "guest";
+  const check = await verifyCurrentSession(token, config.key, config.store, now);
+  return check.status === "valid" ? "admin" : "guest";
+}
+
+/** The session config, or null (guest-only) if absent or unbuildable. */
+function sessionConfigOrNull(): SessionConfig | null {
+  try {
+    return sessionConfigFromEnv();
+  } catch {
+    return null;
+  }
 }
 
 /* ─────────────────────────────── env / limits ──────────────────────────── */
@@ -327,12 +341,12 @@ export const KEY_PREFIX = {
 } as const;
 
 /** Limit thresholds (decided with the site owner; protects the ~1k/day Groq
- * free quota). Guest: per-IP 8/min AND 60/day. Admin: a generous 60/min burst
+ * free quota). Guest: per-IP 8/min AND 20/day. Admin: a generous 60/min burst
  * and NO per-day cap — but STILL bounded by the shared global 400/day, so a
  * stolen 24h session can never farm the whole Groq quota. */
 export const LIMITS = {
   ipPerMinute: 8,
-  ipPerDay: 60,
+  ipPerDay: 20,
   globalPerDay: 400,
   adminPerMinute: 60,
 } as const;
@@ -343,7 +357,7 @@ export const LIMITS = {
 export interface LimitPlan {
   /** Which per-minute limiter to apply (guest 8/min vs. admin 60/min). */
   readonly minute: "guest" | "admin";
-  /** Whether the visitor per-day (60/day) cap is enforced (guest only). */
+  /** Whether the visitor per-day (20/day) cap is enforced (guest only). */
   readonly enforceIpDay: boolean;
 }
 
@@ -416,7 +430,7 @@ export interface LimitCheckers {
  * could burn all 400 daily tokens in a few minutes and take the terminal
  * offline for every other visitor. Sequencing the global check AFTER the per-IP
  * verdict means an IP can only ever spend as many global tokens as its own cap
- * allows (60/day for a guest).
+ * allows (20/day for a guest).
  *
  * The global cap still genuinely caps Groq spend: every request that reaches
  * Groq has passed this function, and every request that passes consumes exactly
@@ -476,12 +490,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   // 2.5) Server-derived source. NEVER trust the client: "admin" requires a
-  //      valid signed session cookie. This drives both the higher rate limit
-  //      and the analytics tag below — a forged flag can't earn either. Header
-  //      only, so it costs nothing and can run ahead of the body.
-  const source = detectSource(
+  //      valid signed session cookie from the current epoch. This drives both
+  //      the higher rate limit and the analytics tag below — a forged flag
+  //      can't earn either. Header-only (plus one Redis read for a correctly
+  //      signed cookie), so it can run ahead of the body.
+  const source = await detectSource(
     (name) => request.headers.get(name),
-    process.env.ADMIN_SESSION_SECRET,
+    sessionConfigOrNull(),
   );
 
   // 3) Rate limit BEFORE the body is read and long before Groq is touched —

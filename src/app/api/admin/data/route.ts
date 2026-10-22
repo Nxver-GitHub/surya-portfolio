@@ -6,11 +6,17 @@
  * rollups, and build sysinfo. Read-only; writes NOTHING. The response shape is
  * exported as `adminDataResponseSchema` so the CLI can type against one contract.
  *
- * Fails closed via requireAdmin (503 if unconfigured, 401 if unauthenticated).
+ * Guard order, every step failing closed: Access config present (else 503
+ * ADMIN_NOT_CONFIGURED) → Cloudflare Access JWT verified (else opaque 403, see
+ * lib/cfAccess) → requireAdmin (503 if unconfigured or the session epoch can't
+ * be read, 401 if the session is missing, invalid, expired or superseded).
+ * Each successful read logs one `[admin-data] read {"ip"}` audit line.
  */
 
 import { z } from "zod";
 import { requireAdmin } from "@/lib/adminSession";
+import { accessConfigFromEnv, checkCfAccess, readAccessEnv } from "@/lib/cfAccess";
+import { extractClientIp } from "@/app/api/cafe-terminal/route";
 import {
   RING_KEY,
   RING_CAP,
@@ -23,7 +29,7 @@ import {
 } from "@/lib/events";
 import { KNOWN_ROUTES } from "@/lib/routes";
 import { getBuildSha, getPlatform } from "@/lib/buildInfo";
-import { errorMessage } from "@/lib/logging";
+import { errorMessage, truncateIpForLog } from "@/lib/logging";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -124,9 +130,22 @@ function json(body: unknown, status: number): Response {
   });
 }
 
+/** The audit line for an admin data read — the ip only, never the session. */
+export function logAdminDataRead(ip: string): void {
+  console.info("[admin-data] read", JSON.stringify({ ip: truncateIpForLog(ip) }));
+}
+
 export async function GET(request: Request): Promise<Response> {
-  const guard = requireAdmin(request);
+  const access = accessConfigFromEnv(readAccessEnv());
+  if (!access) return json({ error: "ADMIN_NOT_CONFIGURED" }, 503);
+
+  const ip = extractClientIp((name) => request.headers.get(name));
+  const accessDenied = await checkCfAccess(request, access, ip);
+  if (accessDenied) return accessDenied;
+
+  const guard = await requireAdmin(request);
   if (!guard.ok) return guard.response;
+  logAdminDataRead(ip);
 
   const client = getEventsRedis();
   const sysinfo = {

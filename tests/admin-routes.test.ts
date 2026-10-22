@@ -4,7 +4,15 @@ import {
   loginConfigured,
   parseLoginBody,
 } from "../src/app/api/admin/login/route";
-import { POST as logoutPOST } from "../src/app/api/admin/logout/route";
+import {
+  POST as logoutPOST,
+  revokeIfAuthenticated,
+} from "../src/app/api/admin/logout/route";
+import {
+  ADMIN_SESSION_COOKIE,
+  deriveSessionKey,
+  mintSessionToken,
+} from "../src/lib/adminSession";
 import { parseBeaconBody } from "../src/app/api/beacon/route";
 import {
   isValidIsoTimestamp,
@@ -51,24 +59,79 @@ describe("admin login — request schema", () => {
 });
 
 describe("admin login — env gate", () => {
-  it("is configured only when all four vars are present", () => {
+  const full = {
+    ADMIN_PASSPHRASE_SCRYPT: "s:h",
+    ADMIN_SESSION_SECRET: "sec",
+    UPSTASH_REDIS_REST_URL: "u",
+    UPSTASH_REDIS_REST_TOKEN: "t",
+    CF_ACCESS_TEAM_DOMAIN: "team.cloudflareaccess.com",
+    CF_ACCESS_AUD: "aud",
+    ADMIN_ACCESS_EMAIL: "owner@example.test",
+  };
+
+  it("is configured only when every var — Access included — is present", () => {
     expect(loginConfigured({})).toBe(false);
-    expect(
-      loginConfigured({
-        ADMIN_PASSPHRASE_SCRYPT: "s:h",
-        ADMIN_SESSION_SECRET: "sec",
-        UPSTASH_REDIS_REST_URL: "u",
-        // token missing
-      }),
-    ).toBe(false);
-    expect(
-      loginConfigured({
-        ADMIN_PASSPHRASE_SCRYPT: "s:h",
-        ADMIN_SESSION_SECRET: "sec",
-        UPSTASH_REDIS_REST_URL: "u",
-        UPSTASH_REDIS_REST_TOKEN: "t",
-      }),
-    ).toBe(true);
+    expect(loginConfigured(full)).toBe(true);
+    for (const key of Object.keys(full) as (keyof typeof full)[]) {
+      expect(loginConfigured({ ...full, [key]: undefined })).toBe(false);
+    }
+  });
+
+  it("is not configured with a non-Access team domain", () => {
+    expect(loginConfigured({ ...full, CF_ACCESS_TEAM_DOMAIN: "evil.example.com" })).toBe(false);
+  });
+});
+
+describe("admin logout — revocation only for a valid current session", () => {
+  const KEY = deriveSessionKey("sec", "s:h");
+  function store(epoch: number, fail: "never" | "bump" = "never") {
+    const s = {
+      epoch,
+      bumps: 0,
+      current: async () => s.epoch,
+      bump: async () => {
+        if (fail === "bump") throw new Error("redis down");
+        s.bumps += 1;
+        s.epoch += 1;
+        return s.epoch;
+      },
+    };
+    return s;
+  }
+  function withCookie(token: string | null): Request {
+    const headers = new Headers({ origin: "https://suryapugaz.com", host: "suryapugaz.com" });
+    if (token) headers.set("cookie", `${ADMIN_SESSION_COOKIE}=${token}`);
+    return new Request("https://suryapugaz.com/api/admin/logout", { method: "POST", headers });
+  }
+
+  it("bumps the epoch when the request carries the current session", async () => {
+    const s = store(3);
+    const outcome = await revokeIfAuthenticated(withCookie(mintSessionToken(KEY, 3)), { key: KEY, store: s });
+    expect(outcome).toBe("revoked");
+    expect(s.bumps).toBe(1);
+  });
+
+  it("never bumps for an unauthenticated, forged or superseded logout", async () => {
+    const s = store(3);
+    const config = { key: KEY, store: s };
+    expect(await revokeIfAuthenticated(withCookie(null), config)).toBe("skipped");
+    expect(await revokeIfAuthenticated(withCookie("v2.3.1.n.sig"), config)).toBe("skipped");
+    expect(await revokeIfAuthenticated(withCookie(mintSessionToken(KEY, 2)), config)).toBe("skipped");
+    expect(await revokeIfAuthenticated(withCookie(mintSessionToken(KEY, 3)), null)).toBe("skipped");
+    expect(s.bumps).toBe(0);
+  });
+
+  it("reports failure when the epoch cannot be advanced", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const outcome = await revokeIfAuthenticated(withCookie(mintSessionToken(KEY, 1)), {
+        key: KEY,
+        store: store(1, "bump"),
+      });
+      expect(outcome).toBe("failed");
+    } finally {
+      error.mockRestore();
+    }
   });
 });
 

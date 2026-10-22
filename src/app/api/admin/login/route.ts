@@ -8,6 +8,9 @@
  *     bypass. Absent config can only lock you out, never let you in.
  *   - Same-origin guard and a hard body-size cap; no cross-site page can post a
  *     login attempt, and no caller can make us buffer an unbounded body.
+ *   - Cloudflare Access JWT check (lib/cfAccess), FAIL CLOSED, right after the
+ *     origin guard and BEFORE the rate limiter — a request Access never saw
+ *     cannot spend the owner's login budget. Denied → opaque 403.
  *   - Per-IP rate limit, FAIL CLOSED, stricter than guest chat (5 / hour). Runs
  *     BEFORE the body is read and before the CPU-bound scrypt, so a flood can't
  *     burn the function on parsing either.
@@ -17,8 +20,10 @@
  *     concurrency-gated (verifyPassphraseGuarded) — at capacity, a request is
  *     refused with the same 503 SYSTEM_BUSY shape as a rate-limiter backend
  *     error, without ever running scrypt for it.
- *   - On success: httpOnly + Secure + SameSite=Strict signed session cookie,
- *     24h expiry, no server-side store (see lib/adminSession).
+ *   - On success: the session epoch is advanced in Upstash (killing any older
+ *     session) and an httpOnly + Secure + SameSite=Strict signed cookie carrying
+ *     the new epoch is set, 24h expiry (see lib/adminSession). One structured
+ *     `[admin-login] success {"ip"}` line is logged.
  *
  * Import-safe with no env set (no top-level client construction), so keyless CI
  * builds never throw — clients are built lazily inside the handler.
@@ -31,9 +36,11 @@ import { verifyPassphraseGuarded } from "@/lib/adminAuth";
 import {
   buildSessionCookie,
   mintSessionToken,
+  sessionConfigFromEnv,
 } from "@/lib/adminSession";
+import { accessConfigFromEnv, checkCfAccess } from "@/lib/cfAccess";
 import { extractClientIp, retryAfterSeconds } from "@/app/api/cafe-terminal/route";
-import { errorMessage } from "@/lib/logging";
+import { errorMessage, truncateIpForLog } from "@/lib/logging";
 import {
   MAX_TINY_BODY_BYTES,
   hasTrustedOrigin,
@@ -83,17 +90,22 @@ interface LoginEnv {
   ADMIN_SESSION_SECRET?: string;
   UPSTASH_REDIS_REST_URL?: string;
   UPSTASH_REDIS_REST_TOKEN?: string;
+  CF_ACCESS_TEAM_DOMAIN?: string;
+  CF_ACCESS_AUD?: string;
+  ADMIN_ACCESS_EMAIL?: string;
 }
 
-/** True only when every var needed to safely process a login is present. When
- * false the route answers 503 rather than constructing clients or bypassing the
- * (fail-closed) rate limiter. Pure. */
+/** True only when every var needed to safely process a login is present —
+ * including the Cloudflare Access config (team domain, AUD tag, owner email).
+ * When false the route answers 503 rather than constructing clients, skipping
+ * the Access check, or bypassing the (fail-closed) rate limiter. Pure. */
 export function loginConfigured(env: LoginEnv): boolean {
   return Boolean(
     env.ADMIN_PASSPHRASE_SCRYPT &&
       env.ADMIN_SESSION_SECRET &&
       env.UPSTASH_REDIS_REST_URL &&
-      env.UPSTASH_REDIS_REST_TOKEN,
+      env.UPSTASH_REDIS_REST_TOKEN &&
+      accessConfigFromEnv(env),
   );
 }
 
@@ -129,22 +141,10 @@ function json(body: unknown, status: number, headers?: HeadersInit): Response {
 /** Reason a login attempt failed — the only two cases that get logged. */
 export type AuthFailureReason = "bad_passphrase" | "rate_limited";
 
-/** Cap on the logged `ip` field's length — 45 chars covers the longest real
- * IPv6 textual form; a header spoofed with more than that is truncated
- * rather than trusted verbatim into a log line. */
-export const MAX_LOGGED_IP_CHARS = 45;
-
-/** Truncate an ip for logging. Pure. */
-function truncateIpForLog(ip: string): string {
-  return ip.length > MAX_LOGGED_IP_CHARS
-    ? ip.slice(0, MAX_LOGGED_IP_CHARS)
-    : ip;
-}
-
 /**
  * Emit the ONE structured, greppable log line a Cloudflare Workers
  * Observability alert matches on a failed admin login. A JSON object with
- * exactly `ip` (truncated, see {@link MAX_LOGGED_IP_CHARS}) and `reason` —
+ * exactly `ip` (truncated, see MAX_LOGGED_IP_CHARS in lib/logging) and `reason` —
  * deliberately no parameter for the candidate passphrase, its length, or the
  * stored hash, so there is nothing here that could ever leak one into logs.
  *
@@ -164,14 +164,24 @@ export function logAuthFailure(ip: string, reason: AuthFailureReason): void {
   console.warn(prefix, JSON.stringify({ ip: truncateIpForLog(ip), reason }));
 }
 
+/** The audit line for a successful login — the ip only; never the passphrase,
+ * the token, the hash or the Access identity. */
+export function logLoginSuccess(ip: string): void {
+  console.info("[admin-login] success", JSON.stringify({ ip: truncateIpForLog(ip) }));
+}
+
 export async function POST(request: Request): Promise<Response> {
   const env: LoginEnv = {
     ADMIN_PASSPHRASE_SCRYPT: process.env.ADMIN_PASSPHRASE_SCRYPT,
     ADMIN_SESSION_SECRET: process.env.ADMIN_SESSION_SECRET,
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+    CF_ACCESS_TEAM_DOMAIN: process.env.CF_ACCESS_TEAM_DOMAIN,
+    CF_ACCESS_AUD: process.env.CF_ACCESS_AUD,
+    ADMIN_ACCESS_EMAIL: process.env.ADMIN_ACCESS_EMAIL,
   };
-  if (!loginConfigured(env)) {
+  const access = accessConfigFromEnv(env);
+  if (!access || !loginConfigured(env)) {
     return json({ error: "ADMIN_NOT_CONFIGURED" }, 503);
   }
 
@@ -181,10 +191,16 @@ export async function POST(request: Request): Promise<Response> {
     return json({ error: "FORBIDDEN" }, 403);
   }
 
+  const ip = extractClientIp((name) => request.headers.get(name));
+
+  // Cloudflare Access must have run: verify its signed JWT before anything
+  // spends limiter budget or CPU.
+  const accessDenied = await checkCfAccess(request, access, ip);
+  if (accessDenied) return accessDenied;
+
   // Rate limit BEFORE the body is read and before the expensive scrypt — fail
   // CLOSED on any backend error. Reading first meant a flood of unbounded
   // bodies was buffered and parsed before the 5/hour cap could shed any of it.
-  const ip = extractClientIp((name) => request.headers.get(name));
   try {
     const limiters = getLoginLimiters(
       env.UPSTASH_REDIS_REST_URL as string,
@@ -249,7 +265,21 @@ export async function POST(request: Request): Promise<Response> {
     return json({ error: "INVALID_CREDENTIALS" }, 401);
   }
 
-  const token = mintSessionToken(env.ADMIN_SESSION_SECRET as string);
+  // Advance the session epoch FIRST: the new token is the only one that will
+  // match, so any older session (another device, a stolen cookie) dies here.
+  // No epoch, no session — a Redis error fails closed.
+  let token: string;
+  try {
+    const session = sessionConfigFromEnv(env);
+    if (!session) return json({ error: "ADMIN_NOT_CONFIGURED" }, 503);
+    const epoch = await session.store.bump();
+    token = mintSessionToken(session.key, epoch);
+  } catch (error) {
+    console.error("[admin-login] session epoch error", errorMessage(error));
+    return json({ error: "SYSTEM_BUSY" }, 503);
+  }
+
+  logLoginSuccess(ip);
   return json({ ok: true }, 200, {
     "set-cookie": buildSessionCookie(token),
   });

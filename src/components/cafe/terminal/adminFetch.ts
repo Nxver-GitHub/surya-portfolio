@@ -66,6 +66,14 @@ export async function fetchAdminEndpoint(
     return { kind: "access_required" };
   }
 
+  // The Worker re-checks the Access JWT itself and answers an opaque 403 when
+  // it is missing or invalid (lib/cfAccess). From this same-origin client the
+  // only other 403 — the origin guard — cannot fire, so a 403 here means
+  // "Access session needed", the same actionable state as a redirect.
+  if (response.status === 403) {
+    return { kind: "access_required" };
+  }
+
   // Defensive fallback — see the file header. A JSON-only route family
   // returning a 2xx with a non-JSON content-type is never legitimate.
   const contentType = response.headers.get("content-type") ?? "";
