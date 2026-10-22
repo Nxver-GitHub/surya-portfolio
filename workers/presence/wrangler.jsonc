@@ -36,7 +36,10 @@
   "observability": {
     "enabled": true
   }
-  // No secrets and no vars are required. PRESENCE_DEV is set only in
-  // `wrangler dev` (see README) to allow http://localhost origins; production
-  // must never define it.
+  // One REQUIRED secret, set with `wrangler secret put PRESENCE_IP_KEY` (never
+  // here as a var): the HMAC key for the per-IP cap. Without it the Worker
+  // refuses every upgrade with 503 (fail closed); /health still answers. Local
+  // `wrangler dev` needs it in an uncommitted `.dev.vars` (see README).
+  // PRESENCE_DEV is set only in `wrangler dev` to allow http://localhost
+  // origins; production must never define it.
 }
