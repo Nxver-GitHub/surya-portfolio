@@ -73,6 +73,11 @@ export interface PlayerCard {
    * hackathon/competition don't belong in this list at all.
    */
   membership: "active" | "former";
+  /**
+   * Org mark under /public/logos, set into the card's enamel badge. Decorative
+   * beside the visible org name. Omit it and the badge carries a glyph.
+   */
+  logo?: `/logos/${string}`;
   link?: string;
   /** Cross-ref into Career Mode, rendered as /career/<slug> */
   careerEventSlug?: string;
@@ -125,6 +130,7 @@ export const playerList: readonly PlayerCard[] = [
   {
     id: "16vc",
     name: "16VC",
+    logo: "/logos/16vc.png",
     description:
       "Venture firm where Surya previously sourced pre-seed and seed opportunities across the SF Bay Area (Jun – Oct 2026).",
     membership: "former",
@@ -133,6 +139,7 @@ export const playerList: readonly PlayerCard[] = [
   {
     id: "lvlup-ventures",
     name: "LvlUp Ventures",
+    logo: "/logos/lvlup.png",
     description:
       "Shopline-backed seed fund where Surya previously scouted pre-seed and seed founders at demo days.",
     membership: "former",
@@ -141,6 +148,7 @@ export const playerList: readonly PlayerCard[] = [
   {
     id: "venture-starters",
     name: "Venture Starters",
+    logo: "/logos/venture-starters.png",
     description:
       "Educational internship where Surya previously ran live startup pitching sessions and investor Q&A.",
     membership: "former",
@@ -149,6 +157,7 @@ export const playerList: readonly PlayerCard[] = [
   {
     id: "ucsc",
     name: "UC Santa Cruz",
+    logo: "/logos/ucsc.png",
     description:
       "Where Surya earned his B.S. in Computer Science after transferring from community college.",
     membership: "former",
@@ -157,6 +166,7 @@ export const playerList: readonly PlayerCard[] = [
   {
     id: "slugai",
     name: "SlugAI",
+    logo: "/logos/slugai.png",
     description:
       "UCSC's AI innovation club, where Surya previously shipped Calendarize as a product developer.",
     membership: "former",
@@ -165,6 +175,7 @@ export const playerList: readonly PlayerCard[] = [
   {
     id: "dvc",
     name: "Diablo Valley College",
+    logo: "/logos/dvc.png",
     description:
       "Where Surya earned an A.S. in Computer Science and founded the Product Development Club.",
     membership: "former",

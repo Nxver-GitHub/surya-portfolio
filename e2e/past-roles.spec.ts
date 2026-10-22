@@ -57,10 +57,10 @@ test.describe("wrapped stints", () => {
   test("the license center dates the 16VC test", async ({ page }) => {
     await page.goto("/license-center");
     await expectRendered(page);
-    // Test summaries are carried as the trophy tile's tooltip (title attribute).
+    // Test summaries are visible text under each medal row (no tooltip).
     await expect(
-      page.locator('[title^="As a Venture Associate at 16VC (Jun – Oct 2026), sourced"]'),
-    ).toHaveCount(1);
+      page.getByText(/^As a Venture Associate at 16VC \(Jun – Oct 2026\), sourced/),
+    ).toBeVisible();
   });
 
   test("llms-full.txt carries no current roles", async ({ request }) => {

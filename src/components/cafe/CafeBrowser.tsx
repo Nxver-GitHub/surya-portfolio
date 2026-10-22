@@ -24,6 +24,7 @@ import { Terminal } from "./terminal/Terminal";
 import { useTerminalChat } from "./terminal/useTerminalChat";
 import { useReducedMotion } from "../garage/useReducedMotion";
 import { PointerText, useCoarsePointer } from "../gt/pointer";
+import { useRevealDetailOnChange } from "../gt/pickerStrip";
 import { CRT_DOCK_FILL, type ScreenBounds } from "./cameraPoses";
 import type { CafeFocus } from "./CafeScene";
 
@@ -133,6 +134,9 @@ export function CafeBrowser() {
 
   const bookId = searchParams.get("book");
   const selected = menuBooks.find((b) => b.id === bookId) ?? menuBooks[0];
+  // Strip layout: a pick whose panel title sits below the fold slides it up
+  // just far enough to read, so the change is never off-screen.
+  useRevealDetailOnChange(`book-${selected.id}-title`, selected.id);
 
   // Camera focus (scene-only). Starts at room view; book selection flies to the
   // table, the CRT flies to the desk. The 2D UI stays authoritative for content.
@@ -345,12 +349,16 @@ export function CafeBrowser() {
 
   return (
     <div className="cafe-browser mt-6 grid min-w-0 gap-5 lg:grid-cols-[250px_minmax(0,1fr)]">
-      {/* Semantic spine: the tablist that drives selection */}
-      <nav aria-label="Menu Books" className="lg:order-1">
+      {/* Semantic spine: the tablist that drives selection. From 1024px it is
+          the left column; below that the right column dissolves into this
+          grid (`max-lg:contents`) and the books fold into a swipeable strip
+          between the scene controls and the open book's panel, so a tap
+          changes the detail directly beneath the finger. */}
+      <nav aria-label="Menu Books" className="order-1 min-w-0">
         <BookList selectedId={selected.id} onSelect={select} />
       </nav>
 
-      <div className="flex min-w-0 flex-col gap-6 lg:order-2">
+      <div className="flex min-w-0 flex-col gap-6 max-lg:contents lg:order-2">
         {/* 3D café — enhancement only; falls back to a 2D backdrop. Sized to
             read like a ROOM, not a letterbox: portrait-ish on mobile so the
             floor-to-ceiling of the room is visible, a touch under 5:3 on desktop
@@ -559,6 +567,7 @@ export function CafeBrowser() {
           id={`book-panel-${selected.id}`}
           role="tabpanel"
           aria-labelledby={`book-tab-${selected.id}`}
+          className="min-w-0 max-lg:order-2"
         >
           <BookPanel book={selected} />
         </div>

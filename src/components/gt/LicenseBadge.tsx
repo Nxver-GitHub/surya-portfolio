@@ -1,7 +1,14 @@
+import Image from "next/image";
 import { liveries, type LiveryId } from "../../../content/liveries";
 
 interface LicenseBadgeProps {
   glyph: string;
+  /**
+   * Optional org mark (a /public path) set into the enamel face in place of
+   * the glyph. Decorative — the badge is aria-hidden and the org's name is
+   * always visible beside it.
+   */
+  logo?: string;
   livery: LiveryId;
   /** Badge width in px (height follows the enamel-plate ratio) */
   size?: number;
@@ -15,6 +22,7 @@ interface LicenseBadgeProps {
  */
 export function LicenseBadge({
   glyph,
+  logo,
   livery,
   size = 56,
   muted = false,
@@ -29,6 +37,17 @@ export function LicenseBadge({
       style={{ backgroundColor: rim, width: size, height: size * 0.72 }}
     >
       <span className="badge-face flex h-full w-full items-center justify-center">
+        {logo ? (
+          // Square marks, set at the face's full height inside the keyline:
+          // contained, never stretched to the plate's wider ratio.
+          <Image
+            src={logo}
+            alt=""
+            width={64}
+            height={64}
+            className="h-full w-auto object-contain p-px"
+          />
+        ) : (
         <span
           className="font-display leading-none font-black tracking-wide not-italic"
           style={{
@@ -43,6 +62,7 @@ export function LicenseBadge({
         >
           {glyph}
         </span>
+        )}
       </span>
     </span>
   );

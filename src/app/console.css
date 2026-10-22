@@ -303,16 +303,26 @@ body:has([data-fullscreen-overlay]) .sound-bar { display: none; }
 .trophy-tier h2 { font-size: 18px; }
 .trophy-tier ul > li + li { border-top: 1px solid #343f51; }
 .trophy-tier ul a { min-height: 64px; }
+/* Body face, aligned under the medal title: the row's 8px inset, the grade
+   chip's 68px column and the 10px gap between them. */
+.trophy-summary { padding: 0 8px 12px calc(8px + 68px + 10px); line-height: 1.55; }
 
-@media (min-width: 1100px) and (min-height: 700px) {
+/* The height-aware map. Desktops (a mouse, 1100×700 and up) and touch tablets
+   held landscape (1024×600 and up — an iPad on its side is 1024–1180 wide) both
+   derive the map from the height left over after the chrome:
+   (100dvh - --map-chrome) * 4 / 3. Only the chrome allowance differs. */
+@media (min-width: 1100px) and (min-height: 700px),
+  (min-width: 1024px) and (min-height: 600px) and (pointer: coarse) {
   /* 400px is everything on this screen that is not the map: header,
      information strip, control strip, HUD totals — 354px of those — plus the
      46px the Sound Select bar reserves along the bottom edge. The driver card
      made the header taller than the old 330px allowance, which pushed the HUD
      off a 1000px-tall screen; the deck bar is the same kind of debt, so it is
-     paid here rather than left to overlap the HUD. */
+     paid here rather than left to overlap the HUD. On :root rather than the
+     screen because the OPTIONS offset below reads it too. */
+  :root { --map-chrome: 400px; }
   .world-screen {
-    max-width: min(1440px, calc((100dvh - 400px) * 4 / 3));
+    max-width: min(1440px, calc((100dvh - var(--map-chrome)) * 4 / 3));
     /* The floor caps how small the map can get, so it also sets the shortest
        viewport that fits without scrolling. Measured, it holds from about
        980px tall — 46px further up than before, which is exactly what the bar
@@ -336,12 +346,72 @@ body:has([data-fullscreen-overlay]) .sound-bar { display: none; }
   /* Derived from the same expression as the screen width above — if the chrome
      constant moves, this moves with it or the OPTIONS plate drifts off the
      screen's right edge. */
-  body:has(.world-screen) .console-options { right: max(28px, calc((100vw - max(760px, min(1440px, (100dvh - 400px) * 4 / 3))) / 2 + 28px)); top: 20px; }
+  body:has(.world-screen) .console-options { right: max(28px, calc((100vw - max(760px, min(1440px, (100dvh - var(--map-chrome)) * 4 / 3))) / 2 + 28px)); top: 20px; }
+}
+/* A touch tablet on its side has no keyboard to hint at and no HUD worth the
+   fold, so its first screen is the map and the ENTER strip under it: header
+   (122px) + information strip (86px) + the 46px deck bar = 254px, plus 6px of
+   slack = 260px. The control strip and HUD totals sit just below. If the
+   header or the information strip grows, this moves with it, or ENTER slips
+   under the deck bar. The header only holds 122px because OPTIONS moves out
+   into the side margin the narrower map leaves (170px and up on every iPad),
+   so the driver card no longer has to drop below it; the tighter gutters and
+   the 640px floor let a 1024×768 iPad fit too without the title colliding
+   with the card. */
+@media (min-width: 1024px) and (min-height: 600px) and (pointer: coarse) {
+  :root { --map-chrome: 260px; }
+  .world-screen { min-width: 640px; }
+  .world-header { min-height: 0; padding: 16px 20px 14px; gap: 12px; }
+  .world-screen .map-information { padding-block: 10px; min-height: 0; }
+  body:has(.world-screen) .console-options { top: 16px; right: 16px; }
+  .driver-selector { margin-top: 0; width: 300px; }
 }
 @media (max-width: 1199px) {
   .garage-browser { grid-template-columns: 200px minmax(0, 1fr); }
   .garage-browser > aside { grid-column: 1 / -1; }
   .trophy-wall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Viewer first. Below 1024px a picker beside the viewer either fills a phone's
+   first screen (and every tap changes a scene that is off it) or gets crammed
+   into a 170px column on a portrait tablet. So the scene — or the open Menu
+   Book — comes first, and the picker folds into one strip of stamped plates
+   that swipes sideways under it. The DOM keeps its list-first order; only the
+   paint order moves. Plates size to their names (never truncated) between a
+   floor and a ceiling, so the strip's edge cuts the next plate in half — the
+   cue that there are more. The strip owns its own overflow: the page never
+   scrolls sideways. */
+@media (max-width: 1023px) {
+  .garage-browser { display: flex; flex-direction: column; gap: 16px; }
+  .garage-browser > * { width: 100%; }
+  .garage-browser > nav { order: 1; }
+  .garage-browser > aside { order: 2; }
+  .garage-viewport { position: relative; top: auto; }
+  /* The 6px inset is room for the focus outline (2px at a 4px offset), which
+     the strip's overflow would otherwise clip; the negative margin puts the
+     plates back on the page gutter. */
+  .picker-strip {
+    flex-direction: row; gap: 6px;
+    margin-inline: -6px; padding: 6px 6px 12px;
+    overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scroll-padding-inline: 6px;
+  }
+  .picker-strip > button {
+    flex: 0 0 auto; width: max-content; min-width: 132px; max-width: 232px;
+    min-height: 52px; padding: 8px 12px; scroll-snap-align: start;
+  }
+  .picker-strip .font-display.text-base { font-size: 14px; }
+  /* A pick reveals the open book's title (useRevealDetailOnChange): clear the
+     deck bar and leave room for the first lines of the blurb under it. */
+  .cafe-browser [role="tabpanel"] h2 { scroll-margin-bottom: calc(var(--deck-bar-reserve) + 96px); }
+  /* The selection cursor can't hang off the left edge of a plate in a row —
+     the neighbour sits there — so it drops in from the top edge instead,
+     stamped in the plate ink. */
+  .picker-strip > button[aria-current="true"]::before,
+  .picker-strip > [role="tab"][aria-selected="true"]::before {
+    top: 0; left: 50%; transform: translateX(-50%);
+    border: 6px solid transparent; border-bottom: 0;
+    border-top-color: var(--color-asphalt);
+  }
 }
 @media (max-width: 767px) {
   .console-page { padding: 16px; border: 0; }
@@ -386,14 +456,42 @@ body:has([data-fullscreen-overlay]) .sound-bar { display: none; }
   .map-mobile-directory > a > span:last-child { margin-left: auto; }
   .directory-locked { color: #bfc4cf; }
   .directory-locked small { font-size: 12px; margin-left: auto; }
-  .garage-browser { display: flex; flex-direction: column; gap: 16px; }
-  .garage-browser > * { width: 100%; }
-  .garage-browser > nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .garage-browser > nav > button { padding: 10px 8px; }
-  .garage-browser > nav > button > span:first-child { display: none; }
-  .garage-browser > nav > button .font-display { font-size: 14px; }
-  .garage-viewport { height: 330px; min-height: 330px; position: relative; top: auto; }
+  .garage-viewport { height: 330px; min-height: 330px; }
   .trophy-wall { grid-template-columns: minmax(0, 1fr); }
+}
+/* Short screens — a phone on its side (~730×340). The serif title, its rule
+   and the header's breathing room were filling the whole first screen before
+   any content showed, so everything above the content tightens: a smaller
+   title and rule, less padding, and on the world map the Driver Profile card
+   folds to a one-line chip beside the title. Placed after the width queries
+   on purpose: height is the constraint that wins here. */
+@media (max-height: 500px) {
+  .console-page { padding-top: 12px; }
+  .console-options { top: 12px; }
+  .console-page > header { min-height: 44px; }
+  .console-page > main > div:first-child { margin-top: 12px; }
+  .console-page > main > div:first-child:has(.console-title-block) { padding-bottom: 12px; }
+  .console-page .gt-title { font-size: 30px; }
+  .console-title-block .gt-rule { width: min(100%, 200px); height: 3px; margin-top: 6px; }
+  .garage-viewport { height: max(180px, calc(100dvh - var(--deck-bar-reserve) - 84px)); min-height: 0; }
+
+  /* World map: mark, title and driver chip share one row, clear of OPTIONS. */
+  .world-header {
+    display: flex; align-items: center; gap: 12px; min-height: 0;
+    padding: 10px 144px 10px 16px;
+  }
+  .world-brand { display: flex; align-items: center; gap: 10px; }
+  .world-header .gt-mark-face { width: 36px; height: 36px; font-size: 21px; }
+  .world-header .gt-title { font-size: 28px; margin-top: 0; }
+  .world-header .gt-title::after { width: 100%; height: 3px; margin-top: 4px; }
+  .driver-selector {
+    width: auto; max-width: none; min-width: 0; min-height: 44px;
+    margin: 0 0 0 auto; padding: 4px 10px 4px 4px; flex-shrink: 1;
+  }
+  .driver-selector-portrait { width: 30px; height: 34px; }
+  .driver-selector-label, .driver-selector-role { display: none; }
+  .driver-selector-name { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .driver-selector-arrow { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .map-node, .map-enter { transition: none; }

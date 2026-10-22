@@ -47,6 +47,7 @@ export function PlayerListCard({ player, livery }: PlayerListCardProps) {
   return (
     <PlayerPlate
       glyph="P"
+      logo={player.logo}
       livery={livery}
       title={player.name}
       chipLabel={active ? "Active" : "Former"}

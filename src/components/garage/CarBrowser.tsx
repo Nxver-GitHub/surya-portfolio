@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useCenterSelected } from "@/components/gt/pickerStrip";
 import { useSound } from "@/components/sound/SoundProvider";
 import { cars, type Car } from "../../../content/cars";
 import { liveries } from "../../../content/liveries";
@@ -90,10 +92,13 @@ export function CarBrowser() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { tick } = useSound();
+  const stripRef = useRef<HTMLElement>(null);
 
   // URL is the single source of truth — back/forward stays in sync
   const carId = searchParams.get("car");
   const selected = cars.find((c) => c.id === carId) ?? cars[0];
+
+  useCenterSelected(stripRef, selected.id);
 
   // The tick belongs to the selection change, so re-clicking the car already
   // in the bay is silent — same guard the URL update already uses.
@@ -106,8 +111,14 @@ export function CarBrowser() {
 
   return (
     <div className="garage-browser mt-6 grid gap-5">
-      {/* Car list */}
-      <nav aria-label="Cars" className="console-menu flex flex-col gap-2">
+      {/* Car list. A side column from 1024px; below that it folds into a
+          swipeable strip under the viewer (CSS order), so a pick never
+          changes a scene that is off-screen. DOM order stays list-first. */}
+      <nav
+        ref={stripRef}
+        aria-label="Cars"
+        className="console-menu picker-strip flex flex-col gap-2"
+      >
         {cars.map((c) => (
           <CarListButton
             key={c.id}
