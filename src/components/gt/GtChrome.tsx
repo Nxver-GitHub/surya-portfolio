@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { GtMark } from "./GtMark";
+import { Num } from "./Num";
 
 /** Orange breadcrumb strip bleeding off the right screen edge (GT2). */
 export function GtCrumb({ label }: { label: string }) {
   return (
     <div className="console-location">
       <span className="gt-crumb font-display text-sm font-bold uppercase">
-        {label}
+        <Num>{label}</Num>
       </span>
     </div>
   );
@@ -51,6 +52,17 @@ export function GtTitle({
  * lives on its own fixed bar along the bottom edge, mounted once in the root
  * layout, so it never competes with what a screen is trying to say.
  */
+/**
+ * Narrow-phone forms of the back labels. At 320px the mark, the lozenge and
+ * OPTIONS share one row, and "← SPECIAL STAGE" alone would take most of it.
+ * Each short form is the tail of its full name, so the visible text is always
+ * contained in the accessible name (WCAG 2.5.3, label in name).
+ */
+const SHORT_BACK_LABELS: Readonly<Record<string, string>> = {
+  "World Map": "Map",
+  "Special Stage": "Stage",
+};
+
 export function GtBackHeader({
   href,
   label,
@@ -59,11 +71,24 @@ export function GtBackHeader({
   /** Plain destination name — the component supplies the arrow. */
   label: string;
 }) {
+  const short = SHORT_BACK_LABELS[label];
   return (
     <header className="console-header">
       <GtMark />
       <LozengeLink href={href}>
-        <span aria-hidden="true">←</span> {label}
+        <span aria-hidden="true">←</span>{" "}
+        {short ? (
+          <>
+            {/* Below 400px the short form shows and the full name stays in
+                the accessibility tree, so the link's name never changes. */}
+            <span aria-hidden="true" className="hidden max-[399px]:inline">
+              {short}
+            </span>
+            <span className="max-[399px]:sr-only">{label}</span>
+          </>
+        ) : (
+          label
+        )}
       </LozengeLink>
     </header>
   );

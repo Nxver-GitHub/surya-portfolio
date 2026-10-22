@@ -12,7 +12,7 @@ export function CarChip({ carId }: { carId: string }) {
   return (
     <Link
       href={carHref(car)}
-      className="inline-flex items-center gap-1.5 border border-gt/60 px-2 py-0.5 font-display text-xs font-semibold tracking-wider text-gt-bright uppercase outline-none hover:border-gt-bright hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
+      className="inline-flex min-h-6 items-center gap-1.5 border border-gt/60 px-2 py-0.5 font-display text-xs font-semibold tracking-wider text-gt-bright uppercase outline-none hover:border-gt-bright hover:text-chrome focus-visible:ring-2 focus-visible:ring-gt-bright"
     >
       <Glyph kind="car" />
       {car.name}

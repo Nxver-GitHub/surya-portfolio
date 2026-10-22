@@ -31,11 +31,42 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: /mobile-layout\.spec\.ts/,
     },
     {
       name: "mobile",
       use: { ...devices["Pixel 7"] },
       testMatch: /home\.spec\.ts/,
+    },
+    // The mobile gate (mobile-layout.spec.ts). Every device here runs in
+    // Chromium — CI installs only Chromium, and Playwright's iPhone/iPad
+    // descriptors default to WebKit — so these pin browserName back. Note
+    // devices["iPhone SE"] is 320 wide, so 375 is a custom viewport.
+    {
+      name: "phone-375",
+      use: {
+        browserName: "chromium",
+        viewport: { width: 375, height: 667 },
+        deviceScaleFactor: 2,
+        isMobile: true,
+        hasTouch: true,
+      },
+      testMatch: /mobile-layout\.spec\.ts/,
+    },
+    {
+      name: "iphone-15-pro",
+      use: { ...devices["iPhone 15 Pro"], browserName: "chromium" },
+      testMatch: /mobile-layout\.spec\.ts/,
+    },
+    {
+      name: "iphone-15-pro-landscape",
+      use: { ...devices["iPhone 15 Pro landscape"], browserName: "chromium" },
+      testMatch: /mobile-layout\.spec\.ts/,
+    },
+    {
+      name: "ipad-mini",
+      use: { ...devices["iPad Mini"], browserName: "chromium" },
+      testMatch: /mobile-layout\.spec\.ts/,
     },
   ],
   webServer: process.env.E2E_BASE_URL

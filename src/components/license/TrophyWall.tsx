@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Num } from "../gt/Num";
 import { licenses, type License, type LicenseTest } from "../../../content/licenses";
 import { carById, carHref } from "../../../content/cars";
 import { missionById } from "../../../content/missions";
@@ -54,11 +55,11 @@ function MedalRow({ test }: { test: LicenseTest }) {
     <span className="trophy-row w-full">
       <GradeChip grade={test.grade} />
       <span className="trophy-row-title ts-hard min-w-0 font-display text-sm leading-tight font-bold text-chrome uppercase">
-        {test.name}
+        <Num>{test.name}</Num>
       </span>
       {target ? (
         <span className="trophy-evidence flex min-w-0 items-baseline gap-1 font-display text-xs font-semibold text-gt-bright uppercase">
-          <span className="truncate">{target.label}</span>
+          <span className="min-w-0 leading-snug wrap-break-word">{target.label}</span>
           <span aria-hidden="true">→</span>
         </span>
       ) : null}

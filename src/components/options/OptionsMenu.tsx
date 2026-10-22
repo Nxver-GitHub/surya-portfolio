@@ -128,10 +128,13 @@ export function OptionsMenu() {
         onClick={() => setOpen((o) => !o)}
         className={`${
           open ? "plate-hot text-asphalt" : "lozenge text-asphalt"
-        } inline-flex min-h-11 items-center gap-1.5 px-3 py-1 font-display text-sm font-bold tracking-wide uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome`}
+        } inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 px-3 py-1 font-display text-sm font-bold tracking-wide uppercase outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-chrome`}
       >
         <Glyph kind="badge" size="0.95em" className={open ? "" : "opacity-70"} />
-        <span>Options</span>
+        {/* Below 400px the plate folds to its badge so the mark, the back
+            lozenge and OPTIONS share one row without colliding. The word stays
+            in the accessibility tree (sr-only), so the name never changes. */}
+        <span className="max-[399px]:sr-only">Options</span>
       </button>
 
       {open ? (

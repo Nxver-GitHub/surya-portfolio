@@ -36,7 +36,7 @@ export function GradeChip({ grade }: GradeChipProps) {
       <span className="badge-face inline-flex items-center px-2 py-0.5">
         <span
           className="font-display text-xs font-black tracking-[0.16em] uppercase"
-          style={{ color: meta.rim, textShadow: "1px 1px 0 rgba(0,0,0,0.35)" }}
+          style={{ color: meta.ink, textShadow: "1px 1px 0 rgba(255,255,255,0.35)" }}
         >
           {meta.label}
         </span>

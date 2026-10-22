@@ -8,7 +8,9 @@ test.describe("garage", () => {
     await expectRendered(page);
 
     const list = page.getByRole("navigation", { name: "Cars" });
-    expect(await list.getByRole("button").count()).toBeGreaterThanOrEqual(5);
+    // count() is a one-shot read; poll so a slow runner's late hydration
+    // can't read an empty list.
+    await expect.poll(() => list.getByRole("button").count()).toBeGreaterThanOrEqual(5);
     await expect(list.getByRole("button", { name: /Calendarize/ })).toHaveAttribute("aria-current", "true");
 
     const sheet = page.getByRole("complementary", { name: /Calendarize spec sheet/ });

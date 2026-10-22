@@ -34,7 +34,7 @@ export function Chevron({
   return (
     <div
       aria-hidden="true"
-      className={`h-2 w-full max-w-[68ch] ${className}`}
+      className={`h-2 w-full max-w-measure ${className}`}
       style={{
         backgroundColor: background,
         backgroundImage: `${stripes}, ${mirrored}`,

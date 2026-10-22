@@ -28,6 +28,9 @@ async function dismissTakeover(page: Page) {
 }
 
 test.describe("citation teaser", () => {
+  // The café's 3D room is the slowest page to boot under CI's software GL.
+  test.slow();
+
   test("'what's next?' plays the Citation advert and leaves a linked card", async ({ page }) => {
     const errors = watchConsoleErrors(page);
     const { input, output } = await openTerminal(page);
@@ -64,16 +67,33 @@ test.describe("citation teaser", () => {
     test.use({ reducedMotion: "no-preference" });
 
     test("the advert cuts through the car and the Citation lockup", async ({ page }) => {
+      // Each frame is on screen for one beat only, so a slow runner can miss it
+      // with a visibility poll. Record every advert frame that mounts and loads
+      // inside the dialog instead, and assert on that log.
+      await page.addInitScript(() => {
+        const seen: Record<string, number> = {};
+        (window as unknown as { __adFrames: Record<string, number> }).__adFrames = seen;
+        const record = (img: HTMLImageElement) => {
+          const name = /\/terminal\/citation\/(car|lockup)\.webp/.exec(img.src)?.[1];
+          if (!name || !img.closest("[role=dialog]")) return;
+          const log = () => { if (img.naturalWidth) seen[name] = img.naturalWidth; };
+          if (img.complete) log(); else img.addEventListener("load", log, { once: true });
+        };
+        new MutationObserver((mutations) => {
+          for (const m of mutations) for (const node of Array.from(m.addedNodes)) {
+            if (node instanceof HTMLImageElement) record(node);
+            else if (node instanceof Element) node.querySelectorAll("img").forEach(record);
+          }
+        }).observe(document, { childList: true, subtree: true });
+      });
       const { input } = await openTerminal(page);
       await input.fill("what's next?");
       await input.press("Enter");
       const ad = page.getByRole("dialog", { name: "Citation teaser advertisement" });
       await expect(ad).toBeVisible();
-      for (const [name, width] of [["car", 1070], ["lockup", 666]] as const) {
-        const frame = ad.locator(`img[src*="/terminal/citation/${name}.webp"]`);
-        await expect(frame, name).toBeVisible({ timeout: 20_000 });
-        expect(await frame.evaluate((img: HTMLImageElement) => img.naturalWidth), name).toBe(width);
-      }
+      await expect
+        .poll(() => page.evaluate(() => (window as unknown as { __adFrames: Record<string, number> }).__adFrames), { timeout: 30_000 })
+        .toEqual({ car: 1070, lockup: 666 });
       await expect(ad).toContainText("citation.so", { timeout: 20_000 });
       await expect(ad).not.toContainText(/proximize/i);
     });

@@ -69,18 +69,22 @@ export interface CategoryMeta {
   featuredPhotoId: string;
 }
 
+/**
+ * Tab order, and the first entry is the default tab. Cars leads because it is
+ * the category with real photography; Nature and Life are still placeholders.
+ */
 export const categories: readonly CategoryMeta[] = [
-  {
-    id: "nature",
-    name: "Nature",
-    blurb: "Landscapes, light, and the outdoors — between the races.",
-    featuredPhotoId: "nature-01",
-  },
   {
     id: "cars",
     name: "Cars",
     blurb: "Machines that inspired the Garage — as seen in the metal.",
     featuredPhotoId: "cars-01",
+  },
+  {
+    id: "nature",
+    name: "Nature",
+    blurb: "Landscapes, light, and the outdoors — between the races.",
+    featuredPhotoId: "nature-01",
   },
   {
     id: "life",

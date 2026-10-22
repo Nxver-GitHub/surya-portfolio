@@ -59,7 +59,7 @@ function CarListButton({
       />
       <span className="flex min-w-0 flex-1 flex-col">
         <span
-          className={`truncate font-display text-base leading-tight font-bold tracking-wide uppercase ${
+          className={`font-display text-base leading-tight wrap-break-word font-bold tracking-wide uppercase ${
             isActive
               ? "text-asphalt"
               : `ts-hard ${locked ? "text-silver" : "text-chrome"}`
@@ -68,7 +68,7 @@ function CarListButton({
           {car.name}
         </span>
         <span
-          className={`truncate text-xs ${isActive ? "text-asphalt/80" : "text-silver"}`}
+          className={`text-xs leading-snug wrap-break-word ${isActive ? "text-asphalt/80" : "text-silver"}`}
         >
           {locked ? "Locked" : car.carClass}
         </span>

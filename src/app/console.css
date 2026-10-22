@@ -49,7 +49,16 @@ input, textarea { caret-color: #ffbf19; }
 .console-page article > div > header { min-width: 0; }
 .console-page p { text-wrap: pretty; }
 .console-page .font-display { letter-spacing: .025em; }
-.console-page .font-display.text-xs, .console-page .tabular-nums { font-family: var(--font-saira), sans-serif; }
+.console-page .font-display.text-xs { font-family: var(--font-numeric); }
+/* Numerals are evidence, so they are always Saira. Pixelify's digits are a
+   coin-toss at UI sizes — 2 reads as 8, 5 as S — which is fine for a short
+   code (SS1, 01A, a tier letter) and wrong for a count, a date or a version.
+   `.num` marks a numeric readout (or a number set inside a Pixelify heading,
+   via <Num>); `tabular-nums` already meant "readout" here, so it carries the
+   same face inside console pages. Unlayered on purpose: it must beat the
+   font-display utility on the same element. No letter-spacing here, so the
+   element's own tracking utility still wins. */
+.num, .console-page .tabular-nums { font-family: var(--font-numeric); font-variant-numeric: tabular-nums; }
 .console-page button, .console-page a.lozenge { min-height: 44px; }
 .console-page [role="tab"], .console-menu > button { position: relative; }
 .console-page [role="tab"][aria-selected="true"]::before,
@@ -104,6 +113,8 @@ input, textarea { caret-color: #ffbf19; }
 .sound-bar-credit {
   flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
   white-space: nowrap; font-size: 12px; color: var(--color-silver);
+  /* A 24px line so the links' padded hit areas sit inside the clip box. */
+  line-height: 24px;
 }
 .sound-readout:hover { border-top-color: var(--color-gt-bright); }
 .sound-readout-mark { display: inline-flex; flex-shrink: 0; color: var(--color-gt-bright); }
@@ -173,6 +184,12 @@ input, textarea { caret-color: #ffbf19; }
   border-top: 1px solid var(--color-steel); padding: 6px 10px;
   font-size: 12px; line-height: 1.45; color: var(--color-silver);
 }
+/* A full-screen overlay (the phone café terminal, the media viewer) owns the
+   whole screen, the bottom edge included, so the deck steps aside while one is
+   mounted. One attribute on the overlay root is the whole contract — no state
+   threads back to the bar. The phone terminal's Citation teaser plays inside
+   that overlay, so the same rule covers it. */
+body:has([data-fullscreen-overlay]) .sound-bar { display: none; }
 /* Things that also live along the bottom edge have to clear the bar. */
 .controller-hints { bottom: calc(var(--deck-bar-reserve) + 12px); }
 .memory-card-toast { bottom: calc(var(--deck-bar-reserve) + 16px); }
@@ -370,7 +387,7 @@ input, textarea { caret-color: #ffbf19; }
   .map-mobile-directory > a > span:first-child, .directory-locked > span { color: #ffbf19; font-size: 13px; }
   .map-mobile-directory > a > span:last-child { margin-left: auto; }
   .directory-locked { color: #bfc4cf; }
-  .directory-locked small { font-size: 10px; margin-left: auto; }
+  .directory-locked small { font-size: 12px; margin-left: auto; }
   .garage-browser { display: flex; flex-direction: column; gap: 16px; }
   .garage-browser > * { width: 100%; }
   .garage-browser > nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }

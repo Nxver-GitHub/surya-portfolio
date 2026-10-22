@@ -47,7 +47,7 @@ export function ReasonCodeBoard() {
               <div className="max-w-[52ch]">
                 <p
                   aria-hidden="true"
-                  className="font-display text-[11px] font-bold tracking-[0.18em] text-silver uppercase sm:hidden"
+                  className="font-display text-xs font-bold tracking-[0.18em] text-silver uppercase sm:hidden"
                 >
                   The tell
                 </p>
