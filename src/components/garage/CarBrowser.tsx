@@ -98,10 +98,10 @@ export function CarBrowser() {
   const carId = searchParams.get("car");
   const selected = cars.find((c) => c.id === carId) ?? cars[0];
 
-  // The tick belongs to the selection change, so re-clicking the car already
-  // in the bay is silent — same guard the URL update already uses.
   useCenterSelected(stripRef, selected.id);
 
+  // The tick belongs to the selection change, so re-clicking the car already
+  // in the bay is silent — same guard the URL update already uses.
   const select = (car: Car) => {
     if (car.id !== selected.id) {
       tick();
