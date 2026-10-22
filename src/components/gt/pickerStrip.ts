@@ -28,7 +28,27 @@ export function useSidePicker(): boolean {
   );
 }
 
-const SELECTED = '[aria-current="true"], [aria-selected="true"]';
+/**
+ * In the strip layout, make sure the detail a pick just changed is on screen:
+ * after each change (never on first paint) the element with `detailId` is
+ * scrolled the least distance that brings it into view — a no-op when it
+ * already is. Pair with a `scroll-margin` that clears the fixed deck bar.
+ */
+export function useRevealDetailOnChange(detailId: string, selectedKey: string): void {
+  const previous = useRef(selectedKey);
+
+  useEffect(() => {
+    if (previous.current === selectedKey) return;
+    previous.current = selectedKey;
+    if (window.matchMedia(SIDE_PICKER_QUERY).matches) return;
+    const detail = document.getElementById(detailId);
+    if (!detail) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    detail.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
+  }, [detailId, selectedKey]);
+}
+
+const SELECTED ='[aria-current="true"], [aria-selected="true"]';
 
 /**
  * Keep the selected plate of a horizontal picker strip in view: centred on

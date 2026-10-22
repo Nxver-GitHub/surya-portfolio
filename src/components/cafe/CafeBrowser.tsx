@@ -24,6 +24,7 @@ import { Terminal } from "./terminal/Terminal";
 import { useTerminalChat } from "./terminal/useTerminalChat";
 import { useReducedMotion } from "../garage/useReducedMotion";
 import { PointerText, useCoarsePointer } from "../gt/pointer";
+import { useRevealDetailOnChange } from "../gt/pickerStrip";
 import { CRT_DOCK_FILL, type ScreenBounds } from "./cameraPoses";
 import type { CafeFocus } from "./CafeScene";
 
@@ -133,6 +134,9 @@ export function CafeBrowser() {
 
   const bookId = searchParams.get("book");
   const selected = menuBooks.find((b) => b.id === bookId) ?? menuBooks[0];
+  // Strip layout: a pick whose panel title sits below the fold slides it up
+  // just far enough to read, so the change is never off-screen.
+  useRevealDetailOnChange(`book-${selected.id}-title`, selected.id);
 
   // Camera focus (scene-only). Starts at room view; book selection flies to the
   // table, the CRT flies to the desk. The 2D UI stays authoritative for content.

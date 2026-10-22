@@ -21,6 +21,22 @@ async function settle(page: Page): Promise<void> {
   await page.waitForTimeout(400);
 }
 
+/**
+ * Refuse WebGL contexts so the 3D scenes fall back to their 2D bays. The
+ * layout checks only need the scene's box, and booting the café or a garage
+ * car under CI's software GL starves the parallel touch.spec gesture tests.
+ */
+async function withoutWebGL(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...rest: any[]) {
+      if (type.startsWith("webgl") || type === "experimental-webgl") return null;
+      return original.call(this, type as "2d", ...rest);
+    } as typeof original;
+  });
+}
+
 test.describe("mobile layout audit", () => {
   for (const route of MOBILE_ROUTES) {
     test(`${route} fits, reads and taps`, async ({ page }) => {
@@ -118,7 +134,8 @@ test.describe("mobile focused regressions", () => {
 
   test("garage: viewer first, picker strip below, taps change what is on screen", async ({ page }, testInfo) => {
     test.skip(!["phone-375", "ipad-mini"].includes(testInfo.project.name), "phone + portrait tablet");
-    test.slow(); // the garage mounts a WebGL scene under CI's software GL
+    test.slow();
+    await withoutWebGL(page); // layout only: keep SwiftShader free for touch.spec
     await page.goto("/garage?car=nodegent");
     await expectRendered(page);
     const nav = page.getByRole("navigation", { name: "Cars" });
@@ -156,7 +173,8 @@ test.describe("mobile focused regressions", () => {
 
   test("café: picking a Menu Book changes the detail in view", async ({ page }, testInfo) => {
     test.skip(!["phone-375", "ipad-mini"].includes(testInfo.project.name), "phone + portrait tablet");
-    test.slow(); // the 3D café boots slowly under CI's software GL
+    test.slow();
+    await withoutWebGL(page); // layout only: keep SwiftShader free for touch.spec
     await page.goto("/cafe");
     await expectRendered(page);
     const books = page.getByRole("tablist", { name: "Menu Books" });
@@ -167,11 +185,11 @@ test.describe("mobile focused regressions", () => {
 
     const heading = page.getByRole("tabpanel").getByRole("heading", { level: 2 });
     await expect(heading).toHaveText(/Venture Table/i);
-    // No scroll after the tap: the new title is already inside the viewport.
+    // The visitor never scrolls: the new title is on screen, above the deck bar.
     await expect.poll(() =>
       heading.evaluate((el) => {
         const r = el.getBoundingClientRect();
-        return r.top >= 0 && r.bottom <= window.innerHeight;
+        return r.top >= 0 && r.bottom <= window.innerHeight - 46;
       }),
     ).toBe(true);
     expect(await horizontalOverflow(page), "page overflow (px)").toBe(0);

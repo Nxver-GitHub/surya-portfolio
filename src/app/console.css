@@ -400,6 +400,9 @@ body:has([data-fullscreen-overlay]) .sound-bar { display: none; }
     min-height: 52px; padding: 8px 12px; scroll-snap-align: start;
   }
   .picker-strip .font-display.text-base { font-size: 14px; }
+  /* A pick reveals the open book's title (useRevealDetailOnChange): clear the
+     deck bar and leave room for the first lines of the blurb under it. */
+  .cafe-browser [role="tabpanel"] h2 { scroll-margin-bottom: calc(var(--deck-bar-reserve) + 96px); }
   /* The selection cursor can't hang off the left edge of a plate in a row —
      the neighbour sits there — so it drops in from the top edge instead,
      stamped in the plate ink. */
