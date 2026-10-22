@@ -18,6 +18,7 @@ import { cars, type Car } from "../../../content/cars";
 import { runOnIdle } from "../../lib/runOnIdle";
 import { useReducedMotion } from "./useReducedMotion";
 import { ConsoleResolution } from "../gt/ConsoleResolution";
+import { TouchPanY } from "../gt/TouchPanY";
 
 /** Normalized car length in scene units — every model fits the same stage. */
 const CAR_LENGTH = 2.8;
@@ -243,10 +244,12 @@ export function GarageScene({ car }: { car: Car }) {
       camera={{ position: [4.1, 1.9, 4.1], fov: 38 }}
       dpr={1}
       gl={{ antialias: false }}
-      className="touch-none"
+      className="touch-pan-y"
       flat
     >
       <ConsoleResolution />
+      {/* vertical swipes scroll the page; horizontal drags orbit the car */}
+      <TouchPanY />
       <color attach="background" args={["#18202c"]} />
       <fog attach="fog" args={["#18202c", 8, 16]} />
 

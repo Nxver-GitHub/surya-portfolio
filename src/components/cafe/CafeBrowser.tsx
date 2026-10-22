@@ -23,6 +23,7 @@ import { LoadingHold } from "../gt/LoadingHold";
 import { Terminal } from "./terminal/Terminal";
 import { useTerminalChat } from "./terminal/useTerminalChat";
 import { useReducedMotion } from "../garage/useReducedMotion";
+import { PointerText, useCoarsePointer } from "../gt/pointer";
 import { CRT_DOCK_FILL, type ScreenBounds } from "./cameraPoses";
 import type { CafeFocus } from "./CafeScene";
 
@@ -183,6 +184,7 @@ export function CafeBrowser() {
   const [expanded, setExpanded] = useState(false);
   const reducedMotion = useReducedMotion();
   const isMobile = useIsMobile();
+  const coarsePointer = useCoarsePointer();
 
   // Free-roam: WASD/arrow keys pan the café camera. Held keys live in a ref so
   // the render loop reads them without re-rendering. `engaged` (scene hovered or
@@ -359,7 +361,11 @@ export function CafeBrowser() {
         <div
           className="console-scene relative aspect-[4/5] max-h-[560px] min-h-[340px] overflow-hidden bg-asphalt outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-chrome sm:aspect-[16/10] sm:max-h-none sm:min-h-[400px] lg:aspect-[5/3] lg:min-h-[420px]"
           tabIndex={0}
-          aria-label="GT Café 3D view — drag to look, scroll to zoom, WASD or arrow keys to move around the room"
+          aria-label={
+            coarsePointer
+              ? "GT Café 3D view — drag to look, pinch to zoom, tap an exhibit to inspect it"
+              : "GT Café 3D view — drag to look, scroll to zoom, WASD or arrow keys to move around the room"
+          }
           onPointerEnter={engageScene}
           onPointerLeave={disengageScene}
           onFocus={engageScene}
@@ -420,13 +426,29 @@ export function CafeBrowser() {
             </div>
           ) : null}
 
-          {/* Navigation hint — pointer users only (no keyboard on touch). Sits
-              over the canvas, never intercepts its drag. Hidden while the
-              terminal owns the view. */}
-          {sceneReady && !isMobile && focus.kind !== "crt" ? (
-            <div className="pointer-events-none absolute bottom-2 left-2 select-none rounded-sm border border-white/15 bg-black/55 px-2.5 py-1 font-display text-xs font-semibold tracking-wide text-white/70 uppercase backdrop-blur-sm">
-              Drag to look · Scroll to zoom ·{" "}
-              <span className="text-chrome">WASD / Arrows</span> to move
+          {/* Navigation hint. Wording follows the pointer, not the width: a
+              finger gets drag/pinch/tap (an iPad has no keyboard either), a
+              mouse gets the keyboard roam keys. Sits over the canvas, never
+              intercepts its drag. Hidden while the terminal owns the view. */}
+          {sceneReady && focus.kind !== "crt" ? (
+            <div
+              data-testid="cafe-scene-hint"
+              className="pointer-events-none absolute bottom-2 left-2 select-none rounded-sm border border-white/15 bg-black/55 px-2.5 py-1 font-display text-xs font-semibold tracking-wide text-white/70 uppercase backdrop-blur-sm"
+            >
+              <PointerText
+                fine={
+                  <>
+                    Drag to look · Scroll to zoom ·{" "}
+                    <span className="text-chrome">WASD / Arrows</span> to move
+                  </>
+                }
+                touch={
+                  <>
+                    Drag to look · Pinch to zoom ·{" "}
+                    <span className="text-chrome">Tap an exhibit</span>
+                  </>
+                }
+              />
             </div>
           ) : null}
         </div>

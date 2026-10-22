@@ -29,6 +29,7 @@ import { useReducedMotion } from "../../../garage/useReducedMotion";
 import { useSound } from "../../../sound/SoundProvider";
 import { citation } from "../../../../../content/citation";
 import { FrameView } from "./frames";
+import { PointerText } from "../../../gt/pointer";
 import {
   DECODE_STALL_CAP_MS,
   FIRST_IMAGE_BEAT,
@@ -219,7 +220,8 @@ export function TeaserTakeover({ onDone }: TeaserTakeoverProps) {
           color: "rgba(233,236,239,0.42)",
         }}
       >
-        {portrait ? "tap to skip" : "esc — skip"}
+        {/* Pointer, not aspect: an iPad in landscape has no Esc key either. */}
+        <PointerText fine="esc — skip" touch="tap to skip" />
       </span>
     </div>
   );

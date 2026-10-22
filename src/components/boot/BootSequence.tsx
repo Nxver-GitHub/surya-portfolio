@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react";
 import { IntroMonogram } from "./intro/IntroMonogram";
 import { IntroMontage } from "./intro/IntroMontage";
 import { IntroTitle } from "./intro/IntroTitle";
@@ -16,6 +23,25 @@ type Phase = "logo" | "montage" | "title" | "exit" | "done";
 
 const LOGO_MS = 850;
 const EXIT_MS = 250;
+
+/** Keys that never count as "press any key": Escape is the dialog's own skip
+ * (cancel → finish), Tab moves focus to the Skip control, and a lone modifier
+ * is not a deliberate press. */
+const NON_SKIP_KEYS: ReadonlySet<string> = new Set([
+  "Escape",
+  "Tab",
+  "Shift",
+  "Control",
+  "Alt",
+  "Meta",
+  "CapsLock",
+]);
+
+/** Is this event aimed at one of the dialog's own controls (Skip intro /
+ * Press Start)? Those keep their own click/Enter behaviour untouched. */
+function onControl(target: EventTarget | null): boolean {
+  return target instanceof Element && target.closest("button, a") !== null;
+}
 
 /**
  * Signature first-load intro — a trademark-safe homage to the GT2 boot-to-menu:
@@ -51,6 +77,8 @@ export function BootSequence() {
       const seen = sessionStorage.getItem(SESSION_KEY);
       // Agents go straight to content; the intro is for people.
       const agent = isAutomatedVisitor(navigator);
+      // Width picks the montage COMPOSITION (portrait-safe frames); the skip
+      // hint's wording follows the pointer type inside IntroMontage.
       setCompact(window.innerWidth < 768);
       setPhase(reducedMotion || seen || agent ? "done" : "logo");
     });
@@ -80,11 +108,34 @@ export function BootSequence() {
 
   if (!phase || phase === "done") return null;
 
+  // The montage's "Tap to skip" / "Press any key to skip" hint is literal: a
+  // tap/click anywhere or any key during logo/montage jumps to the title — and
+  // only to the title (it is a real gate, authentic GT2). Skipping on `click`
+  // (not pointerdown) means the gesture has fully ended before PRESS START
+  // mounts, so one tap can never also press Start. Key repeats are ignored for
+  // the same reason.
+  const skippable = phase === "logo" || phase === "montage";
+  const skipOnClick = (event: MouseEvent) => {
+    if (skippable && !onControl(event.target)) startTitle();
+  };
+  const skipOnKey = (event: KeyboardEvent) => {
+    if (!skippable || event.repeat || NON_SKIP_KEYS.has(event.key)) return;
+    // Browser shortcuts (reload, find, address bar, devtools) keep working and
+    // never count as "any key".
+    if (event.metaKey || event.ctrlKey || event.altKey || /^F\d{1,2}$/.test(event.key)) return;
+    // Enter/Space on the focused Skip control is that control's own press.
+    if ((event.key === "Enter" || event.key === " ") && onControl(event.target)) return;
+    event.preventDefault();
+    startTitle();
+  };
+
   return (
     <dialog
       ref={dialog}
       aria-label="Surya Racing portfolio introduction"
       onCancel={(event) => { event.preventDefault(); finish(); }}
+      onClick={skipOnClick}
+      onKeyDown={skipOnKey}
       data-boot-overlay=""
       className={`fixed inset-0 z-60 m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden border-0 bg-asphalt p-0 text-chrome transition-transform duration-(--duration-panel) ease-(--ease-mech) ${
         phase === "exit" ? "-translate-y-full" : ""
