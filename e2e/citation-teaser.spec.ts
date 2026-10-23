@@ -31,6 +31,21 @@ test.describe("citation teaser", () => {
   // The café's 3D room is the slowest page to boot under CI's software GL.
   test.slow();
 
+  // WebGL off: the café falls back to its 2D backdrop and plain "Open
+  // terminal" lozenge. Everything here is terminal DOM, but under CI's
+  // software GL the 3D scene's first render blocks the main thread for 15s+:
+  // advert beats stall on their timers and image polls run out of time.
+  // Without a scene there is no stall.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      const getContext = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...rest: unknown[]) {
+        if (/webgl/i.test(kind)) return null;
+        return (getContext as (...a: unknown[]) => RenderingContext | null).call(this, kind, ...rest);
+      } as typeof getContext;
+    });
+  });
+
   test("'what's next?' plays the Citation advert and leaves a linked card", async ({ page }) => {
     const errors = watchConsoleErrors(page);
     const { input, output } = await openTerminal(page);
@@ -52,7 +67,9 @@ test.describe("citation teaser", () => {
     await expect
       .poll(() => poster.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
       .toBe(1085);
-    expect(errors).toEqual([]);
+    // Three reports the blocked context (see the beforeEach); the café's error
+    // boundary turns it into the 2D fallback. Any other error still fails.
+    expect(errors.filter((e) => !/Error creating WebGL context/.test(e))).toEqual([]);
   });
 
   test("the pre-rebrand name still reaches the teaser", async ({ page }) => {
@@ -65,21 +82,6 @@ test.describe("citation teaser", () => {
 
   test.describe("with full motion", () => {
     test.use({ reducedMotion: "no-preference" });
-
-    // WebGL off: the café falls back to its 2D backdrop and plain "Open
-    // terminal" lozenge. The advert is pure DOM, but its beats run on timers,
-    // and under CI's software GL the 3D scene's first render blocks the main
-    // thread for 15s+ — an advert started before it stalls on its opening
-    // beats and the frame log stays empty. Without a scene there is no stall.
-    test.beforeEach(async ({ page }) => {
-      await page.addInitScript(() => {
-        const getContext = HTMLCanvasElement.prototype.getContext;
-        HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...rest: unknown[]) {
-          if (/webgl/i.test(kind)) return null;
-          return (getContext as (...a: unknown[]) => RenderingContext | null).call(this, kind, ...rest);
-        } as typeof getContext;
-      });
-    });
 
     test("the advert cuts through the car and the Citation lockup", async ({ page }) => {
       // Each frame is on screen for one beat only, so a slow runner can miss it
