@@ -66,6 +66,21 @@ test.describe("citation teaser", () => {
   test.describe("with full motion", () => {
     test.use({ reducedMotion: "no-preference" });
 
+    // WebGL off: the café falls back to its 2D backdrop and plain "Open
+    // terminal" lozenge. The advert is pure DOM, but its beats run on timers,
+    // and under CI's software GL the 3D scene's first render blocks the main
+    // thread for 15s+ — an advert started before it stalls on its opening
+    // beats and the frame log stays empty. Without a scene there is no stall.
+    test.beforeEach(async ({ page }) => {
+      await page.addInitScript(() => {
+        const getContext = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, kind: string, ...rest: unknown[]) {
+          if (/webgl/i.test(kind)) return null;
+          return (getContext as (...a: unknown[]) => RenderingContext | null).call(this, kind, ...rest);
+        } as typeof getContext;
+      });
+    });
+
     test("the advert cuts through the car and the Citation lockup", async ({ page }) => {
       // Each frame is on screen for one beat only, so a slow runner can miss it
       // with a visibility poll. Record every advert frame that mounts and loads
