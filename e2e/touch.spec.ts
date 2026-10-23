@@ -25,7 +25,17 @@ interface Point {
   y: number;
 }
 
-/** One finger (or several, for a pinch) dragged in straight lines. */
+/** One finger (or several, for a pinch) dragged in straight lines.
+ *
+ * The whole sequence is queued at once, the way a real digitiser streams
+ * points regardless of how busy the page is; the browser keeps the order and
+ * coalesces moves exactly as it would for a finger. Awaiting each event in
+ * lock-step instead (the old shape) was a test artifact that broke under CI:
+ * `Input.dispatchTouchEvent` resolves only once the renderer has handled the
+ * event, the canvases hold non-passive touch listeners, and under software GL
+ * a café frame is ~0.5s, with two whole-scene re-renders on top (engage on
+ * touch, disengage on pointercancel). Sixteen serial round trips cost 20–40s
+ * and pushed the café swipe past its 90s budget. */
 async function touchGesture(page: Page, paths: ReadonlyArray<readonly [Point, Point]>, steps = 14) {
   const cdp = await page.context().newCDPSession(page);
   const at = (t: number) =>
@@ -34,12 +44,12 @@ async function touchGesture(page: Page, paths: ReadonlyArray<readonly [Point, Po
       y: from.y + (to.y - from.y) * t,
       id,
     }));
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: at(0) });
-  for (let i = 1; i <= steps; i += 1) {
-    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: at(i / steps) });
-    await page.waitForTimeout(16);
-  }
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  const send = (type: "touchStart" | "touchMove" | "touchEnd", touchPoints: ReturnType<typeof at>) =>
+    cdp.send("Input.dispatchTouchEvent", { type, touchPoints });
+  const sent = [send("touchStart", at(0))];
+  for (let i = 1; i <= steps; i += 1) sent.push(send("touchMove", at(i / steps)));
+  sent.push(send("touchEnd", []));
+  await Promise.all(sent);
   await cdp.detach();
 }
 
@@ -76,7 +86,7 @@ async function expectCanvasUnderCentre(scene: Locator) {
           const r = el.getBoundingClientRect();
           return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.tagName;
         }),
-      { timeout: 40_000 },
+      { timeout: 60_000 },
     )
     .toBe("CANVAS");
 }
@@ -88,20 +98,30 @@ async function topOf(scene: Locator): Promise<number> {
 
 /** A vertical swipe that starts on the canvas must move the page. Swipes in
  * whichever direction the page still has room to scroll. `scene` is the
- * canvas's stable wrapper (the canvas element itself can remount). */
+ * canvas's stable wrapper (the canvas element itself can remount).
+ *
+ * Spends as few main-thread round trips as it can: on the café under CI's
+ * software GL each one waits out a ~0.5s frame (plus a DOM snapshot when a
+ * retry is traced), so the probes around the swipe are one call each side. */
 async function expectSwipeScrolls(page: Page, scene: Locator) {
-  await scene.evaluate((el) => el.scrollIntoView({ block: "center" }));
-  await page.waitForTimeout(200);
-  const before = await topOf(scene);
-  const room = await page.evaluate(() => {
-    const el = document.scrollingElement!;
-    return el.scrollHeight - el.clientHeight - el.scrollTop;
+  // Centre the scene and read everything the swipe needs in one round trip
+  // (scrollIntoView is synchronous: nothing on the site scrolls smoothly).
+  const { before, room, c } = await scene.evaluate((el) => {
+    el.scrollIntoView({ block: "center" });
+    const r = el.getBoundingClientRect();
+    const doc = document.scrollingElement!;
+    return {
+      before: r.top,
+      room: doc.scrollHeight - doc.clientHeight - doc.scrollTop,
+      c: { x: r.left + r.width / 2, y: r.top + r.height / 2 },
+    };
   });
-  const c = await centreOf(scene);
   const dy = room > 160 ? -140 : 140;
   await touchGesture(page, [[{ x: c.x, y: c.y - dy / 2 }, { x: c.x, y: c.y + dy / 2 }]]);
-  await page.waitForTimeout(400);
-  const after = await topOf(scene);
+  // Let the pan land, then read — one round trip, timed inside the page.
+  const after = await scene.evaluate(
+    (el) => new Promise<number>((resolve) => setTimeout(() => resolve(el.getBoundingClientRect().top), 400)),
+  );
   expect(Math.abs(after - before), "page should scroll under a vertical swipe").toBeGreaterThan(50);
 }
 
@@ -136,7 +156,10 @@ async function openCafeScene(page: Page): Promise<Locator> {
   await expectRendered(page);
   const scene = page.getByLabel(/GT Café 3D view/);
   await expect(scene.locator("canvas")).toHaveCount(1, { timeout: 30_000 });
-  await expect(page.getByTestId("cafe-scene-hint")).toBeVisible({ timeout: 30_000 });
+  // The hint appears once the room is attached; under CI's software GL the
+  // scene's first render is then a single 15s+ main-thread task. Let the
+  // test's own budget bound this wait rather than a tighter per-step one.
+  await expect(page.getByTestId("cafe-scene-hint")).toBeVisible({ timeout: 60_000 });
   await expectCanvasUnderCentre(scene);
   return scene;
 }
